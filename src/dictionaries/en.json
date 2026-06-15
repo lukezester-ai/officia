@@ -1,0 +1,17 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "accounting": "Accounting",
+    "hr": "HR",
+    "banking": "Banking",
+    "documents": "Documents",
+    "aiAssistant": "AI Assistant",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "profile": "My Profile"
+  },
+  "dashboard": {
+    "title": "Welcome to Officia",
+    "subtitle": "Your smart office manager"
+  }
+}

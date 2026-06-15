@@ -1,0 +1,17 @@
+{
+  "sidebar": {
+    "dashboard": "Табло",
+    "accounting": "Счетоводство",
+    "hr": "Кадри",
+    "banking": "Банка",
+    "documents": "Архив",
+    "aiAssistant": "AI Асистент",
+    "settings": "Настройки",
+    "logout": "Изход",
+    "profile": "Моят Профил"
+  },
+  "dashboard": {
+    "title": "Добре дошли в Officia",
+    "subtitle": "Вашият интелигентен офис мениджър"
+  }
+}

@@ -1,0 +1,84 @@
+<USER_REQUEST>
+1. AI директно върху документи
+Схема (добавяме поле extractedText в таблицата documents)
+lib/db/schema/documents.ts (добавяме)
+
+ts
+export const documents = pgTable('documents', {
+  // ... съществуващи полета
+  extractedText: text('extracted_text'), // пълният текст, извлечен с AI или OCR
+});
+При качване на документ – извличаме и записваме текста
+app/api/upload/route.ts (разширение)
+
+ts
+// След като сме качили файла в Storage, извикваме Claude Vision за OCR + извличане на текст
+const extractedText = await extractTextFromDocument(fileBuffer, file.type);
+// Записваме в базата
+await db.update(documents).set({ extractedText, isProcessed: true }).where(eq(documents.id, doc.id));
+lib/ai/extract-text.ts
+
+ts
+import { callClaudeWithImage } from './claude';
+
+export async function extractTextFromDocument(fileBuffer: Buffer, mimeType: string): Promise<string> {
+  const base64 = fileBuffer.toString('base64');
+  const prompt = `Извлечи целия текст от този документ. Върни само текстът, без коментари. Ако документът е фактура, включи всички числови стойности, дати, имена.`;
+  const system = 'Ти си OCR и анализатор на документи. Извличаш текст максимално точно.';
+  const result = await callClaudeWithImage(prompt, base64, mimeType, system);
+  return result;
+}
+lib/ai/claude.ts (добавяме функция за изображения)
+
+ts
+export async function callClaudeWithImage(prompt: string, base64Image: string, mimeType: string, system?: string) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'x-api-key': process.env.CLAUDE_API_KEY!,
+<truncated 17537 bytes>
+EXT_PUBLIC_APP_URL}/api/bank/connect`, {
+    method: 'POST',
+    body: JSON.stringify({ institutionId, iban, redirectUrl }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  return res.json();
+}
+
+export async function matchTransactions() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/bank/match-transactions`, { method: 'POST' });
+  return res.json();
+}
+🧩 Добавяне на новите модули към навигацията
+Обнови components/dashboard/sidebar.tsx, добавяйки:
+
+tsx
+import { Landmark, MessageSquare } from 'lucide-react';
+
+// В navItems добави:
+{ name: 'Банка', href: '/dashboard/banking', icon: Landmark },
+За AI върху документи – то се достъпва от страницата на всеки документ (бутон "Задай въпрос" или директният чат).
+
+🔧 Настройки за PSD2 (Nordigen)
+Регистрирай се в Nordigen (безплатен план за до 100 сметки).
+
+Създай API credentials – вземи SECRET_ID и SECRET_KEY.
+
+Добави ги в .env.local:
+
+env
+NORDIGEN_SECRET_ID=your_id
+NORDIGEN_SECRET_KEY=your_key
+В production трябва да имаш публичен URL за webhook-а – добави в Nordigen dashboard https://your-domain.com/api/bank/webhook.
+
+✅ Финал
+Сега Officia има:
+
+AI чат върху всеки документ – задавай въпроси за фактури, договори и отчети.
+
+Автоматично синхронизиране на банкови транзакции (чрез PSD2) и AI съпоставяне с разходите.
+
+Това превръща системата в истински интелигентен офис асистент, който спестява часове ръчна работа.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-06-14T18:29:24+03:00.
+</ADDITIONAL_METADATA>
