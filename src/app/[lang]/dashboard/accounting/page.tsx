@@ -31,14 +31,14 @@ const mockLedger = [
 ];
 
 export default function AccountingPage() {
-  const [invoices, setInvoices] = useState<any[]>(initialInvoices);
-  const [journalEntries, setJournalEntries] = useState<any[]>(mockJournalEntries);
-  const [ledger, setLedger] = useState<any[]>(mockLedger);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [journalEntries, setJournalEntries] = useState<any[]>([]);
+  const [ledger, setLedger] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadData() {
       const invRes = await getInvoices();
-      if (invRes.success && invRes.data && invRes.data.length > 0) {
+      if (invRes.success && invRes.data) {
         setInvoices(invRes.data.map((inv: any) => ({
           id: inv.id,
           invoiceNumber: inv.invoiceNumber,
@@ -51,7 +51,7 @@ export default function AccountingPage() {
       }
 
       const jrnlRes = await getJournalEntries();
-      if (jrnlRes.success && jrnlRes.data && jrnlRes.data.length > 0) {
+      if (jrnlRes.success && jrnlRes.data) {
         setJournalEntries(jrnlRes.data.map((j: any) => ({
           id: j.journalNumber,
           date: new Date(j.entryDate).toLocaleDateString(),
@@ -68,13 +68,12 @@ export default function AccountingPage() {
   }, []);
 
   const handleAddInvoice = async (newInvoice: any) => {
-    setInvoices([newInvoice, ...invoices]);
-    
+    // Optimistic UI update can be tricky with auto-generated IDs, so we wait for server
     const res = await createInvoice(newInvoice);
     if (res.success) {
-      toast.success('Фактурата е записана в базата данни!');
+      toast.success('Фактурата е създадена!');
       const inv = res.data;
-      setInvoices(prev => prev.map(i => i.id === newInvoice.id ? {
+      setInvoices([{
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
         clientName: inv.clientName,
@@ -82,21 +81,34 @@ export default function AccountingPage() {
         issueDate: new Date(inv.issueDate).toLocaleDateString(),
         dueDate: new Date(inv.dueDate).toLocaleDateString(),
         status: inv.status
-      } : i));
+      }, ...invoices]);
     } else {
       toast.error('Грешка при запис: ' + res.error);
-      setInvoices(prev => prev.filter(i => i.id !== newInvoice.id));
     }
   };
 
-  const handleMarkPaid = (id: string) => {
+  const handleMarkPaid = async (id: string) => {
+    // Optimistic update
     setInvoices(invoices.map(inv => inv.id === id ? { ...inv, status: 'paid' } : inv));
-    toast.success('Invoice marked as paid.');
+    const { updateInvoiceStatus } = await import('./actions');
+    const res = await updateInvoiceStatus(id, 'paid');
+    if (res.success) {
+      toast.success('Фактурата е маркирана като платена.');
+    } else {
+      toast.error('Грешка: ' + res.error);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // Optimistic update
     setInvoices(invoices.filter(inv => inv.id !== id));
-    toast.info('Invoice deleted.');
+    const { deleteInvoice } = await import('./actions');
+    const res = await deleteInvoice(id);
+    if (res.success) {
+      toast.info('Фактурата е изтрита.');
+    } else {
+      toast.error('Грешка при изтриване: ' + res.error);
+    }
   };
 
   const handleExportExcel = () => {
