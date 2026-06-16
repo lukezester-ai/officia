@@ -6,8 +6,6 @@ export * from './time_entries';
 export * from './leave_requests';
 export * from './bank_accounts';
 export * from './bank_transactions';
-export * from './time_entries';
-export * from './documents';
 export * from './waitlist';
 export * from './account_plan';
 export * from './journal_entries';
