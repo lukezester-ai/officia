@@ -48,7 +48,7 @@ export default function LandingPage() {
             <Zap size={14} /> Ново: AI асистент за счетоводство
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
-            Твоят интелигентен <span className="text-primary">офис</span>
+            Officia <span className="text-primary">интелигентният офис</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
             Счетоводство, HR и документи събрани на едно място. Спести време и усилия всеки ден.
