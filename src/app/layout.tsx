@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider publishableKey="pk_test_ZnVsbC1zdGFybGluZy0xNC5jbGVyay5hY2NvdW50cy5kZXYk$">
+    <ClerkProvider publishableKey="pk_test_ZnVsbC1zdGFybGluZy0xNC5jbGVyay5hY2NvdW50cy5kZXYk">
       <html lang="bg" suppressHydrationWarning>
         <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-200 relative min-h-screen`}>
           {/* Premium Background Grid */}
