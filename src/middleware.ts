@@ -50,6 +50,7 @@ export default clerkMiddleware(async (auth, req) => {
     // Redirect if there is no locale
     const locale = getLocale(req);
     req.nextUrl.pathname = `/${locale}${pathname}`;
+    return NextResponse.redirect(req.nextUrl);
   }
 });
 
