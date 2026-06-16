@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata = {
-  title: 'Officia - Интелигентен Офис Мениджър',
-  description: 'AI-управлявана ERP система',
+  title: 'Officia',
+  description: 'AI ERP система',
 };
 
 export default function RootLayout({

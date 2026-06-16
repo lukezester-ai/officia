@@ -48,11 +48,10 @@ export default function LandingPage() {
             <Zap size={14} /> Ново: AI асистент за счетоводство
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
-            Целият ти офис.{' '}
-            <span className="text-primary">По-умен.</span>
+            Твоят интелигентен <span className="text-primary">офис</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            Счетоводство, HR, документи и AI — всичко на едно място. Спести часове работа всеки ден.
+            Счетоводство, HR и документи събрани на едно място. Спести време и усилия всеки ден.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href={`/${lang}/dashboard`} className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-primary/25 text-base">
