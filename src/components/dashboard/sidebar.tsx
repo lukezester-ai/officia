@@ -1,13 +1,14 @@
+
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, LogOut, Landmark } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export function Sidebar({ dict, lang }: { dict: any, lang: string }) {
+export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
   const pathname = usePathname();
-  
+
   const navItems = [
     { name: dict.dashboard, href: `/${lang}/dashboard`, icon: LayoutDashboard },
     { name: dict.accounting, href: `/${lang}/dashboard/accounting`, icon: FileText },
@@ -17,45 +18,57 @@ export function Sidebar({ dict, lang }: { dict: any, lang: string }) {
     { name: dict.aiAssistant, href: `/${lang}/dashboard/ai-assistant`, icon: Bot },
     { name: dict.settings, href: `/${lang}/dashboard/settings`, icon: Settings },
   ];
-  
+
   return (
-    <div className="w-64 h-screen bg-[#0F1F3D] text-white p-4 flex flex-col fixed left-0 top-0 z-50">
-      <div className="text-2xl font-bold mb-8 tracking-tight pl-2">
-        <span className="text-[#4F46E5]">O</span>fficia
+    <div
+      className="w-64 h-screen flex flex-col fixed left-0 top-0 z-50"
+      style={{ background: 'oklch(0.09 0.03 264)' }}
+    >
+      <div className="px-5 py-5 flex items-center gap-2.5">
+        <div
+          className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: 'oklch(0.51 0.22 264)' }}
+        >
+          <Sparkles size={16} className="text-white" />
+        </div>
+        <span className="text-white font-bold text-lg tracking-tight">Officia</span>
       </div>
-      
-      <nav className="space-y-2 flex-1">
+
+      <div className="mx-4 mb-4 h-px" style={{ background: 'oklch(1 0 0 / 8%)' }} />
+
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isDashboardHome = item.href === `/${lang}/dashboard`;
-          const isActive = isDashboardHome 
-            ? pathname === item.href 
+          const isActive = isDashboardHome
+            ? pathname === item.href
             : pathname === item.href || pathname.startsWith(item.href + '/');
-            
+
           return (
-            <Link 
-              key={item.href} 
-              href={item.href} 
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-sm font-medium ${
                 isActive
-                  ? 'bg-[#4F46E5] text-white shadow-md' 
-                  : 'text-gray-300 hover:bg-[#1e2e4f] hover:text-white'
+                  ? 'text-white shadow-sm'
+                  : 'text-white/55 hover:text-white/90 hover:bg-white/6'
               }`}
+              style={isActive ? { background: 'oklch(0.51 0.22 264)' } : undefined}
             >
-              <item.icon size={20} />
-              <span className="font-medium">{item.name}</span>
+              <item.icon size={17} />
+              {item.name}
             </Link>
           );
         })}
       </nav>
-      
-      <div className="mt-auto pt-4 border-t border-gray-700">
-        <div className="px-3 flex items-center justify-between py-2">
-          <div className="flex items-center gap-2">
-            <UserButton afterSignOutUrl="/" />
-            <span className="text-sm font-medium text-white">{dict.profile}</span>
-          </div>
-          <ThemeToggle />
+
+      <div className="mx-4 mb-3 h-px" style={{ background: 'oklch(1 0 0 / 8%)' }} />
+
+      <div className="px-4 pb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <UserButton afterSignOutUrl="/" />
+          <span className="text-sm font-medium text-white/70 truncate">{dict.profile}</span>
         </div>
+        <ThemeToggle />
       </div>
     </div>
   );
