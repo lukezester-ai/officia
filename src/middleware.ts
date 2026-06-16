@@ -52,7 +52,7 @@ export default clerkMiddleware(async (auth, req) => {
     req.nextUrl.pathname = `/${locale}${pathname}`;
     return NextResponse.redirect(req.nextUrl);
   }
-});
+}, { publishableKey: 'pk_test_ZnVsbC1zdGFybGluZy0xNC5jbGVyay5hY2NvdW50cy5kZXYk$' });
 
 export const config = {
   matcher: [
