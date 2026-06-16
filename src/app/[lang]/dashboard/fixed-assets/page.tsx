@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getFixedAssets, createFixedAsset, writeOffAsset, calcCurrentBookValue, calcDepreciationSchedule } from './actions';
+import { getFixedAssets, createFixedAsset, writeOffAsset } from './actions';
+import { calcCurrentBookValue, calcDepreciationSchedule } from './utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
