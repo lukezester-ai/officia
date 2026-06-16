@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User } from 'lucide-react';
+import { askAssistant } from '@/components/ai/actions';
 
 type Message = {
   id: string;
@@ -15,7 +16,7 @@ type Message = {
 const INITIAL_MESSAGE: Message = {
   id: '1',
   role: 'ai',
-  content: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури, молби за отпуск или да извлека данни от документи. Как мога да помогна днес?',
+  content: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури, молби за отпуск или да извлека данни за заплати. Как мога да помогна днес?',
 };
 
 export default function AIAssistantPage() {
@@ -31,7 +32,7 @@ export default function AIAssistantPage() {
     }
   }, [messages, isTyping]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
 
@@ -45,32 +46,20 @@ export default function AIAssistantPage() {
     setPrompt('');
     setIsTyping(true);
 
-    // Mock AI response logic
-    setTimeout(() => {
-      const text = userMessage.content.toLowerCase();
-      let aiResponse = 'Извинете, все още се уча. Можете ли да перифразирате въпроса си свързан със счетоводството или кадрите?';
+    const responseText = await askAssistant(userMessage.content);
 
-      if (text.includes('фактур') || text.includes('неплатен')) {
-        aiResponse = 'В момента имате **2,050.50 лв. неплатени фактури** (1 бр. очакваща плащане от DevSolutions BG).\n\nЗа този месец успешно са получени 2,400.00 лв. Искате ли да генерирам напомнителен имейл?';
-      } else if (text.includes('отпуск') || text.includes('почивка')) {
-        aiResponse = 'Имате 1 нова молба за отпуск, която чака вашето одобрение:\n\n- **Мария Георгиева** (HR Manager)\n- Период: 20 Юни - 25 Юни (Annual Leave)\n\nМожете да я одобрите от секция "Human Resources".';
-      } else if (text.includes('заплат')) {
-        aiResponse = 'Месечната ведомост за заплати е готова. Общата сума за изплащане на активните служители този месец е **10,500.00 BGN**.';
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), role: 'ai', content: aiResponse },
-      ]);
-      setIsTyping(false);
-    }, 1500);
+    setMessages((prev) => [
+      ...prev,
+      { id: (Date.now() + 1).toString(), role: 'ai', content: responseText },
+    ]);
+    setIsTyping(false);
   };
 
   return (
     <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
       <div className="flex items-center gap-3">
         <Bot className="h-8 w-8 text-[#4F46E5]" />
-        <h1 className="text-3xl font-bold tracking-tight text-[#0F1F3D]">AI Assistant</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-[#0F1F3D]">AI Асистент</h1>
       </div>
       
       <Card className="flex-1 flex flex-col overflow-hidden shadow-sm border-gray-100">
@@ -91,7 +80,9 @@ export default function AIAssistantPage() {
                       ? 'bg-[#4F46E5] text-white rounded-tr-sm' 
                       : 'bg-gray-50 text-gray-800 rounded-tl-sm border border-gray-100'
                   }`}>
-                    {msg.content}
+                    {msg.content.split('**').map((part, i) => 
+                      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                    )}
                   </div>
 
                   {msg.role === 'user' && (
@@ -124,7 +115,7 @@ export default function AIAssistantPage() {
               onChange={(e) => setPrompt(e.target.value)}
               className="flex-1 h-12 shadow-sm rounded-full px-6 bg-slate-50 focus-visible:ring-[#4F46E5]"
             />
-            <Button type="submit" disabled={isTyping} className="h-12 w-12 rounded-full p-0 bg-[#4F46E5] hover:bg-[#4338CA] shrink-0 shadow-md">
+            <Button type="submit" disabled={isTyping || !prompt.trim()} className="h-12 w-12 rounded-full p-0 bg-[#4F46E5] hover:bg-[#4338CA] shrink-0 shadow-md">
               <Send size={18} className="ml-[-2px]" />
             </Button>
           </form>

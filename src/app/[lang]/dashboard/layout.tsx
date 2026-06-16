@@ -3,6 +3,7 @@ import { getDictionary, Locale } from '@/lib/get-dictionary';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { UserButton } from '@clerk/nextjs';
 import { Bell, Search } from 'lucide-react';
+import { AiWidget } from '@/components/ai/ai-widget';
 
 export default async function DashboardLayout({
   children,
@@ -15,7 +16,7 @@ export default async function DashboardLayout({
   const dict = await getDictionary(lang as Locale);
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-muted/40 relative">
       <Sidebar dict={dict.sidebar} lang={lang} />
       <div className="pl-64 flex flex-col min-h-screen w-full">
         <header className="h-16 bg-background border-b flex items-center justify-between px-6 sticky top-0 z-10">
@@ -43,6 +44,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <AiWidget />
     </div>
   );
 }
