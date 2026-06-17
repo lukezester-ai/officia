@@ -84,7 +84,8 @@
       "ai": "AI Асистент",
       "billing": "Абонамент",
       "reports": "Справки",
-      "signOut": "Изход"
+      "signOut": "Изход",
+      "accounting": "Счетоводство"
     },
     "header": {
       "searchPlaceholder": "Търсене на фактури, документи или служители..."
@@ -144,5 +145,17 @@
     "enterprise": "Ентърпрайз",
     "monthly": "месечно",
     "subscribe": "Абонирай се"
+  },
+  "Accounting": {
+    "title": "Счетоводен workspace",
+    "subtitle": "Фактури, разходи и финансови процеси на едно място.",
+    "back": "Назад към dashboard",
+    "invoicesTitle": "Фактури",
+    "invoicesDesc": "Създаване на фактури, ДДС изчисления, preview и PDF export.",
+    "invoicesCta": "Отвори фактури",
+    "expensesTitle": "Разходи",
+    "expensesDesc": "Модулът за разходи и одобрения е подготвен като следващ счетоводен слой.",
+    "expensesCta": "Очаквайте скоро",
+    "status": "Счетоводен център"
   }
 }

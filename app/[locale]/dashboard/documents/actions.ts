@@ -1,16 +1,22 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { bootstrapWorkspace } from "@/lib/workspaces/bootstrap";
 
+function localizedDocumentsPath(locale: string, status: string) {
+  return `/${locale}/dashboard/documents?created=${status}`;
+}
+
 export async function createDocumentAction(formData: FormData) {
+  const locale = await getLocale();
   const workspace = await bootstrapWorkspace();
 
   if (!db || workspace.status !== "ready" || !workspace.workspaceId) {
-    redirect("/dashboard/documents?created=database-not-ready");
+    redirect(localizedDocumentsPath(locale, "database-not-ready"));
   }
 
   const fileName = String(formData.get("fileName") || "").trim();
@@ -19,7 +25,7 @@ export async function createDocumentAction(formData: FormData) {
   const aiSummary = String(formData.get("aiSummary") || "").trim() || null;
 
   if (!fileName) {
-    redirect("/dashboard/documents?created=missing-fields");
+    redirect(localizedDocumentsPath(locale, "missing-fields"));
   }
 
   try {
@@ -32,10 +38,10 @@ export async function createDocumentAction(formData: FormData) {
       aiSummary,
     });
 
-    revalidatePath("/dashboard/documents");
-    redirect("/dashboard/documents?created=success");
+    revalidatePath(`/${locale}/dashboard/documents`);
+    redirect(localizedDocumentsPath(locale, "success"));
   } catch (error) {
     console.error("Failed to create document:", error);
-    redirect("/dashboard/documents?created=error");
+    redirect(localizedDocumentsPath(locale, "error"));
   }
 }

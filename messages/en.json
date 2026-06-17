@@ -84,7 +84,8 @@
       "ai": "AI Assistant",
       "billing": "Billing",
       "reports": "Reports",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "accounting": "Accounting"
     },
     "header": {
       "searchPlaceholder": "Search invoices, documents, or employees..."
@@ -144,5 +145,17 @@
     "enterprise": "Enterprise",
     "monthly": "per month",
     "subscribe": "Subscribe"
+  },
+  "Accounting": {
+    "title": "Accounting workspace",
+    "subtitle": "Invoices, expenses and financial workflows in one place.",
+    "back": "Back to dashboard",
+    "invoicesTitle": "Invoices",
+    "invoicesDesc": "Create invoices, calculate VAT, preview and export PDF documents.",
+    "invoicesCta": "Open invoices",
+    "expensesTitle": "Expenses",
+    "expensesDesc": "Expense capture and approval workflow is prepared as the next accounting layer.",
+    "expensesCta": "Coming soon",
+    "status": "Accounting hub"
   }
 }

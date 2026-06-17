@@ -1,4 +1,4 @@
-import { UserButton } from "@clerk/nextjs";
+﻿import { UserButton } from "@clerk/nextjs";
 import { Link } from "@/i18n/routing";
 import { bootstrapWorkspace } from "@/lib/workspaces/bootstrap";
 import { getTranslations } from "next-intl/server";
@@ -30,6 +30,7 @@ export default async function DashboardPage() {
 
   const navItems = [
     { label: t("nav.overview"), icon: LayoutDashboard, active: true, href: "/dashboard" },
+    { label: t("nav.accounting"), icon: FileText, href: "/dashboard/accounting" },
     { label: t("nav.invoices"), icon: ReceiptText, href: "/dashboard/invoices" },
     { label: t("nav.documents"), icon: FolderOpen, href: "/dashboard/documents" },
     { label: t("nav.time"), icon: Clock3, href: "/dashboard/time" },
@@ -258,3 +259,4 @@ export default async function DashboardPage() {
     </main>
   );
 }
+

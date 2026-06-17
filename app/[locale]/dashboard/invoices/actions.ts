@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { db } from "@/lib/db";
 import { invoiceLineItems, invoices } from "@/lib/db/schema";
 import { bootstrapWorkspace } from "@/lib/workspaces/bootstrap";
@@ -15,6 +16,10 @@ type DraftLineItem = {
   tax: number;
   total: number;
 };
+
+function localizedInvoicePath(locale: string, status: string) {
+  return `/${locale}/dashboard/invoices?created=${status}`;
+}
 
 function parsePositiveNumber(value: FormDataEntryValue | null, fallback = 0) {
   const amount = Number(String(value || "").replace(",", "."));
@@ -54,10 +59,11 @@ function parseLineItems(formData: FormData): DraftLineItem[] {
 }
 
 export async function createInvoiceAction(formData: FormData) {
+  const locale = await getLocale();
   const workspace = await bootstrapWorkspace();
 
   if (!db || workspace.status !== "ready" || !workspace.workspaceId) {
-    redirect("/dashboard/invoices?created=database-not-ready");
+    redirect(localizedInvoicePath(locale, "database-not-ready"));
   }
 
   const workspaceId = workspace.workspaceId;
@@ -69,7 +75,7 @@ export async function createInvoiceAction(formData: FormData) {
   const items = parseLineItems(formData);
 
   if (!invoiceNumber || !clientName || items.length === 0) {
-    redirect("/dashboard/invoices?created=missing-fields");
+    redirect(localizedInvoicePath(locale, "missing-fields"));
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
@@ -111,11 +117,10 @@ export async function createInvoiceAction(formData: FormData) {
       );
     });
 
-    revalidatePath("/dashboard/invoices");
-    redirect("/dashboard/invoices?created=success");
+    revalidatePath(`/${locale}/dashboard/invoices`);
+    redirect(localizedInvoicePath(locale, "success"));
   } catch (error) {
     console.error("Failed to create invoice:", error);
-    redirect("/dashboard/invoices?created=error");
+    redirect(localizedInvoicePath(locale, "error"));
   }
 }
-
