@@ -31,22 +31,27 @@ export default function CounterpartiesPage() {
     c.vatNumber?.toLowerCase().includes(search.toLowerCase())
   ), [all, search]);
 
-  const customers = filtered.filter(c => c.type === 'customer' || c.type === 'both');
+  const clients = filtered.filter(c => c.type === 'client' || c.type === 'both');
   const suppliers = filtered.filter(c => c.type === 'supplier' || c.type === 'both');
   const active = all.filter(c => c.isActive !== false);
 
   const handleSave = async (data: any) => {
-    let res;
-    if (editing) res = await updateCounterparty(editing.id, data);
-    else res = await createCounterparty(data);
-    if (res.success) { toast.success(editing ? 'Обновено!' : 'Добавено!'); setDialogOpen(false); setEditing(null); load(); }
-    else toast.error('Грешка');
+    const res = editing ? await updateCounterparty(editing.id, data) : await createCounterparty(data);
+    if (res.success) {
+      toast.success(editing ? 'Обновено!' : 'Добавено!');
+      setDialogOpen(false);
+      setEditing(null);
+      load();
+    } else {
+      toast.error('Грешка при запис');
+    }
   };
 
   const handleDeactivate = async (id: string) => {
-    if (!confirm('Деактивиране?')) return;
+    if (!confirm('Деактивиране на контрагента?')) return;
     const res = await deactivateCounterparty(id);
-    if (res.success) { toast.success('Деактивирано'); load(); } else toast.error('Грешка');
+    if (res.success) { toast.success('Деактивирано'); load(); }
+    else toast.error('Грешка');
   };
 
   return (
@@ -66,14 +71,14 @@ export default function CounterpartiesPage() {
           <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
           <div className="relative flex items-center gap-3">
             <div className="bg-white/20 rounded-xl p-2.5"><Users size={18} /></div>
-            <div><p className="text-sm text-indigo-100">Общо контрагенти</p><p className="text-2xl font-bold">{active.length}</p></div>
+            <div><p className="text-sm text-indigo-100">Общо активни</p><p className="text-2xl font-bold">{active.length}</p></div>
           </div>
         </div>
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-lg shadow-emerald-200/60 dark:shadow-emerald-900/40">
           <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
           <div className="relative flex items-center gap-3">
             <div className="bg-white/20 rounded-xl p-2.5"><Users size={18} /></div>
-            <div><p className="text-sm text-emerald-100">Клиенти</p><p className="text-2xl font-bold">{customers.length}</p></div>
+            <div><p className="text-sm text-emerald-100">Клиенти</p><p className="text-2xl font-bold">{clients.length}</p></div>
           </div>
         </div>
         <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl p-5 shadow-lg shadow-amber-200/60 dark:shadow-amber-900/40">
@@ -94,14 +99,14 @@ export default function CounterpartiesPage() {
           <Tabs defaultValue="all">
             <TabsList className="mb-4">
               <TabsTrigger value="all">Всички ({filtered.length})</TabsTrigger>
-              <TabsTrigger value="customers">Клиенти ({customers.length})</TabsTrigger>
+              <TabsTrigger value="clients">Клиенти ({clients.length})</TabsTrigger>
               <TabsTrigger value="suppliers">Доставчици ({suppliers.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="all">
               <CounterpartyTable data={filtered} loading={loading} onEdit={c => { setEditing(c); setDialogOpen(true); }} onDeactivate={handleDeactivate} />
             </TabsContent>
-            <TabsContent value="customers">
-              <CounterpartyTable data={customers} loading={loading} onEdit={c => { setEditing(c); setDialogOpen(true); }} onDeactivate={handleDeactivate} />
+            <TabsContent value="clients">
+              <CounterpartyTable data={clients} loading={loading} onEdit={c => { setEditing(c); setDialogOpen(true); }} onDeactivate={handleDeactivate} />
             </TabsContent>
             <TabsContent value="suppliers">
               <CounterpartyTable data={suppliers} loading={loading} onEdit={c => { setEditing(c); setDialogOpen(true); }} onDeactivate={handleDeactivate} />
