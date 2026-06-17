@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2 } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2, UsersRound } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -17,6 +17,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: dict.reports, href: `/${lang}/dashboard/accounting/reports`, icon: BarChart3 },
     { name: dict.vatJournals, href: `/${lang}/dashboard/vat-journals`, icon: Receipt },
     { name: dict.fixedAssets, href: `/${lang}/dashboard/fixed-assets`, icon: Building2 },
+    { name: dict.counterparties, href: `/${lang}/dashboard/counterparties`, icon: UsersRound },
     { name: dict.aiAssistant, href: `/${lang}/dashboard/ai-assistant`, icon: Bot },
     { name: dict.settings, href: `/${lang}/dashboard/settings`, icon: Settings },
   ];
