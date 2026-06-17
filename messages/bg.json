@@ -1,0 +1,148 @@
+{
+  "Home": {
+    "nav": {
+      "modules": "Модули",
+      "dashboard": "Dashboard",
+      "pricing": "Цени",
+      "stack": "Stack",
+      "waitlist": "Waitlist",
+      "signIn": "Вход",
+      "joinWaitlist": "Запиши се"
+    },
+    "hero": {
+      "badge": "Създадено за счетоводители и офис екипи",
+      "title": "Вашият офис.",
+      "titleHighlight": "По-умен.",
+      "subtitle": "Officia е modern SaaS платформа за счетоводители и офис служители — фактури, документи, кадри, AI асистент и бизнес dashboard в един професионален workspace.",
+      "ctaWaitlist": "Запиши се за early access",
+      "ctaDashboard": "Виж dashboard preview"
+    },
+    "benefits": {
+      "b1": "AI генерира фактури и офис документи",
+      "b2": "Чете PDF/DOCX и извлича ключови данни",
+      "b3": "Отговаря на въпроси по фирмени документи",
+      "b4": "Следи срокове, плащания и административни задачи"
+    },
+    "dashboardPreview": {
+      "label": "Officia dashboard",
+      "title": "Обзор Юни",
+      "badge": "AI активен",
+      "stat1Label": "Фактури",
+      "stat2Label": "Прочетени док.",
+      "stat3Label": "Задачи",
+      "aiTitle": "Claude асистент",
+      "aiQuote": "„Подготвих фактурата, открих липсващ IBAN в договора и маркирах 3 задачи със срок тази седмица.“",
+      "task1": "ДДС отчетът е готов за преглед",
+      "task2": "2 договора очакват HR одобрение",
+      "task3": "Неплатена фактура: ACME Logistics"
+    },
+    "modules": {
+      "label": "Модули v1.0",
+      "title": "Целият ви офис. На едно място.",
+      "subtitle": "Първата версия е фокусирана върху реалната ежедневна работа: документи, фактури, служители, задачи и AI помощник.",
+      "m1Title": "Счетоводство",
+      "m1Desc": "Фактури, разходи, ДДС, плащания и месечни справки в един чист workspace.",
+      "m2Title": "Кадри",
+      "m2Desc": "Служители, договори, отпуски, досиета и напомняния за срокове.",
+      "m3Title": "Документи",
+      "m3Desc": "Архив, AI четене, извличане на данни и бързо намиране на важни файлове.",
+      "m4Title": "AI Асистент",
+      "m4Desc": "Claude-powered помощник за въпроси, документи, фактури и офис workflows.",
+      "m5Title": "Dashboard",
+      "m5Desc": "Бизнес обзор за приходи, разходи, задачи, документи и оперативни рискове.",
+      "m6Title": "Сигурност",
+      "m6Desc": "Role-based достъп, audit trail и enterprise-ready основа за екипи."
+    },
+    "stack": {
+      "label": "2026 SaaS stack",
+      "title": "Модерна, мащабируема, AI-first.",
+      "subtitle": "Officia започва с production-ready архитектура: Next.js 15, Supabase, Drizzle, Claude, shadcn/ui, Stripe, Resend, Clerk и Vercel."
+    },
+    "waitlistSection": {
+      "title": "Присъединете се към списъка на чакащите",
+      "subtitle": "Запишете се за early access. Формата вече пази заявките в Supabase waitlist таблица."
+    },
+    "footer": {
+      "copy": "© 2026 Officia. Your office. Smarter.",
+      "tagline": "European AI SaaS for accountants and office teams."
+    }
+  },
+  "WaitlistForm": {
+    "emailPlaceholder": "Вашият email",
+    "buttonIdle": "Запиши се",
+    "buttonLoading": "Записване...",
+    "successMessage": "Успешно се записахте за early access!",
+    "errorMessage": "Възникна грешка. Моля, опитайте отново."
+  },
+  "Dashboard": {
+    "nav": {
+      "overview": "Обзор",
+      "invoices": "Фактури",
+      "documents": "Документи",
+      "time": "Време",
+      "hr": "Кадри",
+      "ai": "AI Асистент",
+      "billing": "Абонамент",
+      "reports": "Справки",
+      "signOut": "Изход"
+    },
+    "header": {
+      "searchPlaceholder": "Търсене на фактури, документи или служители..."
+    },
+    "overview": {
+      "greeting": "Добро утро",
+      "badge": "Изглед",
+      "stat1Label": "Приходи",
+      "stat2Label": "Фактури",
+      "stat3Label": "Време",
+      "stat4Label": "Документи",
+      "recentInvoicesTitle": "Скорошни фактури",
+      "recentInvoicesSubtitle": "Очакващи плащания и наскоро изпратени фактури.",
+      "aiTitle": "AI Команден център",
+      "aiSubtitle": "Говорете с Claude за вашите данни.",
+      "aiInputPlaceholder": "Попитайте за фактури, служители или документи...",
+      "aiAction1": "Генерирай фактура за ACME",
+      "aiAction2": "Резюмирай новия договор",
+      "aiAction3": "Покажи ми неплатените фактури"
+    }
+  },
+  "Invoices": {
+    "title": "Фактури",
+    "subtitle": "Управлявайте фактурите си",
+    "stats": {
+      "total": "Общо фактури",
+      "unpaid": "Неплатени",
+      "paid": "Платени"
+    },
+    "createInvoice": "Създай фактура",
+    "clientName": "Клиент",
+    "amount": "Сума",
+    "status": "Статус",
+    "date": "Дата",
+    "statuses": {
+      "paid": "Платена",
+      "pending": "Очакваща",
+      "overdue": "Просрочена"
+    }
+  },
+  "Time": {
+    "title": "Отчитане на време",
+    "subtitle": "Следете работното време и присъствието",
+    "clockIn": "Начало на работа",
+    "clockOut": "Край на работа",
+    "break": "Почивка",
+    "recentEntries": "Скорошни записи",
+    "employee": "Служител",
+    "action": "Действие",
+    "time": "Време"
+  },
+  "Pricing": {
+    "title": "Абонаментни планове",
+    "subtitle": "Изберете подходящия план за вашия екип",
+    "starter": "Старт",
+    "pro": "Про",
+    "enterprise": "Ентърпрайз",
+    "monthly": "месечно",
+    "subscribe": "Абонирай се"
+  }
+}

@@ -1,0 +1,45 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.16), transparent 34rem),
+    radial-gradient(circle at top right, rgba(15, 31, 61, 0.18), transparent 30rem),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 52%, #eef2ff 100%);
+  color: var(--foreground);
+}
+
+::selection {
+  background: rgba(79, 70, 229, 0.18);
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .invoice-sheet {
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  @page {
+    margin: 16mm;
+  }
+}

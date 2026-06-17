@@ -1,0 +1,148 @@
+{
+  "Home": {
+    "nav": {
+      "modules": "Modules",
+      "dashboard": "Dashboard",
+      "pricing": "Pricing",
+      "stack": "Stack",
+      "waitlist": "Waitlist",
+      "signIn": "Sign in",
+      "joinWaitlist": "Join waitlist"
+    },
+    "hero": {
+      "badge": "Built for accountants & office teams",
+      "title": "Your office.",
+      "titleHighlight": "Smarter.",
+      "subtitle": "Officia is a modern SaaS platform for accountants and office workers — invoices, documents, HR, AI assistant, and a business dashboard in one professional workspace.",
+      "ctaWaitlist": "Join for early access",
+      "ctaDashboard": "View dashboard preview"
+    },
+    "benefits": {
+      "b1": "AI generates invoices and office documents",
+      "b2": "Reads PDF/DOCX and extracts key data",
+      "b3": "Answers questions based on company docs",
+      "b4": "Tracks deadlines, payments, and admin tasks"
+    },
+    "dashboardPreview": {
+      "label": "Officia dashboard",
+      "title": "June overview",
+      "badge": "AI active",
+      "stat1Label": "Invoices",
+      "stat2Label": "Docs read",
+      "stat3Label": "Tasks",
+      "aiTitle": "Claude assistant",
+      "aiQuote": "\"I prepared the invoice, found a missing IBAN in the contract, and highlighted 3 tasks due this week.\"",
+      "task1": "VAT report ready for review",
+      "task2": "2 contracts need HR approval",
+      "task3": "Unpaid invoice: ACME Logistics"
+    },
+    "modules": {
+      "label": "Modules v1.0",
+      "title": "All your office. One place.",
+      "subtitle": "The first version focuses on real daily work: documents, invoices, employees, tasks, and an AI assistant.",
+      "m1Title": "Accounting",
+      "m1Desc": "Invoices, expenses, VAT, payments, and monthly reports in one clean workspace.",
+      "m2Title": "HR",
+      "m2Desc": "Employees, contracts, leaves, files, and deadline reminders.",
+      "m3Title": "Documents",
+      "m3Desc": "Archive, AI reading, data extraction, and quick search for important files.",
+      "m4Title": "AI Assistant",
+      "m4Desc": "Claude-powered assistant for questions, documents, invoices, and office workflows.",
+      "m5Title": "Dashboard",
+      "m5Desc": "Business overview for revenue, expenses, tasks, documents, and operational risks.",
+      "m6Title": "Security",
+      "m6Desc": "Role-based access, audit trail, and enterprise-ready foundation for teams."
+    },
+    "stack": {
+      "label": "2026 SaaS stack",
+      "title": "Modern, scalable, AI-first.",
+      "subtitle": "Officia starts with a production-ready architecture: Next.js 15, Supabase, Drizzle, Claude, shadcn/ui, Stripe, Resend, Clerk, and Vercel."
+    },
+    "waitlistSection": {
+      "title": "Join the Officia waitlist",
+      "subtitle": "Sign up for early access. The form already saves requests in a Supabase waitlist table."
+    },
+    "footer": {
+      "copy": "© 2026 Officia. Your office. Smarter.",
+      "tagline": "European AI SaaS for accountants and office teams."
+    }
+  },
+  "WaitlistForm": {
+    "emailPlaceholder": "Your email address",
+    "buttonIdle": "Join waitlist",
+    "buttonLoading": "Joining...",
+    "successMessage": "Successfully joined the waitlist!",
+    "errorMessage": "An error occurred. Please try again."
+  },
+  "Dashboard": {
+    "nav": {
+      "overview": "Overview",
+      "invoices": "Invoices",
+      "documents": "Documents",
+      "time": "Time",
+      "hr": "HR",
+      "ai": "AI Assistant",
+      "billing": "Billing",
+      "reports": "Reports",
+      "signOut": "Sign out"
+    },
+    "header": {
+      "searchPlaceholder": "Search invoices, documents, or employees..."
+    },
+    "overview": {
+      "greeting": "Good morning",
+      "badge": "Preview",
+      "stat1Label": "Revenue",
+      "stat2Label": "Invoices",
+      "stat3Label": "Time",
+      "stat4Label": "Documents",
+      "recentInvoicesTitle": "Recent invoices",
+      "recentInvoicesSubtitle": "Pending payments and recently sent invoices.",
+      "aiTitle": "AI Command center",
+      "aiSubtitle": "Chat with Claude about your data.",
+      "aiInputPlaceholder": "Ask about invoices, employees, or documents...",
+      "aiAction1": "Generate invoice for ACME",
+      "aiAction2": "Summarize new contract",
+      "aiAction3": "Show unpaid invoices"
+    }
+  },
+  "Invoices": {
+    "title": "Invoices",
+    "subtitle": "Manage your invoices",
+    "stats": {
+      "total": "Total Invoices",
+      "unpaid": "Unpaid",
+      "paid": "Paid"
+    },
+    "createInvoice": "Create Invoice",
+    "clientName": "Client",
+    "amount": "Amount",
+    "status": "Status",
+    "date": "Date",
+    "statuses": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue"
+    }
+  },
+  "Time": {
+    "title": "Time Tracking",
+    "subtitle": "Track work hours and attendance",
+    "clockIn": "Clock In",
+    "clockOut": "Clock Out",
+    "break": "Break",
+    "recentEntries": "Recent Entries",
+    "employee": "Employee",
+    "action": "Action",
+    "time": "Time"
+  },
+  "Pricing": {
+    "title": "Subscription Plans",
+    "subtitle": "Choose the right plan for your team",
+    "starter": "Starter",
+    "pro": "Pro",
+    "enterprise": "Enterprise",
+    "monthly": "per month",
+    "subscribe": "Subscribe"
+  }
+}
