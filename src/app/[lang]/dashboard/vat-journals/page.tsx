@@ -1,4 +1,4 @@
-'use client';
+                  'use client';
 import { useState, useEffect } from 'react';
 import { getVatJournals, createVatJournal, deleteVatJournal } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,13 +17,21 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function AddEntryDialog({ type, year, month, onAdd }: { type: 'sales'|'purchases'; year: number; month: number; onAdd: () => void }) {
+function AddEntryDialog({ type, year, month, onAdd }: {
+  type: 'sales'|'purchases'; year: number; month: number; onAdd: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    documentNumber: '', documentDate: new Date().toISOString().split('T')[0],
-    counterpartyName: '', counterpartyVat: '', netAmount: '', vatRate: '20', vatAmount: '',
+    documentNumber: '',
+    documentDate: new Date().toISOString().split('T')[0],
+    counterpartyName: '',
+    counterpartyVat: '',
+    netAmount: '',
+    vatRate: '20',
+    vatAmount: '',
   });
+
   const set = (f: string, v: string) => {
     const next = { ...form, [f]: v };
     if (f === 'netAmount' || f === 'vatRate') {
@@ -40,14 +48,25 @@ function AddEntryDialog({ type, year, month, onAdd }: { type: 'sales'|'purchases
     if (!form.netAmount || parseFloat(form.netAmount) <= 0) { toast.error('Въведи данъчна основа'); return; }
     setLoading(true);
     const res = await createVatJournal({
-      type, periodYear: year, periodMonth: month,
-      documentNumber: form.documentNumber, documentDate: form.documentDate,
-      counterpartyName: form.counterpartyName, counterpartyVat: form.counterpartyVat,
-      netAmount: parseFloat(form.netAmount), vatRate: parseFloat(form.vatRate),
+      type,
+      periodYear: year,
+      periodMonth: month,
+      documentNumber: form.documentNumber,
+      documentDate: form.documentDate,
+      counterpartyName: form.counterpartyName,
+      counterpartyVat: form.counterpartyVat,
+      netAmount: parseFloat(form.netAmount),
+      vatRate: parseFloat(form.vatRate),
       vatAmount: parseFloat(form.vatAmount) || 0,
     });
-    if (res.success) { toast.success('Записано!'); onAdd(); setOpen(false); setForm({ documentNumber: '', documentDate: new Date().toISOString().split('T')[0], counterpartyName: '', counterpartyVat: '', netAmount: '', vatRate: '20', vatAmount: '' }); }
-    else toast.error('Грешка: ' + res.error);
+    if (res.success) {
+      toast.success('Записано!');
+      onAdd();
+      setOpen(false);
+      setForm({ documentNumber: '', documentDate: new Date().toISOString().split('T')[0], counterpartyName: '', counterpartyVat: '', netAmount: '', vatRate: '20', vatAmount: '' });
+    } else {
+      toast.error('Грешка: ' + res.error);
+    }
     setLoading(false);
   };
 
@@ -57,33 +76,63 @@ function AddEntryDialog({ type, year, month, onAdd }: { type: 'sales'|'purchases
         <Button size="sm" className="gap-1.5"><Plus size={14} /> Нов запис</Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{type === 'sales' ? 'Дневник продажби' : 'Дневник покупки'} — нов запис</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>
+            {type === 'sales' ? 'Дневник продажби' : 'Дневник покупки'} — нов запис
+          </DialogTitle>
+        </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><label className="text-sm font-medium">Номер документ *</label><Input placeholder="0000000001" value={form.documentNumber} onChange={e => set('documentNumber', e.target.value)} /></div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">Дата</label><Input type="date" value={form.documentDate} onChange={e => set('documentDate', e.target.value)} /></div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Номер документ *</label>
+              <Input placeholder="0000000001" value={form.documentNumber} onChange={e => set('documentNumber', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Дата</label>
+              <Input type="date" value={form.documentDate} onChange={e => set('documentDate', e.target.value)} />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><label className="text-sm font-medium">Контрагент *</label><Input placeholder="ЕООД / АД" value={form.counterpartyName} onChange={e => set('counterpartyName', e.target.value)} /></div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">ЕИК / ДДС №</label><Input placeholder="BG123456789" value={form.counterpartyVat} onChange={e => set('counterpartyVat', e.target.value)} /></div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Контрагент *</label>
+              <Input placeholder="ЕООД / АД" value={form.counterpartyName} onChange={e => set('counterpartyName', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">ЕИК / ДДС №</label>
+              <Input placeholder="BG123456789" value={form.counterpartyVat} onChange={e => set('counterpartyVat', e.target.value)} />
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5"><label className="text-sm font-medium">Дан. основа *</label><Input type="number" min="0" step="0.01" placeholder="0.00" value={form.netAmount} onChange={e => set('netAmount', e.target.value)} /></div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Дан. основа *</label>
+              <Input type="number" min="0" step="0.01" placeholder="0.00" value={form.netAmount} onChange={e => set('netAmount', e.target.value)} />
+            </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">ДДС %</label>
-              <select className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm outline-none" value={form.vatRate} onChange={e => set('vatRate', e.target.value)}>
+              <select
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                value={form.vatRate}
+                onChange={e => set('vatRate', e.target.value)}
+              >
                 {VAT_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
               </select>
             </div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">ДДС сума</label><Input type="number" min="0" step="0.01" value={form.vatAmount} onChange={e => set('vatAmount', e.target.value)} /></div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">ДДС сума</label>
+              <Input type="number" min="0" step="0.01" value={form.vatAmount} onChange={e => set('vatAmount', e.target.value)} />
+            </div>
           </div>
           <div className="rounded-lg bg-muted/50 p-3 text-sm flex justify-between">
             <span className="text-muted-foreground">Сума с ДДС:</span>
-            <span className="font-mono font-semibold">{fmt((parseFloat(form.netAmount)||0) + (parseFloat(form.vatAmount)||0))} лв.</span>
+            <span className="font-mono font-semibold">
+              {fmt((parseFloat(form.netAmount)||0) + (parseFloat(form.vatAmount)||0))} лв.
+            </span>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>Отказ</Button>
-            <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Записване...' : 'Добави'}</Button>
+            <Button onClick={handleSubmit} disabled={loading}>
+              {loading ? 'Записване...' : 'Добави'}
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -106,8 +155,12 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
 
   const handleDelete = async (id: string) => {
     const res = await deleteVatJournal(id);
-    if (res.success) { setEntries(p => p.filter(e => e.id !== id)); toast.success('Записът е изтрит.'); }
-    else toast.error('Грешка: ' + res.error);
+    if (res.success) {
+      setEntries(p => p.filter(e => e.id !== id));
+      toast.success('Записът е изтрит.');
+    } else {
+      toast.error('Грешка: ' + res.error);
+    }
   };
 
   const totalNet = entries.reduce((s, e) => s + parseFloat(e.netAmount||'0'), 0);
@@ -117,17 +170,28 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex gap-4 text-sm">
-          <span className="text-muted-foreground">Данъчна основа: <span className="font-mono font-semibold text-foreground">{fmt(totalNet)} лв.</span></span>
-          <span className="text-muted-foreground">ДДС: <span className={`font-mono font-semibold ${type === 'sales' ? 'text-indigo-600' : 'text-amber-600'}`}>{fmt(totalVat)} лв.</span></span>
+          <span className="text-muted-foreground">
+            Данъчна основа:{' '}
+            <span className="font-mono font-semibold text-foreground">{fmt(totalNet)} лв.</span>
+          </span>
+          <span className="text-muted-foreground">
+            ДДС:{' '}
+            <span className={`font-mono font-semibold ${type === 'sales' ? 'text-indigo-600' : 'text-amber-600'}`}>
+              {fmt(totalVat)} лв.
+            </span>
+          </span>
         </div>
         <AddEntryDialog type={type} year={year} month={month} onAdd={load} />
       </div>
+
       {loading ? (
         <p className="text-sm text-muted-foreground py-8 text-center">Зареждане...</p>
       ) : entries.length === 0 ? (
         <div className="text-center py-12">
           <Receipt size={36} className="mx-auto text-muted-foreground/30 mb-2" />
-          <p className="text-sm text-muted-foreground">Няма записи за {MONTHS[month-1]} {year}.</p>
+          <p className="text-sm text-muted-foreground">
+            Няма записи за {MONTHS[month-1]} {year}.
+          </p>
         </div>
       ) : (
         <Table>
@@ -151,12 +215,106 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
               return (
                 <TableRow key={e.id} className="group">
                   <TableCell className="font-mono text-sm">{e.documentNumber}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{e.documentDate ? new Date(e.documentDate).toLocaleDateString('bg-BG') : '—'}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {e.documentDate ? new Date(e.documentDate).toLocaleDateString('bg-BG') : '—'}
+                  </TableCell>
                   <TableCell className="font-medium">{e.counterpartyName}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm font-mono">{e.counterpartyVat || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm font-mono">
+                    {e.counterpartyVat || '—'}
+                  </TableCell>
                   <TableCell className="text-right font-mono">{fmt(net)}</TableCell>
                   <TableCell className="text-right text-muted-foreground">{e.vatRate || 20}%</TableCell>
-                  <TableCell className={`text-right font-mono ${type === 'sales' ? 'text-indigo-600' : 'text-amber-600'}`}>{fmt(vat)}</TableCell>
+                  <TableCell className={`text-right font-mono ${type === 'sales' ? 'text-indigo-600' : 'text-amber-600'}`}>
+                    {fmt(vat)}
+                  </TableCell>
                   <TableCell className="text-right font-mono font-semibold">{fmt(net + vat)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 text-rose
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 text-rose-500 hover:bg-rose-50"
+                      onClick={() => handleDelete(e.id)}
+                    >
+                      <Trash2 size={13} />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  );
+}
+
+export default function VatJournalsPage() {
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">ДДС Дневници</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Дневник за продажби и покупки по ЗДДС.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+            value={month}
+            onChange={e => setMonth(parseInt(e.target.value))}
+          >
+            {MONTHS.map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
+          </select>
+          <select
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+            value={year}
+            onChange={e => setYear(parseInt(e.target.value))}
+          >
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <Tabs defaultValue="sales">
+        <TabsList className="mb-4">
+          <TabsTrigger value="sales" className="gap-1.5">
+            <TrendingUp size={14} /> Продажби
+          </TabsTrigger>
+          <TabsTrigger value="purchases" className="gap-1.5">
+            <TrendingDown size={14} /> Покупки
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="sales">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">
+                Дневник продажби — {MONTHS[month-1]} {year}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <JournalTab type="sales" year={year} month={month} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="purchases">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">
+                Дневник покупки — {MONTHS[month-1]} {year}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <JournalTab type="purchases" year={year} month={month} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
