@@ -1,0 +1,8 @@
+{
+  "name": "Officia",
+  "short_name": "Officia",
+  "start_url": "/bg/dashboard",
+  "display": "standalone",
+  "background_color": "#0F1F3D",
+  "theme_color": "#4F46E5"
+}

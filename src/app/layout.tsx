@@ -1,5 +1,7 @@
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,11 +14,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-import { ThemeProvider } from "@/components/theme-provider";
-
-export const metadata = {
+export const metadata: Metadata = {
+  applicationName: "Officia",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Officia",
+    statusBarStyle: "black-translucent",
+  },
   title: 'Officia',
   description: 'AI ERP система',
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#4F46E5",
 };
 
 export default function RootLayout({
