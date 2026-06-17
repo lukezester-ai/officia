@@ -22,3 +22,7 @@ export * from './vat_journals';
 export * from './e_invoice_status';
 export * from './rbac';
 export * from './webhooks';
+
+export * from './purchase-invoices';
+
+export * from './purchase-invoices';

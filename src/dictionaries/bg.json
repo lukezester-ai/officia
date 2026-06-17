@@ -1,22 +1,23 @@
-{
-  "sidebar": {
-    "dashboard": "Табло",
-    "accounting": "Счетоводство",
-    "hr": "Кадри",
-    "banking": "Банка",
-    "documents": "Архив",
-    "aiAssistant": "AI Асистент",
-    "reports": "Отчети",
-    "vatJournals": "ДДС Дневници",
-    "fixedAssets": "Дълготрайни активи",
-    "counterparties": "Контрагенти",
-    "invoices": "Фактури",
-    "settings": "Настройки",
-    "logout": "Изход",
-    "profile": "Моят Профил"
-  },
-  "dashboard": {
-    "title": "Добре дошли в Officia",
-    "subtitle": "Вашият интелигентен офис мениджър"
-  }
+﻿{
+    "sidebar":  {
+                    "dashboard":  "Ð¢Ð°Ð±Ð»Ð¾",
+                    "accounting":  "Ð¡Ñ‡ÐµÑ‚Ð¾Ð²Ð¾Ð´ÑÑ‚Ð²Ð¾",
+                    "hr":  "ÐšÐ°Ð´Ñ€Ð¸",
+                    "banking":  "Ð‘Ð°Ð½ÐºÐ°",
+                    "documents":  "ÐÑ€Ñ…Ð¸Ð²",
+                    "aiAssistant":  "AI ÐÑÐ¸ÑÑ‚ÐµÐ½Ñ‚",
+                    "reports":  "ÐžÑ‚Ñ‡ÐµÑ‚Ð¸",
+                    "vatJournals":  "Ð”Ð”Ð¡ Ð”Ð½ÐµÐ²Ð½Ð¸Ñ†Ð¸",
+                    "fixedAssets":  "Ð”ÑŠÐ»Ð³Ð¾Ñ‚Ñ€Ð°Ð¹Ð½Ð¸ Ð°ÐºÑ‚Ð¸Ð²Ð¸",
+                    "counterparties":  "ÐšÐ¾Ð½Ñ‚Ñ€Ð°Ð³ÐµÐ½Ñ‚Ð¸",
+                    "invoices":  "Ð¤Ð°ÐºÑ‚ÑƒÑ€Ð¸",
+                    "settings":  "ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸",
+                    "logout":  "Ð˜Ð·Ñ…Ð¾Ð´",
+                    "profile":  "ÐœÐ¾ÑÑ‚ ÐŸÑ€Ð¾Ñ„Ð¸Ð»"
+                },
+    "dashboard":  {
+                      "title":  "Ð”Ð¾Ð±Ñ€Ðµ Ð´Ð¾ÑˆÐ»Ð¸ Ð² Officia",
+                      "subtitle":  "Ð’Ð°ÑˆÐ¸ÑÑ‚ Ð¸Ð½Ñ‚ÐµÐ»Ð¸Ð³ÐµÐ½Ñ‚ÐµÐ½ Ð¾Ñ„Ð¸Ñ Ð¼ÐµÐ½Ð¸Ð´Ð¶ÑŠÑ€"
+                  },
+    "purchaseInvoices":  "Покупни фактури"
 }

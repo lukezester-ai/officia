@@ -1,22 +1,23 @@
-{
-  "sidebar": {
-    "dashboard": "Dashboard",
-    "accounting": "Accounting",
-    "hr": "HR",
-    "banking": "Banking",
-    "documents": "Documents",
-    "aiAssistant": "AI Assistant",
-    "reports": "Reports",
-    "vatJournals": "VAT Journals",
-    "fixedAssets": "Fixed Assets",
-    "counterparties": "Counterparties",
-    "invoices": "Invoices",
-    "settings": "Settings",
-    "logout": "Log Out",
-    "profile": "My Profile"
-  },
-  "dashboard": {
-    "title": "Welcome to Officia",
-    "subtitle": "Your smart office manager"
-  }
+﻿{
+    "sidebar":  {
+                    "dashboard":  "Dashboard",
+                    "accounting":  "Accounting",
+                    "hr":  "HR",
+                    "banking":  "Banking",
+                    "documents":  "Documents",
+                    "aiAssistant":  "AI Assistant",
+                    "reports":  "Reports",
+                    "vatJournals":  "VAT Journals",
+                    "fixedAssets":  "Fixed Assets",
+                    "counterparties":  "Counterparties",
+                    "invoices":  "Invoices",
+                    "settings":  "Settings",
+                    "logout":  "Log Out",
+                    "profile":  "My Profile"
+                },
+    "dashboard":  {
+                      "title":  "Welcome to Officia",
+                      "subtitle":  "Your smart office manager"
+                  },
+    "purchaseInvoices":  "Purchase Invoices"
 }
