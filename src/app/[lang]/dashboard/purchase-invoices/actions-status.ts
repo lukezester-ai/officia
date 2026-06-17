@@ -1,4 +1,4 @@
-﻿'use server';
+'use server';
 import { db } from '@/lib/db';
 import { purchaseInvoices, vatJournalEntries } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs/server';
