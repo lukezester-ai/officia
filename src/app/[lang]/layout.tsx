@@ -3,8 +3,8 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
 export const metadata: Metadata = {
-  title: "Officia - Your office. Smarter.",
-  description: "Modern SaaS for accountants and office managers",
+  title: "Officia — Вашият офис. По-умно.",
+  description: "Модерен SaaS за счетоводители и офис мениджъри",
 };
 
 export default async function LangLayout({

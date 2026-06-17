@@ -1,85 +1,67 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { getFixedAssets, createFixedAsset, writeOffAsset } from './actions';
-import { calcCurrentBookValue, calcDepreciationSchedule } from './utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { calcCurrentBookValue } from './utils';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Package, TrendingDown, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Package, TrendingDown, AlertCircle, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
 const METHODS = [
   { value: 'straight_line', label: 'Линеен' },
-  { value: 'declining_balance', label: 'Ускорен (намаляваща база)' },
+  { value: 'declining_balance', label: 'Намаляващ остатък' },
 ];
-const MONTHS_BG = ['Яну','Фев','Мар','Апр','Май','Юни','Юли','Авг','Сеп','Окт','Ное','Дек'];
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function AddAssetDialog({ onAdd }: { onAdd: (a: any) => void }) {
+function AddAssetDialog({ onAdd }: { onAdd: () => void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    inventoryNumber: '', name: '',
-    acquisitionDate: new Date().toISOString().split('T')[0],
-    acquisitionCost: '', salvageValue: '0',
-    usefulLifeMonths: '60', amortizationMethod: 'straight_line',
-  });
-  const set = (f: string, v: string) => setForm(p => ({ ...p, [f]: v }));
+  const [form, setForm] = useState({ name: '', category: '', acquisitionDate: new Date().toISOString().split('T')[0], acquisitionCost: '', depreciationMethod: 'straight_line', usefulLifeYears: '5', residualValue: '0', notes: '' });
 
-  const monthlyDep = Math.round(
-    ((parseFloat(form.acquisitionCost) || 0) - (parseFloat(form.salvageValue) || 0))
-    / (parseInt(form.usefulLifeMonths) || 1) * 100
-  ) / 100;
+  const set = (f: string, v: string) => setForm(prev => ({ ...prev, [f]: v }));
 
   const handleSubmit = async () => {
-    if (!form.inventoryNumber.trim()) { toast.error('Въведи инвентарен номер'); return; }
     if (!form.name.trim()) { toast.error('Въведи наименование'); return; }
     if (!form.acquisitionCost || parseFloat(form.acquisitionCost) <= 0) { toast.error('Въведи стойност'); return; }
     setLoading(true);
-    await onAdd({ ...form, acquisitionCost: parseFloat(form.acquisitionCost), salvageValue: parseFloat(form.salvageValue) || 0, usefulLifeMonths: parseInt(form.usefulLifeMonths) });
-    setOpen(false);
-    setForm({ inventoryNumber: '', name: '', acquisitionDate: new Date().toISOString().split('T')[0], acquisitionCost: '', salvageValue: '0', usefulLifeMonths: '60', amortizationMethod: 'straight_line' });
+    const res = await createFixedAsset({ name: form.name, category: form.category, acquisitionDate: form.acquisitionDate, acquisitionCost: parseFloat(form.acquisitionCost), depreciationMethod: form.depreciationMethod, usefulLifeYears: parseInt(form.usefulLifeYears), residualValue: parseFloat(form.residualValue) || 0, notes: form.notes });
+    if (res.success) { toast.success('Активът е добавен!'); onAdd(); setOpen(false); setForm({ name: '', category: '', acquisitionDate: new Date().toISOString().split('T')[0], acquisitionCost: '', depreciationMethod: 'straight_line', usefulLifeYears: '5', residualValue: '0', notes: '' }); }
+    else toast.error('Грешка');
     setLoading(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button className="gap-2"><Plus size={15} /> Нов актив</Button></DialogTrigger>
+      <DialogTrigger asChild><Button size="sm" className="gap-1.5"><Plus size={14} />Нов актив</Button></DialogTrigger>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Добавяне на ДМА</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Добави дълготраен актив</DialogTitle></DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><label className="text-sm font-medium">Инвент. номер *</label><Input placeholder="ДМА-001" value={form.inventoryNumber} onChange={e => set('inventoryNumber', e.target.value)} /></div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">Наименование *</label><Input placeholder="Лек автомобил" value={form.name} onChange={e => set('name', e.target.value)} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 space-y-1.5"><label className="text-sm font-medium">Наименование *</label><Input placeholder="Лаптоп / Автомобил..." value={form.name} onChange={e => set('name', e.target.value)} /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Категория</label><Input placeholder="ДМА / НМА" value={form.category} onChange={e => set('category', e.target.value)} /></div>
             <div className="space-y-1.5"><label className="text-sm font-medium">Дата придобиване</label><Input type="date" value={form.acquisitionDate} onChange={e => set('acquisitionDate', e.target.value)} /></div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Метод</label>
-              <select className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm outline-none" value={form.amortizationMethod} onChange={e => set('amortizationMethod', e.target.value)}>
-                {METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
-            </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5"><label className="text-sm font-medium">Отч. стойност *</label><Input type="number" min="0" step="0.01" placeholder="0.00" value={form.acquisitionCost} onChange={e => set('acquisitionCost', e.target.value)} /></div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">Остатъчна ст.</label><Input type="number" min="0" step="0.01" placeholder="0.00" value={form.salvageValue} onChange={e => set('salvageValue', e.target.value)} /></div>
-            <div className="space-y-1.5"><label className="text-sm font-medium">Срок (месеци)</label><Input type="number" min="1" max="600" value={form.usefulLifeMonths} onChange={e => set('usefulLifeMonths', e.target.value)} /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Стойност *</label><Input type="number" min="0" step="0.01" placeholder="0.00" value={form.acquisitionCost} onChange={e => set('acquisitionCost', e.target.value)} /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Остатъчна стойност</label><Input type="number" min="0" step="0.01" placeholder="0.00" value={form.residualValue} onChange={e => set('residualValue', e.target.value)} /></div>
+            <div className="space-y-1.5"><label className="text-sm font-medium">Полезен живот (г.)</label><Input type="number" min="1" max="50" placeholder="5" value={form.usefulLifeYears} onChange={e => set('usefulLifeYears', e.target.value)} /></div>
           </div>
-          <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-            <div className="flex justify-between"><span className="text-muted-foreground">Амортизируема стойност:</span><span className="font-mono">{fmt((parseFloat(form.acquisitionCost)||0)-(parseFloat(form.salvageValue)||0))} лв.</span></div>
-            <div className="flex justify-between font-medium"><span className="text-muted-foreground">Месечна амортизация:</span><span className="font-mono text-amber-600">{fmt(monthlyDep)} лв.</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Годишна амортизация:</span><span className="font-mono">{fmt(monthlyDep*12)} лв.</span></div>
+          <div className="space-y-1.5"><label className="text-sm font-medium">Метод на амортизация</label>
+            <select className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm outline-none" value={form.depreciationMethod} onChange={e => set('depreciationMethod', e.target.value)}>
+              {METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="space-y-1.5"><label className="text-sm font-medium">Бележки</label><Input placeholder="По желание..." value={form.notes} onChange={e => set('notes', e.target.value)} /></div>
+          <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>Отказ</Button>
-            <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Записване...' : 'Добави'}</Button>
+            <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Записва...' : 'Добави'}</Button>
           </div>
         </div>
       </DialogContent>
@@ -87,177 +69,115 @@ function AddAssetDialog({ onAdd }: { onAdd: (a: any) => void }) {
   );
 }
 
-function AssetRow({ asset, onWriteOff }: { asset: any; onWriteOff: (id: string) => void }) {
-  const [expanded, setExpanded] = useState(false);
-  const cost = parseFloat(asset.acquisitionCost);
-  const salvage = parseFloat(asset.salvageValue || '0');
-  const months = parseInt(asset.usefulLifeMonths);
-  const params = { acquisitionDate: asset.acquisitionDate, acquisitionCost: cost, salvageValue: salvage, usefulLifeMonths: months, amortizationMethod: asset.amortizationMethod };
-  const current = calcCurrentBookValue(params);
-  const depPct = Math.round((current.accumulated / (cost - salvage || 1)) * 100);
-  const schedule = expanded ? calcDepreciationSchedule(params) : [];
-  const now = new Date();
-
-  return (
-    <>
-      <TableRow className={`group ${!asset.isActive ? 'opacity-50' : ''}`}>
-        <TableCell>
-          <button onClick={() => setExpanded(e => !e)} className="flex items-center gap-1 text-primary hover:underline font-mono text-sm">
-            {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-            {asset.inventoryNumber}
-          </button>
-        </TableCell>
-        <TableCell className="font-medium">{asset.name}</TableCell>
-        <TableCell className="text-muted-foreground text-sm">{asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('bg-BG') : '—'}</TableCell>
-        <TableCell className="text-right font-mono">{fmt(cost)} лв.</TableCell>
-        <TableCell className="text-right font-mono text-amber-600">{fmt(current.accumulated)} лв.</TableCell>
-        <TableCell className="text-right font-mono font-semibold">{fmt(current.bookValue)} лв.</TableCell>
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden w-16">
-              <div className="h-full bg-amber-400 rounded-full" style={{ width: `${Math.min(depPct, 100)}%` }} />
-            </div>
-            <span className="text-xs text-muted-foreground">{depPct}%</span>
-          </div>
-        </TableCell>
-        <TableCell>
-          {asset.isActive
-            ? <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">Активен</Badge>
-            : <Badge className="bg-gray-50 text-gray-500 border-gray-200 text-xs">Отписан</Badge>}
-        </TableCell>
-        <TableCell>
-          {asset.isActive && (
-            <Button variant="ghost" size="sm" className="h-7 text-xs opacity-0 group-hover:opacity-100 text-rose-500 hover:bg-rose-50" onClick={() => onWriteOff(asset.id)}>Отпиши</Button>
-          )}
-        </TableCell>
-      </TableRow>
-      {expanded && (
-        <TableRow>
-          <TableCell colSpan={9} className="bg-muted/30 p-0">
-            <div className="p-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Амортизационен план — {asset.name} ({METHODS.find(m => m.value === asset.amortizationMethod)?.label})
-              </p>
-              <div className="rounded-md border bg-background overflow-auto max-h-64">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs">Период</TableHead>
-                      <TableHead className="text-right text-xs">Амортизация</TableHead>
-                      <TableHead className="text-right text-xs">Натрупана</TableHead>
-                      <TableHead className="text-right text-xs">Балансова стойност</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {schedule.map((row, i) => {
-                      const isCurrent = row.month === now.getMonth()+1 && row.year === now.getFullYear();
-                      return (
-                        <TableRow key={i} className={isCurrent ? 'bg-indigo-50 dark:bg-indigo-950/30 font-semibold' : ''}>
-                          <TableCell className="text-xs py-1.5">
-                            {isCurrent && <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 mb-0.5" />}
-                            {MONTHS_BG[row.month-1]} {row.year}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-xs py-1.5 text-amber-600">{fmt(row.depreciation)}</TableCell>
-                          <TableCell className="text-right font-mono text-xs py-1.5 text-muted-foreground">{fmt(row.accumulated)}</TableCell>
-                          <TableCell className="text-right font-mono text-xs py-1.5">{fmt(row.bookValue)}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </TableCell>
-        </TableRow>
-      )}
-    </>
-  );
-}
-
 export default function FixedAssetsPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    getFixedAssets().then(res => { if (res.success) setAssets(res.data); setLoading(false); });
-  }, []);
-
-  const handleAdd = async (data: any) => {
-    const res = await createFixedAsset(data);
-    if (res.success && res.data) { setAssets(prev => [res.data, ...prev]); toast.success(`${data.name} е добавен!`); }
-    else toast.error('Грешка: ' + res.error);
+  const load = async () => {
+    setLoading(true);
+    const res = await getFixedAssets();
+    if (res.success) setAssets((res as any).data || []);
+    setLoading(false);
   };
+  useEffect(() => { load(); }, []);
 
-  const handleWriteOff = async (id: string) => {
+  const handleWriteOff = async (id: string, name: string) => {
+    if (!confirm(`Отписване на "${name}"?`)) return;
     const res = await writeOffAsset(id);
-    if (res.success) { setAssets(prev => prev.map(a => a.id === id ? { ...a, isActive: false } : a)); toast.success('Активът е отписан.'); }
-    else toast.error('Грешка: ' + res.error);
+    if (res.success) { toast.success('Активът е отписан'); load(); } else toast.error('Грешка');
   };
 
-  const active = assets.filter(a => a.isActive);
-  const totalCost = active.reduce((s, a) => s + parseFloat(a.acquisitionCost||'0'), 0);
-  const totals = active.reduce((acc, a) => {
-    const cv = calcCurrentBookValue({ acquisitionDate: a.acquisitionDate, acquisitionCost: parseFloat(a.acquisitionCost), salvageValue: parseFloat(a.salvageValue||'0'), usefulLifeMonths: parseInt(a.usefulLifeMonths), amortizationMethod: a.amortizationMethod });
-    return { bookValue: acc.bookValue + cv.bookValue, monthly: acc.monthly + cv.monthlyDepreciation };
-  }, { bookValue: 0, monthly: 0 });
+  const active = assets.filter(a => a.status === 'active');
+  const writtenOff = assets.filter(a => a.status === 'written_off');
+  const totalCost = active.reduce((s, a) => s + parseFloat(a.acquisitionCost || '0'), 0);
+  const totalBookValue = active.reduce((s, a) => s + calcCurrentBookValue(a), 0);
+  const monthlyDepr = active.reduce((s, a) => {
+    const annual = (parseFloat(a.acquisitionCost || '0') - parseFloat(a.residualValue || '0')) / (a.usefulLifeYears || 1);
+    return s + annual / 12;
+  }, 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Дълготрайни активи</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Регистър на ДМА и амортизационен план.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Управление и амортизация на активите</p>
         </div>
-        <AddAssetDialog onAdd={handleAdd} />
+        <AddAssetDialog onAdd={load} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5"><Package size={14} /> Активни ДМА</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{active.length}</div><div className="text-xs text-muted-foreground">отч. стойност {fmt(totalCost)} лв.</div></CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5"><TrendingDown size={14} className="text-amber-600" /> Балансова стойност</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-indigo-600">{fmt(totals.bookValue)} лв.</div><div className="text-xs text-muted-foreground">натрупана аморт. {fmt(totalCost - totals.bookValue)} лв.</div></CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5"><AlertCircle size={14} className="text-amber-500" /> Месечна амортизация</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-amber-600">{fmt(totals.monthly)} лв.</div><div className="text-xs text-muted-foreground">годишно {fmt(totals.monthly * 12)} лв.</div></CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-violet-700 text-white rounded-2xl p-5 shadow-lg shadow-indigo-200/60 dark:shadow-indigo-900/40">
+          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="relative flex items-center gap-3">
+            <div className="bg-white/20 rounded-xl p-2.5"><Layers size={18} /></div>
+            <div><p className="text-sm text-indigo-100">Активни активи</p><p className="text-2xl font-bold">{active.length}</p></div>
+          </div>
+        </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-lg shadow-emerald-200/60 dark:shadow-emerald-900/40">
+          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="relative flex items-center gap-3">
+            <div className="bg-white/20 rounded-xl p-2.5"><Package size={18} /></div>
+            <div><p className="text-sm text-emerald-100">Балансова стойност</p><p className="text-xl font-bold">{fmt(totalBookValue)} лв.</p></div>
+          </div>
+        </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl p-5 shadow-lg shadow-amber-200/60 dark:shadow-amber-900/40">
+          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="relative flex items-center gap-3">
+            <div className="bg-white/20 rounded-xl p-2.5"><TrendingDown size={18} /></div>
+            <div><p className="text-sm text-amber-100">Месечна амортизация</p><p className="text-xl font-bold">{fmt(monthlyDepr)} лв.</p></div>
+          </div>
+        </div>
       </div>
 
       <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Регистър на ДМА</CardTitle>
-          <p className="text-sm text-muted-foreground">Кликни на инвент. номер за да разгънеш амортизационния план.</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-5">
           {loading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Зареждане...</p>
+            <div className="py-10 text-center text-muted-foreground text-sm">Зарежда...</div>
           ) : assets.length === 0 ? (
-            <div className="text-center py-12 space-y-2">
-              <Package size={40} className="mx-auto text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">Няма регистрирани активи.<br />Добави нов с бутона горе.</p>
-            </div>
+            <div className="py-10 text-center text-muted-foreground text-sm">Няма добавени активи.</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-28">Инв. №</TableHead>
-                  <TableHead>Наименование</TableHead>
-                  <TableHead>Придобит</TableHead>
-                  <TableHead className="text-right">Отч. стойност</TableHead>
-                  <TableHead className="text-right">Натруп. аморт.</TableHead>
-                  <TableHead className="text-right">Балансова ст.</TableHead>
-                  <TableHead className="w-32">Изхабяване</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assets.map(asset => <AssetRow key={asset.id} asset={asset} onWriteOff={handleWriteOff} />)}
-              </TableBody>
-            </Table>
+            <div className="rounded-xl border overflow-hidden">
+              <Table>
+                <TableHeader><TableRow className="bg-muted/50">
+                  <TableHead>Наименование</TableHead><TableHead>Категория</TableHead><TableHead>Дата</TableHead>
+                  <TableHead className="text-right">Стойност</TableHead><TableHead>Метод</TableHead>
+                  <TableHead className="text-right">Балансова ст.</TableHead><TableHead>Статус</TableHead>
+                  <TableHead className="w-20"></TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {assets.map((a: any) => {
+                    const bv = calcCurrentBookValue(a);
+                    const isActive = a.status === 'active';
+                    return (
+                      <TableRow key={a.id} className="hover:bg-muted/30">
+                        <TableCell className="font-medium text-sm">{a.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{a.category || '—'}</TableCell>
+                        <TableCell className="text-sm">{new Date(a.acquisitionDate).toLocaleDateString('bg-BG')}</TableCell>
+                        <TableCell className="text-right text-sm">{fmt(parseFloat(a.acquisitionCost))} лв.</TableCell>
+                        <TableCell className="text-sm">{METHODS.find(m => m.value === a.depreciationMethod)?.label || a.depreciationMethod}</TableCell>
+                        <TableCell className="text-right text-sm font-semibold">{fmt(bv)} лв.</TableCell>
+                        <TableCell>
+                          <Badge variant={isActive ? 'default' : 'secondary'} className={isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 hover:bg-emerald-100' : ''}>
+                            {isActive ? 'Активен' : 'Отписан'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {isActive && (
+                            <button onClick={() => handleWriteOff(a.id, a.name)} className="text-xs text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1">
+                              <AlertCircle size={13} />Отпиши
+                            </button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {writtenOff.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-3 text-right">{writtenOff.length} отписани актива</p>
           )}
         </CardContent>
       </Card>
