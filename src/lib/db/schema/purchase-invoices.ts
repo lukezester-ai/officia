@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core'
 
 export const purchaseInvoices = pgTable('purchase_invoices', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
+  tenantId: text('tenant_id').notNull(),
   invoiceNumber: text('invoice_number').notNull(),
   issueDate: text('issue_date'),
   dueDate: text('due_date'),
@@ -27,8 +27,8 @@ export const purchaseInvoiceLines = pgTable('purchase_invoice_lines', {
   quantity: text('quantity').notNull().default('1'),
   unitPrice: text('unit_price').notNull().default('0'),
   vatRate: integer('vat_rate').notNull().default(20),
-  netAmount: text('net_amount').notNull().default('0'),
-  vatAmount: text('vat_amount').notNull().default('0'),
-  totalAmount: text('total_amount').notNull().default('0'),
+  lineNet: text('line_net').notNull().default('0'),
+  lineVat: text('line_vat').notNull().default('0'),
+  lineTotal: text('line_total').notNull().default('0'),
   lineOrder: integer('line_order').notNull().default(0),
 });
