@@ -16,7 +16,7 @@ export async function approvePurchaseInvoice(id: string) {
       ),
     });
     if (!inv) return { success: false, error: 'Not found' };
-    if (inv.status !== 'draft') return { success: false, error: 'Ne e chernova' };
+    if (inv.status !== 'draft') return { success: false, error: 'Not a draft' };
     await db.update(purchaseInvoices)
       .set({ status: 'approved', vatPosted: true })
       .where(eq(purchaseInvoices.id, id));
