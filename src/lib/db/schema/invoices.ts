@@ -1,22 +1,36 @@
-import { pgTable, text, timestamp, numeric, uuid, pgEnum, boolean } from 'drizzle-orm/pg-core';
-import { users } from './users';
+import { pgTable, uuid, text, numeric, integer, boolean, timestamp } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants';
-
-export const invoiceStatusEnum = pgEnum('invoice_status', ['draft', 'sent', 'paid', 'overdue']);
+import { counterparties } from './counterparties';
 
 export const invoices = pgTable('invoices', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  counterpartyId: uuid('counterparty_id').references(() => counterparties.id),
   invoiceNumber: text('invoice_number').notNull(),
-  clientName: text('client_name').notNull(),
-  clientEmail: text('client_email'),
-  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
-  vat: numeric('vat', { precision: 5, scale: 2 }).default('0'),
-  issueDate: timestamp('issue_date').notNull(),
-  dueDate: timestamp('due_date').notNull(),
-  status: invoiceStatusEnum('status').default('draft'),
-  pdfUrl: text('pdf_url'),
-  aiGenerated: boolean('ai_generated').default(false),
-  createdAt: timestamp('created_at').defaultNow(),
+  type: text('type').notNull().default('invoice'),
+  status: text('status').notNull().default('draft'),
+  issueDate: text('issue_date').notNull(),
+  dueDate: text('due_date'),
+  counterpartyName: text('counterparty_name').notNull(),
+  counterpartyEik: text('counterparty_eik'),
+  counterpartyVat: text('counterparty_vat'),
+  counterpartyAddress: text('counterparty_address'),
+  netAmount: numeric('net_amount', { precision: 12, scale: 2 }).default('0'),
+  vatAmount: numeric('vat_amount', { precision: 12, scale: 2 }).default('0'),
+  totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).default('0'),
+  notes: text('notes'),
+  vatPosted: boolean('vat_posted').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const invoiceLines = pgTable('invoice_lines', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  invoiceId: uuid('invoice_id').references(() => invoices.id, { onDelete: 'cascade' }).notNull(),
+  description: text('description').notNull(),
+  quantity: numeric('quantity', { precision: 10, scale: 3 }).default('1'),
+  unitPrice: numeric('unit_price', { precision: 12, scale: 2 }).default('0'),
+  vatRate: integer('vat_rate').default(20),
+  lineNet: numeric('line_net', { precision: 12, scale: 2 }).default('0'),
+  lineVat: numeric('line_vat', { precision: 12, scale: 2 }).default('0'),
+  lineTotal: numeric('line_total', { precision: 12, scale: 2 }).default('0'),
 });
