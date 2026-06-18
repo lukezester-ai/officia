@@ -118,7 +118,7 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
             <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-5`}>
               <div className="text-xs text-zinc-400 mb-2">{s.label}</div>
               <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value.toFixed(2)}</div>
-              <div className="text-xs text-zinc-500 mt-0.5">lv.</div>
+              <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
             </div>
           ))}
         </div>

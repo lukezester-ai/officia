@@ -56,7 +56,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
               <span className="text-xs text-zinc-400">Obshto prikhodi</span>
             </div>
             <div className="text-2xl font-bold text-emerald-400 tabular-nums">{totalRevenue.toFixed(2)}</div>
-            <div className="text-xs text-zinc-500 mt-0.5">lv.</div>
+            <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
           </div>
           <div className="bg-red-950/40 border border-red-500/20 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -64,7 +64,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
               <span className="text-xs text-zinc-400">Obshto razkhodi</span>
             </div>
             <div className="text-2xl font-bold text-red-400 tabular-nums">{totalExpenses.toFixed(2)}</div>
-            <div className="text-xs text-zinc-500 mt-0.5">lv.</div>
+            <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
           </div>
           <div className={`${net >= 0 ? "bg-emerald-950/40 border-emerald-500/20" : "bg-red-950/40 border-red-500/20"} border rounded-2xl p-5`}>
             <div className="flex items-center gap-2 mb-2">
@@ -74,7 +74,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
             <div className={`text-2xl font-bold tabular-nums ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               {net >= 0 ? "+" : ""}{net.toFixed(2)}
             </div>
-            <div className="text-xs text-zinc-500 mt-0.5">lv.</div>
+            <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
           </div>
         </div>
 
@@ -139,7 +139,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
               <div className="text-zinc-400 text-sm">Prikhodi - Razkhodi</div>
             </div>
             <div className={`text-3xl font-bold tabular-nums ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {net >= 0 ? "+" : ""}{net.toFixed(2)} lv.
+              {net >= 0 ? "+" : ""}{net.toFixed(2)} EUR
             </div>
           </div>
           {totalRevenue > 0 && (
