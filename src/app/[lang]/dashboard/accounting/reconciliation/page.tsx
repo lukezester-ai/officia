@@ -1,0 +1,31 @@
+import { db } from "@/lib/db/db";
+import { journalEntries } from "@/lib/db/schema";
+import ReconciliationClient from "./ReconciliationClient";
+
+export default async function ReconciliationPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+
+  let entries: any[] = [];
+  try {
+    entries = await db
+      .select()
+      .from(journalEntries as any)
+      .limit(500);
+  } catch {}
+
+  const serialized = entries.map((e) => ({
+    id: String(e.id ?? ""),
+    date: String(e.entryDate ?? e.entry_date ?? ""),
+    description: String(e.description ?? ""),
+    debitAccount: String(e.debitAccount ?? e.debit_account ?? ""),
+    creditAccount: String(e.creditAccount ?? e.credit_account ?? ""),
+    debitAmount: Number(e.debitAmount ?? e.debit_amount ?? 0),
+    creditAmount: Number(e.creditAmount ?? e.credit_amount ?? 0),
+  }));
+
+  return <ReconciliationClient lang={lang} journalEntries={serialized} />;
+}
