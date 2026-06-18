@@ -17,7 +17,7 @@ export default async function HRPage({ params }: { params: Promise<{ lang: strin
   const { lang } = await params;
   const [tenant] = await db.select().from(tenants).limit(1);
   let emps: any[] = [];
-  try { if (tenant) emps = await db.select().from(employees).where(eq(employees.tenantId, tenant.id)); } catch {}
+  try { if (tenant) emps = // table not ready yet } catch {}
   const stats = [
     { label:"Общо", value:emps.length,                                      grad:"from-indigo-500 to-violet-600", Icon:Users },
     { label:"Активни", value:emps.filter(e=>e.status==="active").length,   grad:"from-emerald-500 to-teal-600",  Icon:UserCheck },
