@@ -37,8 +37,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             <a href="#pricing" className="hover:text-white transition-colors">Цени</a>
           </div>
           <div className="flex items-center gap-3">
-            <Link href={`/${lang}/sign-in`} className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2">Вход</Link>
-            <Link href={`/${lang}/sign-up`} className="text-sm bg-indigo-600 hover:bg-indigo-500 transition-colors px-4 py-2 rounded-lg font-medium">Започни безплатно</Link>
+            <Link href={"/sign-in"} className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2">Вход</Link>
+            <Link href={"/sign-up"} className="text-sm bg-indigo-600 hover:bg-indigo-500 transition-colors px-4 py-2 rounded-lg font-medium">Започни безплатно</Link>
           </div>
         </div>
       </nav>
@@ -61,7 +61,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             Специално създаден за малки и средни фирми в България.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href={`/${lang}/sign-up`} className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-8 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
+            <Link href={"/sign-up"} className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-8 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
               Започни безплатно <ArrowRight size={18} />
             </Link>
             <Link href={`/${lang}/dashboard`} className="inline-flex items-center justify-center gap-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all px-8 py-4 rounded-xl font-semibold text-lg">
@@ -159,7 +159,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <div key={i} className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-400" />{i}</div>
                 ))}
               </div>
-              <Link href={`/${lang}/sign-up`} className="block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/5">
+              <Link href={"/sign-up"} className="block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/5">
                 Започни безплатно
               </Link>
             </div>
@@ -173,7 +173,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <div key={i} className="flex items-center gap-2"><CheckCircle size={14} className="text-white" />{i}</div>
                 ))}
               </div>
-              <Link href={`/${lang}/sign-up`} className="block text-center bg-white text-indigo-700 hover:bg-indigo-50 rounded-xl py-3 text-sm font-semibold transition-all">
+              <Link href={"/sign-up"} className="block text-center bg-white text-indigo-700 hover:bg-indigo-50 rounded-xl py-3 text-sm font-semibold transition-all">
                 Започни пробния период
               </Link>
             </div>
@@ -185,7 +185,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да автоматизираш офиса си?</h2>
           <p className="text-zinc-400 mb-8">Присъедини се към фирмите, които вече работят по-умно с Officia.</p>
-          <Link href={`/${lang}/sign-up`} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
+          <Link href={"/sign-up"} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
             Стартирай безплатно <ArrowRight size={18} />
           </Link>
         </div>
