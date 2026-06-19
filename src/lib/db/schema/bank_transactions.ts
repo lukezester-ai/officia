@@ -8,7 +8,7 @@ export const bankTransactions = pgTable('bank_transactions', {
   accountId: uuid('account_id').references(() => bankAccounts.id).notNull(),
   transactionId: text('transaction_id').unique(),
   amount: text('amount').notNull(),
-  currency: text('currency').default('BGN'),
+  currency: text('currency').default('EUR'),
   date: timestamp('date'),
   description: text('description'),
   counterpartyName: text('counterparty_name'),

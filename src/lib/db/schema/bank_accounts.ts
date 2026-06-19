@@ -8,6 +8,6 @@ export const bankAccounts = pgTable('bank_accounts', {
   institutionName: text('institution_name'), // e.g. 'UniCredit Bulbank'
   iban: text('iban'),
   balance: text('balance'),
-  currency: text('currency').default('BGN'),
+  currency: text('currency').default('EUR'),
   createdAt: timestamp('created_at').defaultNow(),
 });

@@ -11,8 +11,8 @@ export interface CurrencyTrend {
 }
 
 export class CurrencyService {
-  private static readonly TARGET_CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF'];
-  private static readonly BASE_CURRENCY = 'BGN';
+  private static readonly TARGET_CURRENCIES = ['USD', 'GBP', 'CHF', 'JPY'];
+  private static readonly BASE_CURRENCY = 'EUR';
   
   /**
    * Fetches latest exchange rates from an open API (Frankfurter - ECB rates)
