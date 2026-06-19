@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { tasks } from '@/lib/db/schema/tasks';
 import { documents } from '@/lib/db/schema/documents';

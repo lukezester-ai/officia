@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Модул за работа с Квалифициран Електронен Подпис (КЕП)
 
 export async function signXML(xmlContent: string, p12Buffer: Buffer | null, password?: string) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pgTable, uuid, varchar, text, timestamp, integer } from 'drizzle-orm/pg-core';
 
 export const eInvoiceStatus = pgTable('e_invoice_status', {

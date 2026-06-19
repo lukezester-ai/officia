@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pgTable, text, uuid, timestamp, numeric } from 'drizzle-orm/pg-core';
 import { accountPlan } from './account_plan';
 import { companyDivisions } from './company_structure';

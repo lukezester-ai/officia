@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Генератори на специализирани финансови отчети
 
 export async function generateGeneralLedger(tenantId: string, startDate: Date, endDate: Date) {

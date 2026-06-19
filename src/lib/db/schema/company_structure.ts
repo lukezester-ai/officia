@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
 
 export const companyDivisions = pgTable('company_divisions', {

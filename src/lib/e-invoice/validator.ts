@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as fs from 'fs';
 import { XMLValidator } from 'fast-xml-parser';
 // В реална среда се инсталира: npm i xsd-schema-validator

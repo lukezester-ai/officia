@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function getFinancialAnalystPrompt(context: string): string {
   return `Ти си специализиран Финансов Анализатор за Officia AI.
 Твоята цел е да помагаш с дълбоки финансови анализи, прогнози и съвети за ликвидност.

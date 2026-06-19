@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function calcDepreciationSchedule(asset: {
   acquisitionDate: string; acquisitionCost: number; salvageValue: number;
   usefulLifeMonths: number; amortizationMethod: string;

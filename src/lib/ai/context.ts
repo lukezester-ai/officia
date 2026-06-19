@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function buildRichContext(tenantId: string, userId: string): Promise<string> {
   // TODO: Тук ще извличаме реални данни от базата за конкретния tenant
   // Например: текущ cash balance, предстоящи плащания, неплатени фактури

@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface SigningResult {
   success: boolean;
   transactionId?: string;

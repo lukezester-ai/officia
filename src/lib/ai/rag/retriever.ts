@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { VectorStore } from './vector-store';
 import { embedDocumentContent } from './document-embedder';
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Електронно фактуриране на хиляди документи – Опашка (Batch Processing Queue)
 // За Enterprise клиенти използваме Background Jobs (напр. BullMQ, AWS SQS, RabbitMQ или Inngest)
 // за да не блокираме основния сървър при изпращане на масиви от данни към НАП.

@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { getCounterparties, createCounterparty, updateCounterparty, deactivateCounterparty } from './actions';

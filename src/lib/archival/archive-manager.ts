@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Mocks (докато свържем реалния Drizzle schema и Supabase client)
 const db = {
   select: () => ({

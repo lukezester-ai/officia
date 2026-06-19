@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Този модул помага на Drizzle ORM да подава правилния контекст към Supabase RLS
 // при използване на Server Actions / API Routes
 

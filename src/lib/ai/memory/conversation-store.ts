@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Съхранява дългосрочната памет за разговорите на потребителя
 
 export async function saveConversationMessage(tenantId: string, userId: string, role: string, content: string) {

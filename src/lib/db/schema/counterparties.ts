@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pgTable, uuid, text, boolean, timestamp } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants';
 

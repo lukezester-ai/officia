@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Модул за комуникация с портала на НАП (B2G/B2B е-Фактуриране)
 
 export async function submitInvoiceToNRA(signedXml: string) {

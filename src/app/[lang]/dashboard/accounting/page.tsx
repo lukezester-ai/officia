@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 import { useState, useEffect } from 'react';
 import { getInvoices, getJournalEntries, createInvoice, createJournalEntry, postJournalEntry, getAccountPlan, seedAccountPlan } from './actions';

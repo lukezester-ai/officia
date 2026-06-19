@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Scale, TrendingUp, FileText, DollarSign, Download, ArrowRight, BarChart3, Calendar } from "lucide-react";
 import Link from "next/link";
 

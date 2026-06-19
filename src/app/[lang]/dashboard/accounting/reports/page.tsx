@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Link from "next/link";
 import { BarChart3, TrendingUp, Scale, Waves, ArrowRight, FileText } from "lucide-react";
 

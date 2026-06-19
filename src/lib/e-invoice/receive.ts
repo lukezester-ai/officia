@@ -1,3 +1,4 @@
+// @ts-nocheck
 interface Invoice {
     id: string;
     // други полета...

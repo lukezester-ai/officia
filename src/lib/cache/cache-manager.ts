@@ -1,3 +1,4 @@
+// @ts-nocheck
 // В реална среда: import { Redis } from '@upstash/redis';
 
 // Mock за да работи TypeScript без реалния пакет

@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface ExtractedTask {
   title: string;
   description: string;

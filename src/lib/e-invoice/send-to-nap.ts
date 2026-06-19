@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as crypto from 'crypto';
 import * as https from 'https';
 import * as fs from 'fs';

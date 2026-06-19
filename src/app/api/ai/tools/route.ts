@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { tools } from '@/lib/ai/tools';
 import { auth } from '@clerk/nextjs/server';

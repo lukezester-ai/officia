@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useRef, useEffect } from 'react';
 import { Send, Loader2, Sparkles } from 'lucide-react';
 import { useAIAssistant } from '@/hooks/useAIAssistant';

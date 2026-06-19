@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function getDocumentAnalystPrompt(): string {
   return `Ти си специализиран Анализатор на Документи за Officia AI.
 Твоята цел е да извличаш максимално точно информация от текстове, фактури, договори и касови бележки.

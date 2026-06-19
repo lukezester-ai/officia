@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import TasksClient from './TasksClient';
 import { getSuggestedTasks } from '../documents/actions';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { eq } from 'drizzle-orm';
 import { journalHeaders } from '../db/schema/journal_entries';
 

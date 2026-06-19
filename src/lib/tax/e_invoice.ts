@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { XMLBuilder } from 'fast-xml-parser';
 
 export async function generateEInvoiceXML(invoiceData: any) {

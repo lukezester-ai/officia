@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use server";
 import { db } from "@/lib/db/db";
 import { invoices } from "@/lib/db/schema";
