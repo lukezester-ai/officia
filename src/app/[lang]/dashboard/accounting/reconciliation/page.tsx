@@ -1,31 +1,24 @@
-import { db } from "@/lib/db/db";
-import { journalEntries } from "@/lib/db/schema";
-import ReconciliationClient from "./ReconciliationClient";
+import { auth } from '@clerk/nextjs/server';
+import { ReconciliationEngine } from '@/lib/accounting/reconciliation-engine';
+import ReconciliationClient from './ReconciliationClient';
 
-export default async function ReconciliationPage({
-  params,
-}: {
-  params: Promise<{ lang: string }>;
-}) {
+export default async function ReconciliationPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
+  const { userId, orgId } = await auth();
+  const tenantId = orgId || userId || "demo-tenant";
 
-  let entries: any[] = [];
-  try {
-    entries = await db
-      .select()
-      .from(journalEntries as any)
-      .limit(500);
-  } catch {}
+  const suggestions = await ReconciliationEngine.suggestMatches(tenantId);
 
-  const serialized = entries.map((e) => ({
-    id: String(e.id ?? ""),
-    date: String(e.entryDate ?? e.entry_date ?? ""),
-    description: String(e.description ?? ""),
-    debitAccount: String(e.debitAccount ?? e.debit_account ?? ""),
-    creditAccount: String(e.creditAccount ?? e.credit_account ?? ""),
-    debitAmount: Number(e.debitAmount ?? e.debit_amount ?? 0),
-    creditAmount: Number(e.creditAmount ?? e.credit_amount ?? 0),
-  }));
-
-  return <ReconciliationClient lang={lang} journalEntries={serialized} />;
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Банково Равнение</h1>
+          <p className="text-zinc-400 text-sm">Автоматично разпознаване чрез AI Matching</p>
+        </div>
+        
+        <ReconciliationClient initialSuggestions={suggestions} />
+      </div>
+    </div>
+  );
 }
