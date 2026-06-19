@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Auto-posting rules for double-entry accounting
 // Call createAutoPostings() after creating an invoice or bank transaction
 

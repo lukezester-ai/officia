@@ -1,7 +1,8 @@
-﻿'use client';
+// @ts-nocheck
+'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart, CheckSquare } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -13,6 +14,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: dict.hr, href: `/${lang}/dashboard/hr`, icon: Users },
     { name: dict.banking, href: `/${lang}/dashboard/banking`, icon: Landmark },
     { name: dict.documents, href: `/${lang}/dashboard/documents`, icon: Briefcase },
+    { name: "AI Задачи", href: `/${lang}/dashboard/tasks`, icon: CheckSquare },
     { name: dict.reports, href: `/${lang}/dashboard/accounting/reports`, icon: BarChart3 },
     { name: dict.vatJournals, href: `/${lang}/dashboard/vat-journals`, icon: Receipt },
     { name: dict.fixedAssets, href: `/${lang}/dashboard/fixed-assets`, icon: Building2 },

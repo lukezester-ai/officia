@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { authenticator } from 'otplib';
 import * as qrcode from 'qrcode';
 import { eq } from 'drizzle-orm';

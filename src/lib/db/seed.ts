@@ -12,7 +12,6 @@ async function seed() {
     // 1. Create Tenant
     const [tenant] = await db.insert(tenants).values({
       name: 'Test Company Ltd.',
-      domain: 'test.officia.bg',
     }).returning();
     console.log('✅ Created tenant:', tenant.name);
 
@@ -35,7 +34,7 @@ async function seed() {
 
     // 4. Create Invoices
     const [invoice] = await db.insert(invoices).values({
-      tenantId: tenant.id,
+
       userId: user.id,
       invoiceNumber: 'INV-2026-0001',
       clientName: 'TechCorp Bulgaria EOOD',

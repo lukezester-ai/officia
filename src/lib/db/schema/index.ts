@@ -2,7 +2,7 @@ export * from './tenants';
 export * from './users';
 export * from './invoices';
 export * from './documents';
-export * from './time_entries';
+
 export * from './leave_requests';
 export * from './bank_accounts';
 export * from './bank_transactions';
@@ -25,3 +25,4 @@ export * from './webhooks';
 
 export * from './purchase-invoices';
 export * from './reports';
+export * from './tasks';
