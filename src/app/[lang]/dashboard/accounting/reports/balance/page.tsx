@@ -1,5 +1,5 @@
-import { db } from "@/lib/db/db";
-import { journalEntries } from "@/lib/db/schema";
+import { ReportEngine } from "@/lib/accounting/report-engine";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { Scale, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -13,49 +13,31 @@ const NAMES: Record<string, string> = {
   "601": "Razkhodi mat.", "603": "Amortizatsii", "701": "Prikhodi prodajbi",
 };
 
-function classify(acc: string): "asset" | "liability" | "equity" | "other" {
-  if (!acc) return "other";
-  const n = parseInt(acc);
-  if (n >= 100 && n < 200) return "equity";
-  if (n >= 200 && n < 400) return "asset";
-  if (n >= 400 && n < 500) {
-    if (acc.startsWith("41") || acc.startsWith("4531")) return "asset";
-    return "liability";
-  }
-  if (n >= 500 && n < 600) return "asset";
-  return "other";
-}
-
 export default async function BalanceReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
+  const { userId, orgId } = await auth();
+  const tenantId = orgId || userId || "demo-tenant";
 
-  let entries: any[] = [];
-  try { entries = await db.select().from(journalEntries as any).limit(2000); } catch {}
+  const asOf = new Date();
+  const report = await ReportEngine.generateBalanceSheet(tenantId, asOf);
 
-  const bal: Record<string, number> = {};
-  for (const e of entries) {
-    const da = e.debitAccount ?? e.debit_account;
-    const ca = e.creditAccount ?? e.credit_account;
-    const damt = Number(e.debitAmount ?? e.debit_amount ?? 0);
-    const camt = Number(e.creditAmount ?? e.credit_amount ?? 0);
-    if (da) bal[da] = (bal[da] ?? 0) + damt;
-    if (ca) bal[ca] = (bal[ca] ?? 0) - camt;
-  }
+  const flatten = (grouped: any) => {
+    const res: [string, number][] = [];
+    Object.values(grouped).forEach((arr: any) => {
+      arr.forEach((acc: any) => {
+        res.push([acc.accountCode || "Unknown", Math.abs(Number(acc.balance) || 0)]);
+      });
+    });
+    return res;
+  };
 
-  const assets: [string, number][] = [];
-  const liabilities: [string, number][] = [];
-  const equity: [string, number][] = [];
+  const assets = flatten(report.assets);
+  const liabilities = flatten(report.liabilities);
+  const equity = flatten(report.equity);
 
-  for (const [acc, v] of Object.entries(bal)) {
-    const cls = classify(acc);
-    if (cls === "asset") assets.push([acc, Math.abs(v)]);
-    else if (cls === "liability") liabilities.push([acc, Math.abs(v)]);
-    else if (cls === "equity") equity.push([acc, Math.abs(v)]);
-  }
-
-  const totalA = assets.reduce((s, [, v]) => s + v, 0);
-  const totalL = liabilities.reduce((s, [, v]) => s + v, 0);
-  const totalE = equity.reduce((s, [, v]) => s + v, 0);
+  const totalA = report.totalAssets;
+  const totalL = report.totalLiabilities;
+  const totalE = report.totalEquity;
   const balanced = Math.abs(totalA - (totalL + totalE)) < 1;
 
   const Section = ({ title, color, rows, total, totalColor, bg }: any) => (

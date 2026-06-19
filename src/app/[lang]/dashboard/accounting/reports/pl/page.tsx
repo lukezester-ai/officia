@@ -1,5 +1,5 @@
-import { db } from "@/lib/db/db";
-import { journalEntries } from "@/lib/db/schema";
+import { ReportEngine } from "@/lib/accounting/report-engine";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "lucide-react";
 
@@ -11,25 +11,26 @@ const NAMES: Record<string, string> = {
 
 export default async function PLReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
+  const { userId, orgId } = await auth();
+  const tenantId = orgId || userId || "demo-tenant";
 
-  let entries: any[] = [];
-  try { entries = await db.select().from(journalEntries as any).limit(1000); } catch {}
+  const start = new Date(new Date().getFullYear(), 0, 1);
+  const end = new Date();
+  const report = await ReportEngine.generatePnL(tenantId, start, end);
 
   const revenue: Record<string, number> = {};
+  report.revenue.breakdown.forEach((b: any) => {
+    revenue[b.accountCode || "Unknown"] = Math.abs(Number(b.amount) || 0);
+  });
+
   const expenses: Record<string, number> = {};
+  report.expenses.breakdown.forEach((b: any) => {
+    expenses[b.accountCode || "Unknown"] = Math.abs(Number(b.amount) || 0);
+  });
 
-  for (const e of entries) {
-    const ca = e.creditAccount ?? e.credit_account;
-    const da = e.debitAccount ?? e.debit_account;
-    const camt = Number(e.creditAmount ?? e.credit_amount ?? 0);
-    const damt = Number(e.debitAmount ?? e.debit_amount ?? 0);
-    if (ca?.startsWith("7")) revenue[ca] = (revenue[ca] ?? 0) + camt;
-    if (da?.startsWith("6")) expenses[da] = (expenses[da] ?? 0) + damt;
-  }
-
-  const totalRevenue = Object.values(revenue).reduce((s, v) => s + v, 0);
-  const totalExpenses = Object.values(expenses).reduce((s, v) => s + v, 0);
-  const net = totalRevenue - totalExpenses;
+  const totalRevenue = report.revenue.total;
+  const totalExpenses = report.expenses.total;
+  const net = report.netProfit;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6 lg:p-8">

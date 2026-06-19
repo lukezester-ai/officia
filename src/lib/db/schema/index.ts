@@ -24,4 +24,4 @@ export * from './rbac';
 export * from './webhooks';
 
 export * from './purchase-invoices';
-export * from "./invoices";
+export * from './reports';
