@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { journalLines, journalHeaders } from '@/lib/db/schema/journal_entries';
 import { accountPlan } from '@/lib/db/schema/account_plan';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
