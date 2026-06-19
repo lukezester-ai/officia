@@ -2,6 +2,7 @@ import { ReportEngine } from "@/lib/accounting/report-engine";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { Scale, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
+import { ExportButtons } from "@/components/accounting/ExportButtons";
 
 const NAMES: Record<string, string> = {
   "101": "Osnoven kapital", "151": "Dalgosrochni zaemi",
@@ -83,11 +84,14 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
               <p className="text-zinc-400 text-sm">Balance Sheet</p>
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            {balanced
-              ? <><CheckCircle size={16} className="text-emerald-400" /><span className="text-xs text-emerald-400">Balansirano</span></>
-              : <><AlertCircle size={16} className="text-amber-400" /><span className="text-xs text-amber-400">Nebalansirano</span></>
-            }
+          <div className="ml-auto flex items-center gap-4">
+            <ExportButtons data={report} reportType="balance" period={asOf.toLocaleDateString('bg-BG')} />
+            <div className="flex items-center gap-2">
+              {balanced
+                ? <><CheckCircle size={16} className="text-emerald-400" /><span className="text-xs text-emerald-400">Balansirano</span></>
+                : <><AlertCircle size={16} className="text-amber-400" /><span className="text-xs text-amber-400">Nebalansirano</span></>
+              }
+            </div>
           </div>
         </div>
 

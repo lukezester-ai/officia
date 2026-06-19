@@ -2,6 +2,7 @@ import { ReportEngine } from "@/lib/accounting/report-engine";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "lucide-react";
+import { ExportButtons } from "@/components/accounting/ExportButtons";
 
 const NAMES: Record<string, string> = {
   "701": "Prikhodi prodajbi", "702": "Prikhodi uslugi", "709": "Drugi prikhodi",
@@ -47,6 +48,9 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
               <h1 className="text-2xl font-bold">Prikhodi i Razkhodi</h1>
               <p className="text-zinc-400 text-sm">P&L Report</p>
             </div>
+          </div>
+          <div className="ml-auto">
+            <ExportButtons data={report} reportType="pnl" period={`${start.toLocaleDateString('bg-BG')} - ${end.toLocaleDateString('bg-BG')}`} />
           </div>
         </div>
 
