@@ -9,11 +9,41 @@ export class ReportExporter {
     const wb = XLSX.utils.book_new();
 
     if (reportType === 'balance') {
-      const ws = XLSX.utils.json_to_sheet(this.formatBalanceForExcel(data));
-      XLSX.utils.book_append_sheet(wb, ws, "Баланс");
+      // Create separate sheets for Assets, Liabilities, Equity and Summary
+      const summaryData = [
+        ["Баланс - Обобщение", ""],
+        ["Период", period],
+        ["", ""],
+        ["Общо Активи", data.totalAssets],
+        ["Общо Пасиви", data.totalLiabilities],
+        ["Общо Капитал", data.totalEquity],
+        ["Общо Пасиви и Капитал", data.totalLiabilitiesAndEquity],
+        ["Балансиран", Math.abs(data.totalAssets - data.totalLiabilitiesAndEquity) < 1 ? "Да" : "Не"]
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "Summary");
+
+      const wsAssets = XLSX.utils.json_to_sheet(this.formatCategoryForExcel(data.assets, 'Активи'));
+      XLSX.utils.book_append_sheet(wb, wsAssets, "Assets");
+
+      const wsLiabilities = XLSX.utils.json_to_sheet(this.formatCategoryForExcel(data.liabilities, 'Пасиви'));
+      XLSX.utils.book_append_sheet(wb, wsLiabilities, "Liabilities");
+
+      const wsEquity = XLSX.utils.json_to_sheet(this.formatCategoryForExcel(data.equity, 'Капитал'));
+      XLSX.utils.book_append_sheet(wb, wsEquity, "Equity");
+
     } else if (reportType === 'pnl') {
-      const ws = XLSX.utils.json_to_sheet(this.formatPnLForExcel(data));
-      XLSX.utils.book_append_sheet(wb, ws, "P&L");
+      const summaryData = [
+        ["P&L - Обобщение", ""],
+        ["Период", period],
+        ["", ""],
+        ["Общо Приходи", data.revenue?.total || 0],
+        ["Общо Разходи", data.expenses?.total || 0],
+        ["Нетен Резултат", data.netProfit || 0],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "Summary");
+
+      const wsPnL = XLSX.utils.json_to_sheet(this.formatPnLForExcel(data));
+      XLSX.utils.book_append_sheet(wb, wsPnL, "P&L Details");
     }
 
     XLSX.utils.book_append_sheet(wb, this.createMetadataSheet(period), "Информация");
@@ -29,25 +59,49 @@ export class ReportExporter {
       format: 'a4'
     });
 
-    // Header
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text(companyName, 105, 20, { align: "center" });
+    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
 
-    doc.setFontSize(14);
-    doc.text(this.getReportTitle(reportType), 105, 30, { align: "center" });
-    doc.text(`Период: ${period}`, 105, 38, { align: "center" });
+    // Custom Header with Logo Placeholder (Dark Slate color)
+    doc.setFillColor(30, 41, 59); // Slate 800
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text(companyName, 14, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("ФИНАНСОВ ОТЧЕТ", pageWidth - 14, 20, { align: "right" });
+    doc.text(this.getReportTitle(reportType).toUpperCase(), pageWidth - 14, 26, { align: "right" });
+
+    // Reset text color for body
+    doc.setTextColor(0, 0, 0);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Период: ${period}`, 14, 55);
 
     // Content
+    let finalY = 65;
     if (reportType === 'balance') {
-      this.addBalanceToPDF(doc, data);
+      finalY = this.addBalanceToPDF(doc, data, finalY);
     } else if (reportType === 'pnl') {
-      this.addPnLToPDF(doc, data);
+      finalY = this.addPnLToPDF(doc, data, finalY);
+    }
+
+    // Signatures
+    const sigY = finalY + 40;
+    if (sigY < 270) {
+      doc.setFontSize(10);
+      doc.text("Съставил: .......................................", 14, sigY);
+      doc.text("Управител: .......................................", pageWidth - 80, sigY);
     }
 
     // Footer
-    doc.setFontSize(10);
-    doc.text(`Генерирано на: ${new Date().toLocaleDateString('bg-BG')}`, 105, 290, { align: "center" });
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`Генерирано чрез Officia ERP на: ${new Date().toLocaleDateString('bg-BG')} ${new Date().toLocaleTimeString('bg-BG')}`, pageWidth / 2, 290, { align: "center" });
 
     doc.save(`${reportType}_${period}.pdf`);
   }
@@ -61,7 +115,7 @@ export class ReportExporter {
     return titles[type] || type;
   }
 
-  private static addBalanceToPDF(doc: jsPDF, data: any) {
+  private static addBalanceToPDF(doc: jsPDF, data: any, startY: number): number {
     const body: any[] = [];
     ['assets', 'liabilities', 'equity'].forEach(cat => {
       if (data[cat]) {
@@ -74,14 +128,19 @@ export class ReportExporter {
     });
 
     (doc as any).autoTable({
-      startY: 45,
+      startY: startY,
       head: [['Група', 'Код', 'Сметка', 'Сума']],
       body: body,
-      theme: 'grid'
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255,255,255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { fontSize: 10, cellPadding: 5 }
     });
+
+    return (doc as any).lastAutoTable.finalY;
   }
 
-  private static addPnLToPDF(doc: jsPDF, data: any) {
+  private static addPnLToPDF(doc: jsPDF, data: any, startY: number): number {
     const body: any[] = [];
     if (data.revenue?.breakdown) {
       data.revenue.breakdown.forEach((item: any) => {
@@ -95,25 +154,28 @@ export class ReportExporter {
     }
 
     (doc as any).autoTable({
-      startY: 45,
+      startY: startY,
       head: [['Група', 'Код', 'Сметка', 'Сума']],
       body: body,
-      theme: 'grid'
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], textColor: [255,255,255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { fontSize: 10, cellPadding: 5 }
     });
+
+    return (doc as any).lastAutoTable.finalY;
   }
 
   // Helper методи за форматиране
-  private static formatBalanceForExcel(data: any) {
+  private static formatCategoryForExcel(categoryData: any, categoryName: string) {
     const result: any[] = [];
-    ['assets', 'liabilities', 'equity'].forEach(cat => {
-      if (data[cat]) {
-        Object.values(data[cat]).forEach((arr: any) => {
-          arr.forEach((item: any) => {
-            result.push({ Група: cat.toUpperCase(), Код: item.accountCode, Име: item.accountName, Сума: item.balance });
-          });
+    if (categoryData) {
+      Object.values(categoryData).forEach((arr: any) => {
+        arr.forEach((item: any) => {
+          result.push({ Група: categoryName, Код: item.accountCode, Име: item.accountName, Сума: item.balance });
         });
-      }
-    });
+      });
+    }
     return result;
   }
 
@@ -134,8 +196,9 @@ export class ReportExporter {
 
   private static createMetadataSheet(period: string) {
     return XLSX.utils.aoa_to_sheet([
-      ["Отчет"],
+      ["Officia ERP - Финансов Отчет"],
       ["Генериран на:", new Date().toLocaleDateString('bg-BG')],
+      ["Час:", new Date().toLocaleTimeString('bg-BG')],
       ["Период:", period]
     ]);
   }
