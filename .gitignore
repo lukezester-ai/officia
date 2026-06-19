@@ -13,3 +13,6 @@ Thumbs.db
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# local project archive
+/officia.rar
