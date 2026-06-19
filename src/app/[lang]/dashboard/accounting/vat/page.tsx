@@ -59,7 +59,7 @@ export default async function VatPage({
       .from(invoices)
       .where(
         and(
-      2   inArray((invoices as any).status, ["sent", "paid"]),
+          inArray((invoices as any).status, ["sent", "paid"]),
           gte((invoices as any).issueDate, start),
           lte((invoices as any).issueDate, end)
         )
@@ -72,7 +72,7 @@ export default async function VatPage({
   );
   const totalVat = salesRows.reduce(
     (s: number, r: any) => s + parseFloat(String(r.vatAmount ?? r.vat_amount ?? "0")),
-   20
+    0
   );
   const totalGross = salesRows.reduce(
     (s: number, r: any) => s + parseFloat(String(r.total ?? "0")),
@@ -148,7 +148,7 @@ export default async function VatPage({
               border: "border-white/10",
               bg: "bg-white/3",
               icon: TrendingUp,
-     2        iconColor: "text-zinc-400",
+              iconColor: "text-zinc-400",
             },
             {
               label: "DDS varkhu prodazhbi (izkhodyasht)",
@@ -192,7 +192,7 @@ export default async function VatPage({
 
           {salesRows.length === 0 ? (
             <div className="p-12 text-center">
- 2            <Calculator size={40} className="text-zinc-700 mx-auto mb-4" />
+              <Calculator size={40} className="text-zinc-700 mx-auto mb-4" />
               <p className="text-zinc-500 text-sm">Nyama faktury za tozi period</p>
               <Link
                 href={`/${lang}/dashboard/accounting/invoices/new`}
@@ -213,7 +213,7 @@ export default async function VatPage({
                   <th className="text-right text-xs text-zinc-500 font-medium px-5 py-3">DDS EUR</th>
                   <th className="text-right text-xs text-zinc-500 font-medium px-5 py-3">Obshto EUR</th>
                 </tr>
-     2        </thead>
+              </thead>
               <tbody className="divide-y divide-white/5">
                 {salesRows.map((r: any) => {
                   const base = parseFloat(String(r.subtotal ?? r.sub_total ?? "0"));
@@ -232,7 +232,7 @@ export default async function VatPage({
                     overdue: "Zakasnyala",
                   };
                   return (
-                  2          <tr key={r.id} className="hover:bg-white/2 transition-colors">
+                    <tr key={r.id} className="hover:bg-white/2 transition-colors">
                       <td className="px-5 py-3 text-xs font-mono text-orange-400">
                         {r.invoiceNumber ?? r.invoice_number}
                       </td>
@@ -247,7 +247,7 @@ export default async function VatPage({
                       </td>
                       <td className="px-5 py-3 text-xs text-right tabular-nums text-zinc-300">
                         {base.toFixed(2)}
-                      2  </td>
+                        </td>
                       <td className="px-5 py-3 text-xs text-right tabular-nums text-violet-400 font-medium">
                         {vat.toFixed(2)}
                       </td>
@@ -258,12 +258,12 @@ export default async function VatPage({
                   );
                 })}
               </tbody>
- 2            <tfoot className="border-t-2 border-white/10">
+              <tfoot className="border-t-2 border-white/10">
                 <tr className="bg-white/3">
                   <td colSpan={4} className="px-5 py-3 text-xs font-bold text-zinc-300">OBSHTO</td>
                   <td className="px-5 py-3 text-xs text-right tabular-nums font-bold">{totalBase.toFixed(2)}</td>
                   <td className="px-5 py-3 text-xs text-right tabular-nums font-bold text-violet-400">{totalVat.toFixed(2)}</td>
-   2              <td className="px-5 py-3 text-xs text-right tabular-nums font-bold font-mono">{totalGross.toFixed(2)}</td>
+                  <td className="px-5 py-3 text-xs text-right tabular-nums font-bold font-mono">{totalGross.toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>
