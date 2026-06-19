@@ -3,8 +3,6 @@ import { getDictionary, Locale } from '@/lib/get-dictionary';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { UserButton } from '@clerk/nextjs';
 import { Bell, Search } from 'lucide-react';
-import { AiWidget } from '@/components/ai/ai-widget';
-
 export default async function DashboardLayout({
   children,
   params,
@@ -44,7 +42,6 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
-      <AiWidget />
     </div>
   );
 }
