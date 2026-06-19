@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Plus, Trash2, Save, Send } from "lucide-react";
 import { createInvoice } from "../actions";
@@ -30,8 +30,8 @@ function dueIn(days: number) {
   return d.toISOString().split("T")[0] ?? "";
 }
 
-export default async function NewInvoicePage(props: { params: Promise<{ lang: string }> }) {
-  const params = await props.params;
+export default function NewInvoicePage(props: { params: Promise<{ lang: string }> }) {
+  const params = React.use(props.params);
   const lang = params.lang;
 
   const [invoiceNumber, setInvoiceNumber] = useState(genNumber);
