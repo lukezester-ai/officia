@@ -57,20 +57,20 @@ export function AiWidget() {
     setIsTyping(false);
   };
 
-  if (!isOpen) {
-    return (
-      <Button 
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#4F46E5] hover:bg-[#4338CA] shadow-xl shadow-indigo-500/20 z-50 p-0"
-      >
-        <MessageSquare size={24} className="text-white" />
-      </Button>
-    );
-  }
-
   return (
-    <div className="fixed bottom-6 right-6 w-[380px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl z-50 flex flex-col border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200">
-      {/* Header */}
+    <>
+      {/* Floating Toggle Button */}
+      <Button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#4F46E5] hover:bg-[#4338CA] shadow-xl shadow-indigo-500/20 z-50 p-0 transition-transform duration-200"
+      >
+        {isOpen ? <X size={24} className="text-white" /> : <MessageSquare size={24} className="text-white" />}
+      </Button>
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 w-[380px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl z-40 flex flex-col border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200">
+          {/* Header */}
       <div className="bg-[#4F46E5] text-white p-4 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-3">
           <div className="bg-white/20 p-2 rounded-lg">
@@ -147,5 +147,7 @@ export function AiWidget() {
         </Button>
       </form>
     </div>
+    )}
+    </>
   );
 }
