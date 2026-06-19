@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Officia – Интелигентният Офис Асистент
 
-## Getting Started
+**Модерен ERP + AI офис софтуер за малки и средни фирми в България.**
 
-First, run the development server:
+Officia комбинира класическо счетоводство, фактуриране и управление на документи с мощни **AI възможности** – автоматично извличане на текст от сканирани документи, чат с AI върху твоите фактури и договори, и интелигентно съпоставяне на банкови транзакции.
+
+---
+
+## ✨ Основни функции
+
+- **Счетоводство**  
+  Сметкоплан, журнални записи, ДДС дневници, баланс, отчет за приходи и разходи, амортизация.
+
+- **Фактуриране**  
+  Създаване и управление на продажбени и покупни фактури.
+
+- **Документи + AI**  
+  Качвай PDF/снимки → AI (Claude Vision) извлича текста автоматично → **чат директно с документа**.
+
+- **Банкиране**  
+  Автоматична синхронизация чрез PSD2 (Nordigen/GoCardless) + **AI съпоставяне** на транзакции с разходи.
+
+- **Контрагенти & HR**  
+  Управление на клиенти, доставчици и служители.
+
+- **Dashboard**  
+  Красиви KPI-та, графики и бърз преглед на бизнеса.
+
+### Технологии
+- **Next.js 15** (App Router) + TypeScript + Tailwind + shadcn/ui
+- **Clerk** – автентикация и multi-tenant
+- **Drizzle ORM** + PostgreSQL
+- **Anthropic Claude** – AI за документи и анализ
+- Docker + CI/CD
+
+---
+
+## 🚀 Бърз старт
+
+### Локално развитие
 
 ```bash
+# 1. Клонирай репото
+git clone https://github.com/lukezester-ai/officia.git
+cd officia
+
+# 2. Инсталирай зависимости
+npm install
+
+# 3. Настрой променливи (копирай .env.example → .env.local)
+cp .env.example .env.local
+
+# 4. Стартирай базата (Docker)
+docker-compose up -d
+
+# 5. Приложи миграции
+npm run db:push
+
+# 6. Стартирай
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Отвори http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Docker (production-like)
+```bash
+docker-compose up --build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🔧 Настройки за AI и Банки
 
-## Learn More
+- `CLAUDE_API_KEY` – за Anthropic (OCR + чат)
+- `NORDIGEN_SECRET_ID` / `NORDIGEN_SECRET_KEY` – за банкови връзки
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📌 Планове за развитие
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Публичен Live Demo
+- Мобилно приложение (PWA вече е готово)
+- Експорт към Excel / PDF отчети
+- Многоезичност (BG/EN)
+- Интеграции с e-FACT, e-invoicing и др.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 👨‍💻 Автор
+Създадено от lukezester-ai с ❤️ за българския бизнес.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Готов си да автоматизираш офиса си?**
+⭐ Star-вай проекта и следи развитието!
+
+## Contributing
+Pull requests са добре дошли! Ако искаш да помогнеш – отвори issue или пиши директно.
