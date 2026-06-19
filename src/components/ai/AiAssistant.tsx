@@ -141,7 +141,7 @@ export default function AiAssistant() {
     <>
       {/* Floating Button with animation */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-br from-blue-600 to-violet-600 
                    rounded-full flex items-center justify-center shadow-2xl z-50
                    hover:scale-110 active:scale-95 transition-all duration-300

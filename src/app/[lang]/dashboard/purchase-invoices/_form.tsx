@@ -5,7 +5,7 @@ import { createPurchaseInvoice, getSuppliersForSelect } from './actions-read';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import { Plus, Bot, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { PurchaseInvoiceLines } from './_form-lines';
 
@@ -27,6 +27,45 @@ function fmt(n: number) {
 export function NewPurchaseInvoiceDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [loadingAi, setLoadingAi] = useState(false);
+
+  const handleAiAutoFill = async () => {
+    setLoadingAi(true);
+    try {
+      const res = await fetch('/api/ai/accounting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: aiPrompt })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setForm(p => ({
+          ...p,
+          invoiceNumber: data.invoiceNumber || p.invoiceNumber,
+          issueDate: data.issueDate || p.issueDate,
+          supplierName: data.supplierName || p.supplierName,
+          supplierEik: data.supplierEik || p.supplierEik,
+          supplierVat: data.supplierVat || p.supplierVat,
+          notes: data.notes || p.notes
+        }));
+        if (data.lines && data.lines.length > 0) {
+          setLines(data.lines.map(l => ({
+            description: l.description,
+            quantity: String(l.quantity),
+            unitPrice: String(l.unitPrice),
+            vatRate: l.vatRate
+          })));
+        }
+        toast.success('AI попълни данните успешно!');
+      } else {
+        toast.error('Грешка при AI анализа');
+      }
+    } catch (e) {
+      toast.error('Сървърна грешка при връзка с AI');
+    }
+    setLoadingAi(false);
+  };
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [form, setForm] = useState(freshForm());
@@ -95,6 +134,29 @@ export function NewPurchaseInvoiceDialog({ onCreated }: { onCreated: () => void 
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Нова покупна фактура</DialogTitle></DialogHeader>
         <div className="space-y-5 pt-2">
+          
+          {/* AI Auto-fill section */}
+          <div className="flex gap-2 items-center bg-[#4F46E5]/5 p-3 rounded-xl border border-[#4F46E5]/20">
+            <div className="h-8 w-8 rounded-lg bg-[#4F46E5]/10 flex items-center justify-center shrink-0">
+              <Bot size={18} className="text-[#4F46E5]" />
+            </div>
+            <Input 
+              placeholder="Постави текст от фактура или напиши 'Фактура от Еконт за 50лв'..." 
+              value={aiPrompt}
+              onChange={e => setAiPrompt(e.target.value)}
+              className="bg-white border-white focus-visible:ring-[#4F46E5]/30 shadow-sm"
+              disabled={loadingAi}
+            />
+            <Button 
+              variant="default" 
+              className="bg-[#4F46E5] hover:bg-[#4338CA] whitespace-nowrap shadow-sm"
+              onClick={handleAiAutoFill}
+              disabled={loadingAi || !aiPrompt.trim()}
+            >
+              <Sparkles size={16} className="mr-2" />
+              {loadingAi ? 'Анализ...' : 'AI Попълване'}
+            </Button>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Номер *</label>
