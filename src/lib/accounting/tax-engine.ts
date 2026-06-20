@@ -143,4 +143,38 @@ export class TaxEngine {
   </Подпис>
 </Декларация>`;
   }
+
+  // ==================== ВАЛИДАЦИЯ НА XML ====================
+  static async validateDDSXml(xmlContent: string): Promise<{ valid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+
+    try {
+      // Парсваме с xml2js вместо с тежки native библиотеки (libxmljs2), за да не счупим билда в Render
+      const { parseStringPromise } = await import('xml2js');
+      const parsed = await parseStringPromise(xmlContent);
+      const dds = parsed.Декларация;
+
+      if (!dds) {
+        return { valid: false, errors: ["Липсва коренният елемент <Декларация>"] };
+      }
+
+      if (!dds.Идентификация?.[0]?.ЕИК?.[0]) {
+        errors.push("Липсва ЕИК на фирмата.");
+      }
+
+      const payableVAT = parseFloat(dds.Данни?.[0]?.Резултат?.[0]?.ДДСЗаПлащане?.[0] || '0');
+      if (payableVAT < 0) {
+        errors.push("Отрицателна стойност за ДДС за плащане.");
+      }
+
+      const salesVAT = parseFloat(dds.Данни?.[0]?.Продажби?.[0]?.Общо?.[0] || '0');
+      if (isNaN(salesVAT)) {
+        errors.push("Грешен формат на ДДС Продажби.");
+      }
+
+      return { valid: errors.length === 0, errors };
+    } catch (err: any) {
+      return { valid: false, errors: [`Грешка при парсване на XML: ${err.message}`] };
+    }
+  }
 }
