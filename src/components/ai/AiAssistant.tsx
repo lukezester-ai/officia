@@ -214,9 +214,11 @@ export default function AiAssistant() {
                   onMouseLeave={() => setHoveredMessageId(null)}
                 >
                   <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm relative ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-card border text-card-foreground rounded-tl-sm'}`}>
-                    <ReactMarkdown className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : 'dark:prose-invert'}`}>
-                      {msg.content}
-                    </ReactMarkdown>
+                    <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : 'dark:prose-invert'}`}>
+                      <ReactMarkdown>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                     
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="mt-3 pt-2 border-t border-white/20">
