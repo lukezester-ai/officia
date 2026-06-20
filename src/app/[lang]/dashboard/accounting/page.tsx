@@ -8,11 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, AlertCircle, Clock, Plus, Zap, FileText } from 'lucide-react';
 
+import { AccountingActionButtons } from './_action-buttons';
+
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function AccountingPage() {
+export default async function AccountingPage(props: { params: Promise<{ lang: string }> }) {
+  const params = await props.params;
   const res = await getAccountingData();
   const data = res.success ? res.data : { headers: [], lines: [], pendingInvoices: [] };
 
@@ -26,14 +29,7 @@ export default async function AccountingPage() {
           <h1 className="text-2xl font-bold tracking-tight">Счетоводство</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Регистър на счетоводни движения и AI Асистент.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2">
-            <Zap size={16} className="text-indigo-500" /> Извикай AI Асистент
-          </Button>
-          <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
-            <Plus size={16} /> Нов запис
-          </Button>
-        </div>
+        <AccountingActionButtons lang={params.lang} />
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
