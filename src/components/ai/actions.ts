@@ -17,21 +17,21 @@ async function getCurrentUser() {
   return user;
 }
 
-import { processAIRequest } from '@/lib/ai/assistant';
+import { runAIAssistant } from '@/lib/ai/assistant';
 
 export async function askAssistant(query: string) {
   try {
     const user = await getCurrentUser();
     if (!user) return "Моля, влезте в профила си, за да използвате Асистента.";
 
-    const res = await processAIRequest({
-      tenantId: user.tenantId || 'default',
-      userId: user.clerkId || 'default',
-      message: query,
-      history: []
-    });
+    const res = await runAIAssistant(
+      query,
+      user.tenantId || 'default',
+      user.clerkId || 'default',
+      []
+    );
 
-    return res.message;
+    return res.response;
   } catch (error: any) {
     console.error('AI Error:', error);
     return `Извинете, възникна грешка при връзката с AI Асистента. (Грешка: ${error.message || "Непозната грешка"})`;

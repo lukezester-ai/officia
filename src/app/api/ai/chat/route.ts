@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const tenantId = "current-tenant-id"; 
 
     // We can extract history if it was passed. For simplicity, we assume an empty array if not passed.
-    const history = [];
+    const history: any[] = [];
 
     const result = await runAIAssistant(message, tenantId, userId, history);
 
