@@ -3,7 +3,7 @@ import { generateText, streamText, tool } from 'ai';
 import { z } from 'zod';
 
 // Example tool: Create Invoice
-const createInvoiceTool = {
+const createInvoiceTool = tool({
   description: "Създава нова продажна фактура. Използвай този инструмент, когато потребителят иска да издаде фактура.",
   parameters: z.object({
     counterpartyId: z.string().describe("ID на контрагента (клиента)"),
@@ -29,7 +29,7 @@ const createInvoiceTool = {
       };
     }
   },
-};
+} as any);
 
 const tools = {
   createInvoice: createInvoiceTool,
