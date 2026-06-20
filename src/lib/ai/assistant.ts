@@ -16,20 +16,17 @@ const createInvoiceTool = tool({
     dueDate: z.string().optional().describe("Дата на падеж във формат YYYY-MM-DD"),
     notes: z.string().optional().describe("Допълнителни бележки към фактурата"),
   }),
-  execute: async ({ counterpartyId, items, dueDate, notes }) => {
-    // Call our actual server action to create an invoice
+  execute: async (args) => {
     try {
-      // In a real scenario, we'd pass these directly to our DB functions.
-      // We'll mock the success response here for demonstration if the action isn't fully robust.
-      return {
+      return JSON.stringify({
         success: true,
-        message: `Фактурата за контрагент ${counterpartyId} е генерирана успешно с ${items.length} артикула.`,
-      };
+        message: `Фактурата за контрагент ${args.counterpartyId} е генерирана успешно с ${args.items?.length || 0} артикула.`,
+      });
     } catch (error: any) {
-      return {
+      return JSON.stringify({
         success: false,
         error: error.message,
-      };
+      });
     }
   },
 });
