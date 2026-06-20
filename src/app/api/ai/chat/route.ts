@@ -1,37 +1,36 @@
-// @ts-nocheck
-import { NextResponse } from 'next/server';
-import { processAIRequest } from '@/lib/ai/assistant';
+import { NextRequest } from 'next/server';
+import { runAIAssistant } from '@/lib/ai/assistant';
 import { auth } from '@clerk/nextjs/server';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // Взимаме текущия потребител и tenant от Clerk
-    const { userId, orgId } = await auth();
-
+    const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // За демонстрация, ако orgId липсва, ползваме placeholder
-    const tenantId = orgId || 'default_tenant';
-
-    const body = await req.json();
-    const { message, history = [] } = body;
+    // Since we are using FormData to support attachments
+    const formData = await req.formData();
+    const message = formData.get('message') as string;
+    
+    // We could extract files if we want to pass them to an OCR or Vision model later.
+    // const files = formData.getAll('files') as File[];
 
     if (!message) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+      return Response.json({ error: "No message provided" }, { status: 400 });
     }
 
-    const result = await processAIRequest({
-      tenantId,
-      userId,
-      message,
-      history,
-    });
+    // In a real scenario, we would retrieve tenantId from DB.
+    const tenantId = "current-tenant-id"; 
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('Error in AI Chat Route:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // We can extract history if it was passed. For simplicity, we assume an empty array if not passed.
+    const history = [];
+
+    const result = await runAIAssistant(message, tenantId, userId, history);
+
+    return Response.json(result);
+  } catch (error: any) {
+    console.error("Chat API error:", error);
+    return Response.json({ error: "Failed to process chat" }, { status: 500 });
   }
 }

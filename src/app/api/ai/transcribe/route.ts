@@ -1,11 +1,8 @@
-// @ts-nocheck
 import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 
-export const dynamic = 'force-dynamic';
-
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: NextRequest) {
@@ -20,13 +17,13 @@ export async function POST(req: NextRequest) {
     const transcription = await openai.audio.transcriptions.create({
       file: file,
       model: "whisper-1",
-      language: "bg",           // български
+      language: "bg", // Set to Bulgarian
       response_format: "json",
     });
 
     return Response.json({ text: transcription.text });
-  } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Transcription failed" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Transcription error:", error);
+    return Response.json({ error: "Transcription failed", details: error.message }, { status: 500 });
   }
 }
