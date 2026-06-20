@@ -123,14 +123,14 @@ export async function getCounterparty360Data(id: string) {
     // AI Notes logic
     const aiNotes = [];
     if (unpaidInvoices.length > 0) {
-      aiNotes.push(Контрагентът има  неплатени фактури за общо  лв.);
+      aiNotes.push(`Контрагентът има ${unpaidInvoices.length} неплатени фактури за общо ${totalUnpaid.toLocaleString('bg-BG')} лв.`);
     }
     const overdue = unpaidInvoices.filter(i => i.dueDate && new Date(i.dueDate) < new Date());
     if (overdue.length > 0) {
-      aiNotes.push(ВНИМАНИЕ:  от неплатените фактури са просрочени.);
+      aiNotes.push(`ВНИМАНИЕ: ${overdue.length} от неплатените фактури са просрочени.`);
     }
     if (!counterparty.eik) {
-      aiNotes.push(Липсва ЕИК. Препоръчително е да го въведете за коректно отчитане по ДДС.);
+      aiNotes.push('Липсва ЕИК. Препоръчително е да го въведете за коректно отчитане по ДДС.');
     }
 
     return { 
