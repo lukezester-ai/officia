@@ -3,7 +3,7 @@ import { generateText, streamText, tool } from 'ai';
 import { z } from 'zod';
 
 // Example tool: Create Invoice
-const createInvoiceTool = tool({
+const createInvoiceTool = {
   description: "Създава нова продажна фактура. Използвай този инструмент, когато потребителят иска да издаде фактура.",
   parameters: z.object({
     counterpartyId: z.string().describe("ID на контрагента (клиента)"),
@@ -16,20 +16,20 @@ const createInvoiceTool = tool({
     dueDate: z.string().optional().describe("Дата на падеж във формат YYYY-MM-DD"),
     notes: z.string().optional().describe("Допълнителни бележки към фактурата"),
   }),
-  execute: async (args) => {
+  execute: async (args: any) => {
     try {
-      return JSON.stringify({
+      return {
         success: true,
         message: `Фактурата за контрагент ${args.counterpartyId} е генерирана успешно с ${args.items?.length || 0} артикула.`,
-      });
+      };
     } catch (error: any) {
-      return JSON.stringify({
+      return {
         success: false,
         error: error.message,
-      });
+      };
     }
   },
-});
+};
 
 const tools = {
   createInvoice: createInvoiceTool,
