@@ -11,7 +11,8 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function Counterparty360Page({ params }: { params: { lang: string, id: string } }) {
+export default async function Counterparty360Page(props: { params: Promise<{ lang: string, id: string }> }) {
+  const params = await props.params;
   const res = await getCounterparty360Data(params.id);
   
   if (!res.success || !res.data) {

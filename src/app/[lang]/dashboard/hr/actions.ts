@@ -32,3 +32,8 @@ export async function getHrData() {
     return { success: false, error: error.message };
   }
 }
+
+export async function createEmployee(data: any) {
+  // Mock action for the HR form
+  return { success: true };
+}

@@ -11,7 +11,8 @@ import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History } from 'luci
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-export default async function HrProfilePage({ params }: { params: { lang: string, id: string } }) {
+export default async function HrProfilePage(props: { params: Promise<{ lang: string, id: string }> }) {
+  const params = await props.params;
   const result = await db.select().from(employees).where(eq(employees.id, params.id));
   const emp = result[0];
 
