@@ -23,6 +23,10 @@ export * from './vat_journals';
 export * from './e_invoice_status';
 export * from './rbac';
 export * from './webhooks';
+export * from './ai_inbox';
+export * from './activity_logs';
+export * from './document_extractions';
+export * from './approvals';
 
 export * from './purchase-invoices';
 export * from './reports';

@@ -26,6 +26,10 @@ export const invoices = pgTable("invoices", {
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).default("0"),
   total: numeric("total", { precision: 12, scale: 2 }).default("0"),
   vatPosted: boolean("vat_posted").default(false),
+  aiStatus: text("ai_status"), // ok, needs_review, duplicate_suspected
+  aiConfidence: numeric("ai_confidence", { precision: 3, scale: 2 }), // 0.00 - 1.00
+  matchedTransactionId: uuid("matched_transaction_id"), // Reference to bank_transactions
+  reviewStatus: text("review_status").default("pending"), // pending, reviewed, auto_approved
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

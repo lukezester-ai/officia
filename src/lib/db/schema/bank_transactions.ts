@@ -17,5 +17,8 @@ export const bankTransactions = pgTable('bank_transactions', {
   isReconciled: boolean('is_reconciled').default(false),
   matchedExpenseId: uuid('matched_expense_id').references(() => expenses.id), // AI match for outgoing
   matchedInvoiceId: integer('matched_invoice_id').references(() => invoices.id), // AI match for incoming
+  matchStatus: text('match_status').default('unmatched'), // unmatched, suggested, confirmed, rejected
+  matchConfidence: text('match_confidence'), // Store as string '0.95' or numeric
+  reviewRequired: boolean('review_required').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
