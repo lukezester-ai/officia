@@ -85,4 +85,27 @@ export class TaxEngine {
 
     return Number(result[0]?.totalVAT || 0);
   }
+
+  // ==================== XML ЕКСПОРТ ЗА НАП ====================
+  static async generateDDSXml(declarationId: string) {
+    const declarations = await db.select().from(taxDeclarations).where(eq(taxDeclarations.id, declarationId));
+    const declaration = declarations[0];
+
+    if (!declaration) throw new Error("Декларацията не е намерена");
+
+    const xml = this.buildDDSXml(declaration.data);
+    return xml;
+  }
+
+  private static buildDDSXml(data: any): string {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Декларация>
+  <ПериодНачало>${data.periodStart}</ПериодНачало>
+  <ПериодКрай>${data.periodEnd}</ПериодКрай>
+  <ДДСПродажби>${data.salesVAT}</ДДСПродажби>
+  <ДДСПокупки>${data.purchasesVAT}</ДДСПокупки>
+  <ДДСЗаПлащане>${data.payableVAT > 0 ? data.payableVAT : 0}</ДДСЗаПлащане>
+  <ДДСЗаВъзстановяване>${data.payableVAT < 0 ? Math.abs(data.payableVAT) : 0}</ДДСЗаВъзстановяване>
+</Декларация>`;
+  }
 }
