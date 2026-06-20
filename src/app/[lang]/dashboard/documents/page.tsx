@@ -2,19 +2,23 @@
 import React from 'react';
 import DocumentsClient from './DocumentsClient';
 import { getDocuments } from './actions';
+import { Button } from '@/components/ui/button';
+import { Upload } from 'lucide-react';
 
 export default async function DocumentsPage() {
-  const documents = await getDocuments();
+  const res = await getDocuments();
+  const documents = res.success ? res.data : [];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-            AI Документи
-          </h1>
-          <p className="text-zinc-400 mt-2">Качвайте договори и заповеди. AI ще ги анализира и ще предложи задачи.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Архив & AI Документи</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Интелигентно извличане на данни и управление на файлове.</p>
         </div>
+        <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+          <Upload size={16} /> Качи файл
+        </Button>
       </div>
 
       <DocumentsClient initialDocuments={documents} />

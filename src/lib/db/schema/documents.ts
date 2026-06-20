@@ -11,5 +11,7 @@ export const documents = pgTable('documents', {
   contentExtracted: text('content_extracted'), // raw text from OCR/Parser
   metadata: jsonb('metadata'), // Any structured data
   status: text('status').default('pending_analysis'), // pending_analysis, analyzed, active, archived
+  aiStatus: text('ai_status'), // e.g. 'processed', 'needs_review'
+  aiSummary: text('ai_summary'),
   createdAt: timestamp('created_at').defaultNow(),
 });
