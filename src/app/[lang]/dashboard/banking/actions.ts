@@ -57,3 +57,44 @@ export async function reconcileTransaction(id: string) {
     return { success: false, error: error.message };
   }
 }
+export async function getTransactionsForReview() {
+  try {
+    const data = await db.select().from(bankTransactions)
+      .where(eq(bankTransactions.reviewRequired, true))
+      .orderBy(desc(bankTransactions.date));
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error.message, data: [] };
+  }
+}
+
+export async function acceptMatch(id: string) {
+  try {
+    await db.update(bankTransactions).set({ 
+      matchStatus: 'confirmed', 
+      isReconciled: true,
+      reviewRequired: false 
+    }).where(eq(bankTransactions.id, id));
+    
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectMatch(id: string) {
+  try {
+    await db.update(bankTransactions).set({ 
+      matchStatus: 'rejected',
+      matchedInvoiceId: null,
+      matchedExpenseId: null,
+      reviewRequired: true 
+    }).where(eq(bankTransactions.id, id));
+    
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
