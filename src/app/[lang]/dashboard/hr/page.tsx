@@ -1,60 +1,103 @@
 // @ts-nocheck
-import { db } from "@/lib/db/db";
-import { tenants } from "@/lib/db/schema";
-import { Users, UserCheck, Clock, UserPlus, Briefcase } from "lucide-react";
+import React from 'react';
+import { getHrData } from './actions';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Users, Plus, ChevronRight, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function HRPage({ params }: { params: Promise<{ lang: string }> }) {
-  const { lang } = await params;
-  const emps: any[] = [];
-  const stats = [
-    { label: "Общо", value: emps.length, grad: "from-indigo-500 to-violet-600", Icon: Users },
-    { label: "Активни", value: 0, grad: "from-emerald-500 to-teal-600", Icon: UserCheck },
-    { label: "Отпуска", value: 0, grad: "from-amber-500 to-orange-600", Icon: Clock },
-    { label: "Нови (месец)", value: 0, grad: "from-rose-500 to-pink-600", Icon: UserPlus },
-  ];
+export default async function HrPage() {
+  const res = await getHrData();
+  const data = res.success ? res.data : { employees: [], alerts: [] };
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
-              <Users size={20} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Човешки ресурси</h1>
-              <p className="text-zinc-400 text-sm">Управление на служители и заплати</p>
-            </div>
-          </div>
-          <a href={`/${lang}/dashboard/hr/new`} className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 transition-all px-5 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-rose-500/25">
-            <UserPlus size={16} /> Нов служител
-          </a>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Кадри (HR)</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Управление на служители, документи и договори.</p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map(s => (
-            <div key={s.label} className="bg-white/3 border border-white/8 rounded-2xl p-5 hover:border-white/15 transition-all">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.grad} flex items-center justify-center mb-3 shadow-lg`}>
-                <s.Icon size={18} className="text-white" />
-              </div>
-              <div className="text-2xl font-bold mb-0.5">{s.value}</div>
-              <div className="text-xs text-zinc-400">{s.label}</div>
-            </div>
-          ))}
-        </div>
-        <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Briefcase size={16} className="text-rose-400" /> Служители
-            </h2>
-          </div>
-          <div className="py-16 text-center">
-            <Users size={36} className="text-zinc-700 mx-auto mb-3" />
-            <p className="text-zinc-500 text-sm mb-4">Няма добавени служители</p>
-            <a href={`/${lang}/dashboard/hr/new`} className="inline-flex items-center gap-2 text-xs px-4 py-2 rounded-xl border border-white/10 hover:border-rose-500/30 text-zinc-400 hover:text-white transition-all">
-              <UserPlus size={13} /> Добави първия служител
-            </a>
-          </div>
-        </div>
+        <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+          <Plus size={16} /> Добави служител
+        </Button>
       </div>
+
+      {data.alerts.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-4">
+          <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-2">
+            <AlertTriangle size={18} /> HR Сигнали (Автоматичен одит)
+          </h3>
+          <ul className="list-disc pl-8 space-y-1 text-sm text-amber-700 dark:text-amber-300">
+            {data.alerts.map((a: any, i: number) => (
+              <li key={i}>{a.name} - {a.issue}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <Card className="shadow-sm border-0">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="pl-6">Служител</TableHead>
+                <TableHead>Длъжност</TableHead>
+                <TableHead>Отдел</TableHead>
+                <TableHead>Тип договор</TableHead>
+                <TableHead>Статус</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.employees.map(emp => (
+                <TableRow key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                  <TableCell className="pl-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                        {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-medium">{emp.firstName} {emp.lastName}</div>
+                        <div className="text-xs text-muted-foreground">{emp.email}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{emp.position || '—'}</TableCell>
+                  <TableCell>{emp.department || '—'}</TableCell>
+                  <TableCell>
+                    {emp.contractType === 'full_time' ? 'Трудов договор' : emp.contractType === 'part_time' ? 'Непълно работно време' : 'Граждански / Изпълнител'}
+                  </TableCell>
+                  <TableCell>
+                    {emp.isActive ? (
+                      <Badge variant="outline" className="border-emerald-200 text-emerald-700 bg-emerald-50 gap-1"><CheckCircle size={12}/> Активен</Badge>
+                    ) : (
+                      <Badge variant="outline">Бивш служител</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right pr-6">
+                    <Link href={`/bg/dashboard/hr/${emp.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 gap-1">
+                        Профил <ChevronRight size={14} />
+                      </Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {data.employees.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                    <Users size={32} className="mx-auto mb-2 opacity-50" />
+                    Няма въведени служители.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }

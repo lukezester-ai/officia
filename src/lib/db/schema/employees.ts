@@ -20,5 +20,6 @@ export const employees = pgTable('employees', {
   startDate: date('start_date').notNull(),
   endDate: date('end_date'),
   isActive: boolean('is_active').default(true),
+  aiStatus: text('ai_status'), // e.g. "missing_contract", "expiring_soon"
   createdAt: timestamp('created_at').defaultNow(),
 });

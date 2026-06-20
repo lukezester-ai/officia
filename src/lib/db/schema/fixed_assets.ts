@@ -16,6 +16,8 @@ export const fixedAssets = pgTable('fixed_assets', {
   amortizationAccountId: uuid('amortization_account_id').references(() => accountPlan.id), // Сметка за натрупана амортизация (напр. 241)
   expenseAccountId: uuid('expense_account_id').references(() => accountPlan.id), // Разходна сметка (напр. 603)
   isActive: boolean('is_active').default(true),
+  documentId: uuid('document_id'), // Фактура за придобиване
+  aiStatus: text('ai_status'), // warnings (no invoice, fully amortized but active)
   writtenOffAt: timestamp('written_off_at'),
   createdAt: timestamp('created_at').defaultNow(),
 });
