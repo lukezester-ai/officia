@@ -12,11 +12,11 @@ export async function logActivity(
   try {
     await db.insert(activityLogs).values({
       tenantId,
-      userId: userId || 'system',
+      userId: userId || null,
       action,
       entityType,
       entityId,
-      details,
+      metaJson: details ? { details } : null,
     });
   } catch (e) {
     console.error('Failed to log activity', e);
