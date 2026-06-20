@@ -3,7 +3,7 @@ import { invoices } from '../db/schema/invoices';
 import { aiInboxItems } from '../db/schema/ai_inbox';
 import { eq, and, ne } from 'drizzle-orm';
 
-export async function runReviewEngineForInvoice(invoiceId: string) {
+export async function runReviewEngineForInvoice(invoiceId: number) {
   try {
     const [inv] = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
     if (!inv) return;
@@ -26,12 +26,12 @@ export async function runReviewEngineForInvoice(invoiceId: string) {
         aiStatus = 'duplicate_suspected';
         // Create an inbox item
         await db.insert(aiInboxItems).values({
-          tenantId: inv.tenantId,
+          tenantId: inv.tenantId || '',
           type: 'duplicate_warning',
           title: `Възможен дубликат: Фактура ${inv.invoiceNumber}`,
           description: `Открито е съвпадение по сума и контрагент с друга фактура (${duplicates[0].invoiceNumber}).`,
-          relatedEntityId: inv.id,
-          relatedEntityType: 'invoice',
+          sourceId: String(inv.id),
+          sourceType: 'invoice',
           status: 'open',
           priority: 'high'
         });
@@ -42,12 +42,12 @@ export async function runReviewEngineForInvoice(invoiceId: string) {
     if (!aiStatus && !inv.counterpartyEik) {
       aiStatus = 'needs_review';
       await db.insert(aiInboxItems).values({
-        tenantId: inv.tenantId,
+        tenantId: inv.tenantId || '',
         type: 'missing_data',
         title: `Липсващ ЕИК за фактура ${inv.invoiceNumber}`,
         description: `Задължително е въвеждането на ЕИК за коректно отчитане по ДДС.`,
-        relatedEntityId: inv.id,
-        relatedEntityType: 'invoice',
+        sourceId: String(inv.id),
+        sourceType: 'invoice',
         status: 'open',
         priority: 'medium'
       });
