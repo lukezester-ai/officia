@@ -21,6 +21,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: dict.counterparties, href: `/${lang}/dashboard/counterparties`, icon: UsersRound },
     { name: dict.invoices, href: `/${lang}/dashboard/invoices`, icon: FilePlus },
     { name: dict.purchaseInvoices, href: `/${lang}/dashboard/purchase-invoices`, icon: ShoppingCart },
+    { name: "Данъци", href: `/${lang}/dashboard/taxes`, icon: FileText },
     { name: dict.aiAssistant, href: `/${lang}/dashboard/ai-assistant`, icon: Bot },
     { name: dict.settings, href: `/${lang}/dashboard/settings`, icon: Settings },
   ];
