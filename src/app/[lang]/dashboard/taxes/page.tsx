@@ -15,7 +15,7 @@ export default function TaxesPage() {
 
   const load = async () => {
     const res = await getDeclarations();
-    if (res.success) setDeclarations(res.data);
+    if (res.success && res.data) setDeclarations(res.data);
     setLoading(false);
   };
 
