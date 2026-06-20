@@ -93,17 +93,21 @@ export default function TaxesPage() {
                        </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                       <Button variant="outline" size="sm" asChild className="text-xs h-8">
-                          {/* В истинското приложение тук ще сложим линк към PDF експортъра */}
-                          <a href={`#`} onClick={() => toast('PDF експортът изисква извикване към сървъра (TBD)')}>
-                             <Download size={14} className="mr-1.5 text-red-600"/> PDF Справка
-                          </a>
-                       </Button>
-                       <Button variant="outline" size="sm" asChild className="text-xs h-8">
-                          <a href={`/api/taxes/dds/xml?id=${d.id}`} target="_blank" download>
-                             <FileCode size={14} className="mr-1.5 text-blue-600"/> XML за НАП
-                          </a>
-                       </Button>
+                       <a 
+                         href={`#`} 
+                         onClick={(e) => { e.preventDefault(); toast('PDF експортът изисква извикване към сървъра (TBD)'); }}
+                         className="inline-flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted hover:text-foreground text-xs font-medium h-8 px-2.5 transition-colors"
+                       >
+                         <Download size={14} className="mr-1.5 text-red-600"/> PDF Справка
+                       </a>
+                       <a 
+                         href={`/api/taxes/dds/xml?id=${d.id}`} 
+                         target="_blank" 
+                         download
+                         className="inline-flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted hover:text-foreground text-xs font-medium h-8 px-2.5 transition-colors"
+                       >
+                         <FileCode size={14} className="mr-1.5 text-blue-600"/> XML за НАП
+                       </a>
                     </TableCell>
                   </TableRow>
                 );
