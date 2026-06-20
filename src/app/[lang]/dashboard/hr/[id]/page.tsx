@@ -11,6 +11,8 @@ import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History } from 'luci
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { StatusUpdater } from './_status-updater';
+
 export default async function HrProfilePage(props: { params: Promise<{ lang: string, id: string }> }) {
   const params = await props.params;
   const result = await db.select().from(employees).where(eq(employees.id, params.id));
@@ -52,8 +54,9 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
                 <div><span className="text-sm text-muted-foreground block mb-1">Име</span><p className="font-medium">{emp.firstName} {emp.lastName}</p></div>
                 <div><span className="text-sm text-muted-foreground block mb-1">Имейл</span><p className="font-medium">{emp.email}</p></div>
                 <div><span className="text-sm text-muted-foreground block mb-1">Телефон</span><p className="font-medium">{emp.phone || '—'}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Статус</span>
-                  <p className="mt-1">{emp.isActive ? <Badge variant="secondary">Активен</Badge> : <Badge variant="outline">Бивш</Badge>}</p>
+                <div>
+                  <span className="text-sm text-muted-foreground block mb-1">Работен статус</span>
+                  <StatusUpdater employeeId={emp.id} currentStatus={emp.workStatus || 'at_work'} />
                 </div>
               </div>
             </CardContent>

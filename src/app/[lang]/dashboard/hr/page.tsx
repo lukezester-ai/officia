@@ -19,9 +19,11 @@ export default async function HrPage() {
           <h1 className="text-2xl font-bold tracking-tight">Кадри (HR)</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Управление на служители, документи и договори.</p>
         </div>
-        <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
-          <Plus size={16} /> Добави служител
-        </Button>
+        <Link href={`/bg/dashboard/hr/new`}>
+          <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Plus size={16} /> Добави служител
+          </Button>
+        </Link>
       </div>
 
       {data.alerts.length > 0 && (
@@ -70,10 +72,16 @@ export default async function HrPage() {
                     {emp.contractType === 'full_time' ? 'Трудов договор' : emp.contractType === 'part_time' ? 'Непълно работно време' : 'Граждански / Изпълнител'}
                   </TableCell>
                   <TableCell>
-                    {emp.isActive ? (
-                      <Badge variant="outline" className="border-emerald-200 text-emerald-700 bg-emerald-50 gap-1"><CheckCircle size={12}/> Активен</Badge>
-                    ) : (
+                    {!emp.isActive ? (
                       <Badge variant="outline">Бивш служител</Badge>
+                    ) : emp.workStatus === 'on_leave' ? (
+                      <Badge variant="outline" className="border-amber-200 text-amber-700 bg-amber-50 gap-1">В отпуск</Badge>
+                    ) : emp.workStatus === 'sick_leave' ? (
+                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 gap-1">В болничен</Badge>
+                    ) : emp.workStatus === 'unpaid_leave' ? (
+                      <Badge variant="outline" className="border-slate-200 text-slate-700 bg-slate-50 gap-1">Неплатен отпуск</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-emerald-200 text-emerald-700 bg-emerald-50 gap-1"><CheckCircle size={12}/> На работа</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right pr-6">

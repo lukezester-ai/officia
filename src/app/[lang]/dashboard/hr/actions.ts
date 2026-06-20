@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 export async function getHrData() {
   try {
@@ -33,7 +33,50 @@ export async function getHrData() {
   }
 }
 
+import { tenants } from '@/lib/db/schema/tenants';
+import { revalidatePath } from 'next/cache';
+
+async function getTenant() {
+  const [tenant] = await db.select().from(tenants).limit(1);
+  return tenant;
+}
+
 export async function createEmployee(data: any) {
-  // Mock action for the HR form
-  return { success: true };
+  try {
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant' };
+
+    await db.insert(employees).values({
+      tenantId: tenant.id,
+      userId: tenant.id, // using tenant.id as placeholder for userId
+      firstName: data.name.split(' ')[0] || '',
+      lastName: data.name.split(' ').slice(1).join(' ') || '',
+      email: data.email,
+      position: data.position,
+      department: data.department,
+      salary: data.salary ? data.salary.toString() : null,
+      contractType: 'full_time',
+      startDate: new Date().toISOString().split('T')[0],
+      isActive: true,
+      workStatus: 'at_work',
+    });
+
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateEmployeeStatus(id: string, newStatus: string) {
+  try {
+    await db.update(employees)
+      .set({ workStatus: newStatus })
+      .where(eq(employees.id, id));
+
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
