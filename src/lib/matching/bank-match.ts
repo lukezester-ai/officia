@@ -58,7 +58,7 @@ export async function runMatchEngineForTransaction(transactionId: string) {
       // Suggest the match
       await db.update(bankTransactions).set({
         matchedInvoiceId: bestMatch.id,
-        matchConfidence: maxConfidence,
+        matchConfidence: String(maxConfidence),
         matchStatus: 'proposed',
         reviewRequired: true
       }).where(eq(bankTransactions.id, transactionId));
