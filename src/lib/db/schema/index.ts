@@ -20,6 +20,7 @@ export * from './projects';
 export * from './exchange_rates';
 export * from './fiscal_periods';
 export * from './vat_journals';
+export * from './tax_declarations';
 export * from './e_invoice_status';
 export * from './rbac';
 export * from './webhooks';

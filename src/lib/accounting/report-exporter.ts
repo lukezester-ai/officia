@@ -158,6 +158,35 @@ export class ReportExporter {
     return rows;
   }
 
+  static exportTaxDeclaration(report: any, type: string, companyName: string) {
+    if (type === 'dds') {
+      const doc = new jsPDF('portrait', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      doc.setFillColor(185, 28, 28); // Red for tax
+      doc.rect(0, 0, pageWidth, 35, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("СПРАВКА-ДЕКЛАРАЦИЯ ПО ЗДДС", pageWidth / 2, 18, { align: "center" });
+      
+      doc.setFontSize(12);
+      doc.text(companyName, pageWidth / 2, 26, { align: "center" });
+      doc.text(`За период: ${report.periodStart} - ${report.periodEnd}`, pageWidth / 2, 32, { align: "center" });
+      
+      doc.setTextColor(0);
+      let y = 50;
+      doc.text(`ДДС Продажби: ${Number(report.salesVAT).toFixed(2)} лв`, 20, y);
+      y += 10;
+      doc.text(`ДДС Покупки: ${Number(report.purchasesVAT).toFixed(2)} лв`, 20, y);
+      y += 10;
+      doc.text(`ДДС за внасяне: ${Number(report.payableVAT).toFixed(2)} лв`, 20, y);
+      
+      doc.save(`DDS_${companyName.replace(/\s+/g, '_')}_${report.periodStart}.pdf`);
+    }
+  }
+
   private static getReportTitle(type: string): string {
     const titles: any = {
       balance: "Баланс",

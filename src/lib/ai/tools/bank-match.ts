@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
+import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { eq } from 'drizzle-orm';
 import { ReconciliationEngine } from '@/lib/accounting/reconciliation-engine';
+import { tool } from 'ai';
 
 function simpleTextSimilarity(a: string, b: string): number {
   if (!a || !b) return 0;
@@ -36,7 +38,7 @@ function calculateMatchScore(tx: any, candidate: any): number {
   return Math.min(score, 1.0);
 }
 
-export const bankMatchTool = {
+export const bankMatchTool = tool({
   description: "Съпоставя банкови транзакции с фактури или разходи чрез AI. Използвай го, когато потребителят иска да съпостави (reconcile) банкови транзакции.",
   parameters: z.object({
     bankTransactionId: z.string().describe("ID на банковата транзакция за съпоставяне"),
@@ -52,9 +54,12 @@ export const bankMatchTool = {
       if (!tx) {
         return { success: false, message: "Транзакцията не е намерена" };
       }
+      
+      const accounts = await db.select().from(bankAccounts).where(eq(bankAccounts.id, tx.accountId));
+      const tenantId = accounts.length > 0 ? accounts[0].tenantId : 'default';
 
       // 1. Използваме съществуващия ReconciliationEngine
-      const candidates = await ReconciliationEngine.suggestMatches(tx.tenantId || 'default');
+      const candidates = await ReconciliationEngine.suggestMatches(tenantId || 'default');
       
       // 2. Филтрираме само кандидатите за тази транзакция и добавяме AI scoring
       const relevantCandidates = candidates.filter(c => c.transaction.id === tx.id);
