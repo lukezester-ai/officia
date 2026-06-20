@@ -6,13 +6,13 @@ import { Scale, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
 
 const NAMES: Record<string, string> = {
-  "101": "Osnoven kapital", "151": "Dalgosrochni zaemi",
-  "201": "Zemya i sgradi", "204": "Mashini", "241": "Amortizatsiya DMA",
-  "301": "Materiali", "304": "Stoki",
-  "401": "Dostavchitsi", "411": "Klienti",
-  "4531": "DDS pokupki", "4532": "DDS prodajbi",
-  "501": "Kasa", "503": "Razplashtatelna smetka",
-  "601": "Razkhodi mat.", "603": "Amortizatsii", "701": "Prikhodi prodajbi",
+  "101": "Основен капитал", "151": "Дългосрочни заеми",
+  "201": "Земя и сгради", "204": "Машини", "241": "Амортизация ДМА",
+  "301": "Материали", "304": "Стоки",
+  "401": "Доставчици", "411": "Клиенти",
+  "4531": "ДДС покупки", "4532": "ДДС продажби",
+  "501": "Каса", "503": "Разплащателна сметка",
+  "601": "Разходи материали", "603": "Амортизации", "701": "Приходи продажби",
 };
 
 import { db } from "@/lib/db/db";
@@ -65,13 +65,13 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
             <div key={acc} className="flex items-center justify-between px-5 py-3">
               <div>
                 <span className="text-xs font-mono text-zinc-400">{acc}</span>
-                <span className="text-xs text-zinc-500 ml-2">{NAMES[acc] ?? "Smetka"}</span>
+                <span className="text-xs text-zinc-500 ml-2">{NAMES[acc] ?? "Сметка"}</span>
               </div>
               <span className={`text-sm font-mono tabular-nums ${totalColor}`}>{val.toFixed(2)}</span>
             </div>
           ))}
           <div className={`flex items-center justify-between px-5 py-3 ${bg} font-semibold`}>
-            <span className="text-xs">Obshto</span>
+            <span className="text-xs">Общо</span>
             <span className={`text-sm font-bold tabular-nums ${totalColor}`}>{total.toFixed(2)}</span>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
               <Scale size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Balans</h1>
+              <h1 className="text-2xl font-bold">Баланс</h1>
               <p className="text-zinc-400 text-sm">Balance Sheet</p>
             </div>
           </div>

@@ -6,9 +6,9 @@ import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "lucide-react";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
 
 const NAMES: Record<string, string> = {
-  "701": "Prikhodi prodajbi", "702": "Prikhodi uslugi", "709": "Drugi prikhodi",
-  "601": "Razkhodi materiali", "602": "Razkhodi uslugi", "603": "Amortizatsii",
-  "604": "Razkhodi zaplati", "609": "Drugi razkhodi",
+  "701": "Приходи продажби", "702": "Приходи услуги", "709": "Други приходи",
+  "601": "Разходи материали", "602": "Разходи услуги", "603": "Амортизации",
+  "604": "Разходи заплати", "609": "Други разходи",
 };
 
 import { db } from "@/lib/db/db";
@@ -56,7 +56,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
               <TrendingUp size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Prikhodi i Razkhodi</h1>
+              <h1 className="text-2xl font-bold">Приходи и Разходи</h1>
               <p className="text-zinc-400 text-sm">P&L Report</p>
             </div>
           </div>
@@ -85,7 +85,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
           <div className={`${net >= 0 ? "bg-emerald-950/40 border-emerald-500/20" : "bg-red-950/40 border-red-500/20"} border rounded-2xl p-5`}>
             <div className="flex items-center gap-2 mb-2">
               <Minus size={14} className={net >= 0 ? "text-emerald-400" : "text-red-400"} />
-              <span className="text-xs text-zinc-400">Net rezultat</span>
+              <span className="text-zinc-400 text-sm font-medium">Нетен Финансов Резултат</span>
             </div>
             <div className={`text-2xl font-bold tabular-nums ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               {net >= 0 ? "+" : ""}{net.toFixed(2)}
@@ -98,23 +98,25 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
           <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/8 flex items-center gap-2">
               <TrendingUp size={14} className="text-emerald-400" />
-              <h2 className="font-semibold text-sm">Prikhodi (7xx)</h2>
+              <h2 className="font-semibold text-sm">Приходи (7xx)</h2>
             </div>
-            {Object.keys(revenue).length === 0 ? (
-              <p className="text-zinc-600 text-xs text-center py-8">Niama prikhodi</p>
+            {report.revenue.breakdown.length === 0 ? (
+              <p className="text-zinc-600 text-xs text-center py-8">Няма приходи</p>
             ) : (
               <div className="divide-y divide-white/5">
-                {Object.entries(revenue).sort().map(([acc, amt]) => (
-                  <div key={acc} className="flex items-center justify-between px-5 py-3">
+                {report.revenue.breakdown.map((b: any) => (
+                  <div key={b.accountCode} className="flex items-center justify-between px-5 py-3">
                     <div>
-                      <div className="text-xs font-mono text-zinc-300">{acc}</div>
-                      <div className="text-xs text-zinc-500">{NAMES[acc] ?? "Prihod"}</div>
+                      <div className="text-xs font-mono text-zinc-300">{b.accountCode}</div>
+                      <span className="text-xs text-zinc-500 ml-2">{NAMES[b.accountCode] ?? "Сметка"}</span>
                     </div>
-                    <div className="text-sm font-mono text-emerald-400 tabular-nums">{amt.toFixed(2)}</div>
+                    <span className="text-sm font-mono tabular-nums text-emerald-400">
+                      {Number(b.amount).toFixed(2)}
+                    </span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between px-5 py-3 bg-emerald-950/20">
-                  <span className="text-xs font-semibold text-zinc-300">Obshto</span>
+                <div className="flex items-center justify-between px-5 py-3 bg-emerald-500/5 font-semibold">
+                  <span className="text-xs text-emerald-400">Общо Приходи</span>
                   <span className="text-sm font-bold text-emerald-400 tabular-nums">{totalRevenue.toFixed(2)}</span>
                 </div>
               </div>
@@ -124,23 +126,25 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
           <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/8 flex items-center gap-2">
               <TrendingDown size={14} className="text-red-400" />
-              <h2 className="font-semibold text-sm">Razkhodi (6xx)</h2>
+              <h2 className="font-semibold text-sm">Разходи (6xx)</h2>
             </div>
-            {Object.keys(expenses).length === 0 ? (
-              <p className="text-zinc-600 text-xs text-center py-8">Niama razkhodi</p>
+            {report.expenses.breakdown.length === 0 ? (
+              <p className="text-zinc-600 text-xs text-center py-8">Няма разходи</p>
             ) : (
               <div className="divide-y divide-white/5">
-                {Object.entries(expenses).sort().map(([acc, amt]) => (
-                  <div key={acc} className="flex items-center justify-between px-5 py-3">
+                {report.expenses.breakdown.map((b: any) => (
+                  <div key={b.accountCode} className="flex items-center justify-between px-5 py-3">
                     <div>
-                      <div className="text-xs font-mono text-zinc-300">{acc}</div>
-                      <div className="text-xs text-zinc-500">{NAMES[acc] ?? "Razkhod"}</div>
+                      <div className="text-xs font-mono text-zinc-300">{b.accountCode}</div>
+                      <span className="text-xs text-zinc-500 ml-2">{NAMES[b.accountCode] ?? "Сметка"}</span>
                     </div>
-                    <div className="text-sm font-mono text-red-400 tabular-nums">{amt.toFixed(2)}</div>
+                    <span className="text-sm font-mono tabular-nums text-rose-400">
+                      {Number(b.amount).toFixed(2)}
+                    </span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between px-5 py-3 bg-red-950/20">
-                  <span className="text-xs font-semibold text-zinc-300">Obshto</span>
+                <div className="flex items-center justify-between px-5 py-3 bg-rose-500/5 font-semibold">
+                  <span className="text-xs text-rose-400">Общо Разходи</span>
                   <span className="text-sm font-bold text-red-400 tabular-nums">{totalExpenses.toFixed(2)}</span>
                 </div>
               </div>

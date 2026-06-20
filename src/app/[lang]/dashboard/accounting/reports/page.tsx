@@ -43,8 +43,8 @@ export default async function ReportsPage({ params }: { params: Promise<{ lang: 
             <BarChart3 size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Finansovi otcheti</h1>
-            <p className="text-zinc-400 text-sm">P&L · Balans · Cash Flow</p>
+            <h2 className="text-3xl font-bold mb-2">Финансови отчети</h2>
+            <p className="text-zinc-400">P&L · Баланс · Cash Flow</p>
           </div>
         </div>
 
@@ -53,38 +53,35 @@ export default async function ReportsPage({ params }: { params: Promise<{ lang: 
             <Link
               key={r.href}
               href={r.href}
-              className="group bg-white/3 border border-white/8 rounded-2xl p-6 hover:border-white/20 hover:bg-white/5 transition-all"
+              className="group bg-white/3 border border-white/8 rounded-2xl p-6 hover:border-white/20 hover:bg-white/5 transition-all flex flex-col"
             >
               <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${r.color} flex items-center justify-center mb-5 shadow-lg ${r.shadow} group-hover:scale-105 transition-transform`}>
                 <r.icon size={22} className="text-white" />
               </div>
-              <h2 className="font-bold text-lg mb-0.5">{r.title}</h2>
-              <p className="text-xs text-zinc-500 mb-3">{r.subtitle}</p>
-              <p className="text-sm text-zinc-400 mb-5 leading-relaxed">{r.desc}</p>
-              <div className="flex items-center gap-1.5 text-xs text-zinc-500 group-hover:text-white transition-colors">
-                Otvori otcheta <ArrowRight size={13} />
+              <h3 className="text-xl font-bold mb-1 group-hover:text-emerald-400 transition-colors">{r.title}</h3>
+              <p className="text-emerald-500/80 text-sm mb-6">{r.subtitle}</p>
+              <p className="text-zinc-400 text-sm mb-6 flex-grow">{r.desc}</p>
+              <div className="flex items-center text-emerald-500 text-sm font-medium mt-auto">
+                Отвори отчета <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
           ))}
         </div>
 
         <div className="bg-white/3 border border-white/8 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText size={15} className="text-zinc-400" />
-            <h3 className="font-semibold text-sm">Kak rabotat otchetite</h3>
-          </div>
+          <h3 className="font-bold flex items-center gap-2 mb-4"><FileText size={18} className="text-zinc-400" /> Как работят отчетите</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-zinc-400">
             <div>
               <div className="font-medium text-white mb-1">P&L</div>
-              Izchislява se ot scheti 6xx (Razkhodi) i 7xx (Prikhodi). Razlikata = Net rezultat.
+              Изчислява се от сметки 6xx (Разходи) и 7xx (Приходи). Разликата = Нетен резултат.
             </div>
             <div>
-              <div className="font-medium text-white mb-1">Balans</div>
-              Aktivi (1xx-5xx) vs Pasivi i Kapital (1xx, 4xx). Triabva da se ravniavat.
+              <h4 className="font-semibold text-zinc-300 mb-1">Баланс</h4>
+              Активи (1xx-5xx) vs Пасиви и Капитал (1xx, 4xx). Трябва да се равняват.
             </div>
             <div>
               <div className="font-medium text-white mb-1">Cash Flow</div>
-              Dvijenie po smetki 501 i 503 (Kasa + Banka) v izbran period.
+              Движение по сметки 501 и 503 (Каса + Банка) в избран период.
             </div>
           </div>
         </div>

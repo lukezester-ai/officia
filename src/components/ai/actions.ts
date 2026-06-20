@@ -34,6 +34,6 @@ export async function askAssistant(query: string) {
     return res.message;
   } catch (error: any) {
     console.error('AI Error:', error);
-    return "Извинете, възникна грешка при връзката с AI Асистента.";
+    return `Извинете, възникна грешка при връзката с AI Асистента. (Грешка: ${error.message || "Непозната грешка"})`;
   }
 }
