@@ -53,58 +53,109 @@ export class ReportExporter {
   }
 
   // ==================== PDF ====================
-  static exportToPDF(data: any, reportType: string, period: string, companyName: string) {
-    const doc = new jsPDF({
-      orientation: reportType === 'balance' ? 'portrait' : 'landscape',
-      unit: 'mm',
-      format: 'a4'
-    });
+  static exportBalanceToPDF(data: any, companyName: string, period: string) {
+    const doc = new jsPDF('portrait', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+    // Header
+    doc.setFillColor(30, 58, 138); // blue-800
+    doc.rect(0, 0, pageWidth, 35, 'F');
 
-    // Custom Header with Logo Placeholder (Dark Slate color)
-    doc.setFillColor(30, 41, 59); // Slate 800
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text(companyName, 14, 25);
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("ФИНАНСОВ ОТЧЕТ", pageWidth - 14, 20, { align: "right" });
-    doc.text(this.getReportTitle(reportType).toUpperCase(), pageWidth - 14, 26, { align: "right" });
-
-    // Reset text color for body
-    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(20);
+    doc.text("БАЛАНС", pageWidth / 2, 18, { align: "center" });
 
     doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Период: ${period}`, 14, 55);
+    doc.text(companyName, pageWidth / 2, 26, { align: "center" });
+    doc.text(`Към: ${period}`, pageWidth / 2, 32, { align: "center" });
 
-    // Content
-    let finalY = 65;
-    if (reportType === 'balance') {
-      finalY = this.addBalanceToPDF(doc, data, finalY);
-    } else if (reportType === 'pnl') {
-      finalY = this.addPnLToPDF(doc, data, finalY);
-    }
+    let y = 50;
 
-    // Signatures
-    const sigY = finalY + 40;
-    if (sigY < 270) {
-      doc.setFontSize(10);
-      doc.text("Съставил: .......................................", 14, sigY);
-      doc.text("Управител: .......................................", pageWidth - 80, sigY);
-    }
+    // Summary
+    doc.setTextColor(0);
+    doc.setFontSize(14);
+    doc.text("Обобщение", 20, y);
+    y += 10;
+
+    doc.setFontSize(11);
+    doc.text(`Общо Активи: ${data.totalAssets.toFixed(2)} лв`, 20, y);
+    y += 7;
+    doc.text(`Общо Пасиви и Капитал: ${data.totalLiabilitiesAndEquity.toFixed(2)} лв`, 20, y);
+    y += 12;
+
+    // Assets Table
+    doc.setFontSize(13);
+    doc.text("АКТИВИ", 20, y);
+    y += 8;
+
+    const assetsTable = this.prepareTableData(data.assets);
+    (doc as any).autoTable({
+      startY: y,
+      head: [['Код', 'Наименование', 'Сума (лв)']],
+      body: assetsTable,
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 253, 244] },
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 15;
+
+    // Liabilities Table
+    doc.text("ПАСИВИ И СОБСТВЕН КАПИТАЛ", 20, y);
+    y += 8;
+
+    const liabTable = [
+      ...this.prepareTableData(data.liabilities || {}), 
+      ...this.prepareTableData(data.equity || {})
+    ];
+    
+    (doc as any).autoTable({
+      startY: y,
+      head: [['Код', 'Наименование', 'Сума (лв)']],
+      body: liabTable,
+      theme: 'grid',
+      headStyles: { fillColor: [185, 28, 28], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [254, 226, 226] },
+      styles: { fontSize: 10 },
+    });
 
     // Footer
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Генерирано чрез Officia ERP на: ${new Date().toLocaleDateString('bg-BG')} ${new Date().toLocaleTimeString('bg-BG')}`, pageWidth / 2, 290, { align: "center" });
+    const pageCount = doc.internal.pages.length - 1;
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Генерирано на: ${new Date().toLocaleDateString('bg-BG')}`, 20, 290);
+    doc.text(`Страница 1 от ${pageCount}`, pageWidth - 30, 290);
 
-    doc.save(`${reportType}_${period}.pdf`);
+    doc.save(`Баланс_${companyName.replace(/\s+/g, '_')}_${period}.pdf`);
+  }
+
+  private static prepareTableData(grouped: any) {
+    const rows: any[] = [];
+    if (!grouped) return rows;
+    
+    // Check if it's already an array (in case data format changes)
+    if (Array.isArray(grouped)) {
+       grouped.forEach((acc: any) => {
+         rows.push([acc.accountCode || '', acc.accountName || '', Math.abs(acc.balance || 0).toFixed(2)]);
+       });
+       return rows;
+    }
+    
+    // Process as grouped object
+    Object.keys(grouped).forEach(category => {
+      if (Array.isArray(grouped[category])) {
+        grouped[category].forEach((acc: any) => {
+          rows.push([
+            acc.accountCode,
+            acc.accountName,
+            Math.abs(acc.balance).toFixed(2)
+          ]);
+        });
+      }
+    });
+    return rows;
   }
 
   private static getReportTitle(type: string): string {
