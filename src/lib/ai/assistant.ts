@@ -55,7 +55,6 @@ export async function runAIAssistant(
         { role: 'user', content: userMessage }
       ],
       tools: tools,
-      maxSteps: 3, // Allow the model to call tools and respond
     });
 
     return {
