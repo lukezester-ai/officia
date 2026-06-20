@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 import { generateText, Tool } from 'ai';
 import { tools } from './tools';
 import { buildRichContext } from './context';
@@ -43,7 +43,7 @@ export async function processAIRequest(input: AIRequest): Promise<AIResponse> {
   const availableTools = tools as Record<string, Tool>;
 
   const result = await generateText({
-    model: anthropic('claude-3-5-sonnet-20240620'),
+    model: openai('gpt-4o'),
     system: getSystemPrompt(context),
     messages: [
       ...input.history,
