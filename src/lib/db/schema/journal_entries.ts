@@ -25,6 +25,9 @@ export const journalHeaders = pgTable('journal_headers', {
   hash: text('hash'), // Криптографски хеш на статията
   previousHash: text('previous_hash'), // Верига (Blockchain-like)
   timestampToken: text('timestamp_token'), // Токен от TSA (Time Stamping Authority)
+  aiStatus: text('ai_status'), // needs_review, verified, problem
+  aiConfidence: numeric('ai_confidence', { precision: 3, scale: 2 }), // 0.00 - 1.00
+  aiReasoning: text('ai_reasoning'), // Защо предлага тази статия
   createdAt: timestamp('created_at').defaultNow(),
 });
 
