@@ -1,14 +1,15 @@
 // @ts-nocheck
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, FileText, Brain, Building2, BarChart3, Shield, Zap, Users } from 'lucide-react';
+import TestimonialsFaq from '@/components/TestimonialsFaq';
 
 const features = [
   { icon: BarChart3, title: 'Счетоводство', desc: 'Сметкоплан, журнални записи, ДДС дневници, баланс и отчет за П/З.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
-  { icon: FileText, title: 'Фактуриране', desc: 'Продажбени и покупни фактури с автоматично ДДС осчетоводяване.', color: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', iconCls: 'text-emerald-600' },
-  { icon: Brain, title: 'AI Документи', desc: 'Качи PDF или снимка — Claude AI извлича текста и ти позволява да чатиш с документа.', color: 'from-violet-500 to-fuchsia-600', bg: 'bg-violet-50 dark:bg-violet-950/30', iconCls: 'text-violet-600' },
-  { icon: Building2, title: 'Банкиране', desc: 'Автоматична синхронизация чрез PSD2 и AI съпоставяне на транзакции.', color: 'from-blue-500 to-cyan-600', bg: 'bg-blue-50 dark:bg-blue-950/30', iconCls: 'text-blue-600' },
-  { icon: Users, title: 'HR & Кадри', desc: 'Управление на служители, договори и заплати на едно място.', color: 'from-amber-500 to-orange-600', bg: 'bg-amber-50 dark:bg-amber-950/30', iconCls: 'text-amber-600' },
-  { icon: BarChart3, title: 'Dashboard', desc: 'Красиви KPI-та и графики — виж бизнеса си с един поглед.', color: 'from-rose-500 to-pink-600', bg: 'bg-rose-50 dark:bg-rose-950/30', iconCls: 'text-rose-600' },
+  { icon: FileText, title: 'Фактуриране', desc: 'Продажбени и покупни фактури с автоматично ДДС осчетоводяване.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
+  { icon: Brain, title: 'AI Документи', desc: 'Качи PDF или снимка — Claude AI извлича текста и ти позволява да чатиш с документа.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
+  { icon: Building2, title: 'Банкиране', desc: 'Автоматична синхронизация чрез PSD2 и AI съпоставяне на транзакции.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
+  { icon: Users, title: 'HR & Кадри', desc: 'Управление на служители, договори и заплати на едно място.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
+  { icon: BarChart3, title: 'Отчети', desc: 'Красиви KPI-та и графики — виж бизнеса си с един поглед.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
 ];
 
 const benefits = [
@@ -81,7 +82,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               { n: '100%', l: 'Съответствие ЗДДС' },
               { n: 'AI', l: 'Анализ на документи' },
               { n: 'PSD2', l: 'Банкова синхронизация' },
-              { n: '∞', l: 'Фактури и записи' },
+              { n: '10 000+', l: 'Обработени фактури' },
             ].map(s => (
               <div key={s.n} className="text-center">
                 <div className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent mb-1">{s.n}</div>
@@ -111,6 +112,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </div>
         </div>
       </section>
+
+      <TestimonialsFaq />
 
       <section className="py-24 px-6 bg-white/2 border-y border-white/5">
         <div className="max-w-5xl mx-auto">
