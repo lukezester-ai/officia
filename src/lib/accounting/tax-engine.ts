@@ -93,19 +93,54 @@ export class TaxEngine {
 
     if (!declaration) throw new Error("Декларацията не е намерена");
 
-    const xml = this.buildDDSXml(declaration.data);
+    // Взимаме данните за фирмата (tenant)
+    const { tenants } = await import('@/lib/db/schema/tenants');
+    const tenantRecords = await db.select().from(tenants).where(eq(tenants.id, declaration.tenantId));
+    const company = tenantRecords[0] || { bulstat: '', name: 'Неизвестна фирма', address: '' };
+
+    const xml = this.buildDDSXmlForNAP(declaration.data, company);
     return xml;
   }
 
-  private static buildDDSXml(data: any): string {
+  private static buildDDSXmlForNAP(data: any, company: any): string {
+    const salesVAT = Number(data.salesVAT) || 0;
+    const purchasesVAT = Number(data.purchasesVAT) || 0;
+    const payableVAT = Number(data.payableVAT) || 0;
+
     return `<?xml version="1.0" encoding="UTF-8"?>
-<Декларация>
-  <ПериодНачало>${data.periodStart}</ПериодНачало>
-  <ПериодКрай>${data.periodEnd}</ПериодКрай>
-  <ДДСПродажби>${data.salesVAT}</ДДСПродажби>
-  <ДДСПокупки>${data.purchasesVAT}</ДДСПокупки>
-  <ДДСЗаПлащане>${data.payableVAT > 0 ? data.payableVAT : 0}</ДДСЗаПлащане>
-  <ДДСЗаВъзстановяване>${data.payableVAT < 0 ? Math.abs(data.payableVAT) : 0}</ДДСЗаВъзстановяване>
+<Декларация xmlns="http://nap.bg">
+  <Идентификация>
+    <ЕИК>${company.bulstat || ''}</ЕИК>
+    <Име>${company.name}</Име>
+    <Адрес>${company.address || ''}</Адрес>
+  </Идентификация>
+
+  <Период>
+    <Начало>${data.periodStart}</Начало>
+    <Край>${data.periodEnd}</Край>
+  </Период>
+
+  <Данни>
+    <Продажби>
+      <Общо>${salesVAT.toFixed(2)}</Общо>
+      <Облагаеми>${(salesVAT / 0.2).toFixed(2)}</Облагаеми>
+    </Продажби>
+
+    <Покупки>
+      <Общо>${purchasesVAT.toFixed(2)}</Общо>
+      <Облагаеми>${(purchasesVAT / 0.2).toFixed(2)}</Облагаеми>
+    </Покупки>
+
+    <Резултат>
+      <ДДСЗаПлащане>${(payableVAT > 0 ? payableVAT : 0).toFixed(2)}</ДДСЗаПлащане>
+      <ДДСЗаВъзстановяване>${(payableVAT < 0 ? Math.abs(payableVAT) : 0).toFixed(2)}</ДДСЗаВъзстановяване>
+    </Резултат>
+  </Данни>
+
+  <Подпис>
+    <Дата>${new Date().toISOString().slice(0, 10)}</Дата>
+    <Име>Управител</Име>
+  </Подпис>
 </Декларация>`;
   }
 }
