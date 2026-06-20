@@ -71,7 +71,7 @@ export class ReportEngine {
         accountName: accountPlan.name,
         type: accountPlan.type,
         // Drizzle numeric amounts can be summed conditionally based on entryType ('debit' | 'credit')
-        balance: sql<number>`SUM(CASE WHEN ${journalLines.entryType} = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
+        balance: sql<number>`SUM(CASE WHEN ${journalLines.entryType}::text = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
       })
       .from(journalLines)
       .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
@@ -86,7 +86,7 @@ export class ReportEngine {
   private static async sumByAccountType(tenantId: string, type: string, start: Date, end: Date) {
     const result = await db
       .select({ 
-        total: sql<number>`SUM(CASE WHEN ${journalLines.entryType} = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)` 
+        total: sql<number>`SUM(CASE WHEN ${journalLines.entryType}::text = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)` 
       })
       .from(journalLines)
       .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
@@ -106,7 +106,7 @@ export class ReportEngine {
       .select({
         accountCode: accountPlan.accountNumber,
         accountName: accountPlan.name,
-        amount: sql<number>`SUM(CASE WHEN ${journalLines.entryType} = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
+        amount: sql<number>`SUM(CASE WHEN ${journalLines.entryType}::text = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
       })
       .from(journalLines)
       .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
