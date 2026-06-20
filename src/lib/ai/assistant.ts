@@ -18,9 +18,26 @@ export interface AIResponse {
   confidence?: number;
 }
 
+import { OrchestratorAgent } from '@/ai/orchestrator';
+
 export async function processAIRequest(input: AIRequest): Promise<AIResponse> {
   const context = await buildRichContext(input.tenantId, input.userId);
   
+  // 1. Първо прекарваме заявката през Главния Диригент (Orchestrator)
+  const orchestration = await OrchestratorAgent.routeAndProcess(input.message);
+
+  // 2. Ако Диригентът е разпределил задачата към специализиран агент (или няколко),
+  // връщаме директно техния отговор за максимална бързина.
+  if (orchestration.routedTo !== 'general') {
+    // Log activity
+    await logAIActivity(input.tenantId, [{ toolName: `AgentRoute:${orchestration.routedTo}` }]);
+    return {
+      message: orchestration.response,
+      confidence: 0.99,
+    };
+  }
+
+  // 3. Ако е общ въпрос ('general'), продължаваме към стандартния LLM
   // В момента връщаме всички налични инструменти,
   // в бъдеще може да се филтрират според tenantId (роля/план).
   const availableTools = tools as Record<string, Tool>;
