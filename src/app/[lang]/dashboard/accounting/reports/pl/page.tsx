@@ -11,10 +11,20 @@ const NAMES: Record<string, string> = {
   "604": "Razkhodi zaplati", "609": "Drugi razkhodi",
 };
 
+import { db } from "@/lib/db/db";
+import { users } from "@/lib/db/schema/users";
+import { eq } from "drizzle-orm";
+
 export default async function PLReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const { userId, orgId } = await auth();
-  const tenantId = orgId || userId || "demo-tenant";
+  const { userId } = await auth();
+
+  if (!userId) return <div className="p-8 text-white">Unauthenticated</div>;
+
+  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+  const tenantId = user?.tenantId;
+
+  if (!tenantId) return <div className="p-8 text-white">No tenant configured for this user.</div>;
 
   const start = new Date(new Date().getFullYear(), 0, 1);
   const end = new Date();

@@ -15,10 +15,20 @@ const NAMES: Record<string, string> = {
   "601": "Razkhodi mat.", "603": "Amortizatsii", "701": "Prikhodi prodajbi",
 };
 
+import { db } from "@/lib/db/db";
+import { users } from "@/lib/db/schema/users";
+import { eq } from "drizzle-orm";
+
 export default async function BalanceReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const { userId, orgId } = await auth();
-  const tenantId = orgId || userId || "demo-tenant";
+  const { userId } = await auth();
+  
+  if (!userId) return <div className="p-8 text-white">Unauthenticated</div>;
+
+  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+  const tenantId = user?.tenantId;
+
+  if (!tenantId) return <div className="p-8 text-white">No tenant configured for this user.</div>;
 
   const asOf = new Date();
   const report = await ReportEngine.generateBalanceSheet(tenantId, asOf);
