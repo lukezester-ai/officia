@@ -31,8 +31,11 @@ const createInvoiceTool = tool({
   },
 } as any);
 
+import { bankMatchTool } from './tools/bank-match';
+
 const tools = {
   createInvoice: createInvoiceTool,
+  bankMatch: bankMatchTool,
 };
 
 export async function runAIAssistant(
