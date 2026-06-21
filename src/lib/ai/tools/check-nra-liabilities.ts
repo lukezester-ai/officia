@@ -4,8 +4,10 @@ import { z } from 'zod';
 export function buildCheckNraLiabilitiesTool() {
   return tool({
     description: 'Извършва справка за задължения (ДДС, Осигуровки, ДОД, Корпоративен данък) към НАП.',
-    parameters: z.object({}),
-    execute: async () => {
+    parameters: z.object({
+      dummy: z.string().optional().describe('Не се изисква, оставете празно.'),
+    }),
+    execute: async ({ dummy }) => {
       // Тук нормално се извиква API-то за Справка Задължения към НАП
       // Симулираме заявката.
       
