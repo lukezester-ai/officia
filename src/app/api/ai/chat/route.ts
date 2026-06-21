@@ -19,6 +19,7 @@ import { buildCreateJournalEntryTool } from '@/lib/ai/tools/create-journal-entry
 import { buildManageHRTool } from '@/lib/ai/tools/manage-hr';
 import { buildManageInventoryTool } from '@/lib/ai/tools/manage-inventory';
 import { buildGenerateVatTool } from '@/lib/ai/tools/generate-vat';
+import { buildDepreciateAssetsTool } from '@/lib/ai/tools/depreciate-assets';
 
 export async function POST(req: NextRequest) {
   try {
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
         manageHR: buildManageHRTool(tenantId),
         manageInventory: buildManageInventoryTool(tenantId),
         generateVat: buildGenerateVatTool(tenantId),
+        depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
       }
     });
 
