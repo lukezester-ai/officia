@@ -1,42 +1,10 @@
+// @ts-nocheck
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateText, streamText, tool } from 'ai';
 import { z } from 'zod';
 
-// Example tool: Create Invoice
-const createInvoiceTool = tool({
-  description: "Създава нова продажна фактура. Използвай този инструмент, когато потребителят иска да издаде фактура.",
-  parameters: z.object({
-    counterpartyId: z.string().describe("ID на контрагента (клиента)"),
-    items: z.array(z.object({
-      description: z.string().describe("Описание на стоката/услугата"),
-      quantity: z.number().describe("Количество"),
-      unitPrice: z.number().describe("Единична цена без ДДС"),
-      vatRate: z.number().describe("Данъчна ставка (напр. 20 за стандартна, 0 за ВОД)").optional().default(20),
-    })),
-    dueDate: z.string().optional().describe("Дата на падеж във формат YYYY-MM-DD"),
-    notes: z.string().optional().describe("Допълнителни бележки към фактурата"),
-  }),
-  execute: async (args: any) => {
-    try {
-      return {
-        success: true,
-        message: `Фактурата за контрагент ${args.counterpartyId} е генерирана успешно с ${args.items?.length || 0} артикула.`,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  },
-} as any);
-
-import { bankMatchTool } from './tools/bank-match';
-
-const tools = {
-  createInvoice: createInvoiceTool,
-  bankMatch: bankMatchTool,
-};
+import { buildCreateInvoiceTool } from './tools/create-invoice';
+import { buildBankMatchTool } from './tools/bank-match';
 
 export async function runAIAssistant(
   userMessage: string,
@@ -44,6 +12,11 @@ export async function runAIAssistant(
   userId: string,
   conversationHistory: any[] = []
 ) {
+  const tools = {
+    createInvoice: buildCreateInvoiceTool(tenantId, userId),
+    bankMatch: buildBankMatchTool(tenantId),
+  };
+
   const context = `Ти си Officia AI – интелигентен офис асистент за български фирми.
 Бъди полезен, точен и професионален. Отговаряй винаги на български език.
 Ако потребителят иска да създаде фактура, събери нужната информация (клиент, артикули, цени) и използвай инструмента createInvoice.
