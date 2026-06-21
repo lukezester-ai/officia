@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, FileText, Brain, Building2, BarChart3, Shield, Zap, Users } from 'lucide-react';
 import TestimonialsFaq from '@/components/TestimonialsFaq';
+import MobileMenu from '@/components/mobile-menu';
 
 const features = [
   { icon: BarChart3, title: 'Счетоводство', desc: 'Сметкоплан, журнални записи, ДДС дневници, баланс и отчет за П/З.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
@@ -38,10 +39,11 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             <a href="#features" className="hover:text-white transition-colors">Функции</a>
             <a href="#pricing" className="hover:text-white transition-colors">Цени</a>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <Link href={"/sign-in"} className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2">Вход</Link>
             <Link href={"/sign-up"} className="text-sm bg-indigo-600 hover:bg-indigo-500 transition-colors px-4 py-2 rounded-lg font-medium">Започни безплатно</Link>
           </div>
+          <MobileMenu lang={lang} />
         </div>
       </nav>
 
