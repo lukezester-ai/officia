@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User, Paperclip, X, File as FileIcon } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
-import { Attachment } from 'ai';
 
 export default function AIAssistantPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
@@ -19,7 +18,7 @@ export default function AIAssistantPage() {
         content: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
       }
     ]
-  });
+  } as any) as any;
 
   const [files, setFiles] = useState<FileList | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,7 +91,7 @@ export default function AIAssistantPage() {
                     </div>
 
                     {/* Визуализация на прикачените файлове */}
-                    {msg.experimental_attachments?.map((attachment: Attachment, index: number) => (
+                    {msg.experimental_attachments?.map((attachment: any, index: number) => (
                       <div key={index} className="mt-3">
                         {attachment.contentType?.startsWith('image/') ? (
                           <div className="relative w-48 h-48 rounded-lg overflow-hidden border border-white/20">

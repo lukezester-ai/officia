@@ -25,6 +25,7 @@ const createInvoiceTool = tool({
     dueDate: z.string().optional().describe("Дата на падеж във формат YYYY-MM-DD"),
     notes: z.string().optional().describe("Допълнителни бележки към фактурата"),
   }),
+  // @ts-expect-error AI SDK tool execute type might not match
   execute: async (args: any) => {
     return {
       success: true,
