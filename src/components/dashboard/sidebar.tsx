@@ -18,6 +18,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: "AI Задачи", href: `/${lang}/dashboard/tasks`, icon: CheckSquare },
     { name: dict.reports, href: `/${lang}/dashboard/accounting/reports`, icon: BarChart3 },
     { name: dict.vatJournals, href: `/${lang}/dashboard/vat-journals`, icon: Receipt },
+    { name: "Склад (Наличности)", href: `/${lang}/dashboard/inventory`, icon: ShoppingCart },
     { name: dict.fixedAssets, href: `/${lang}/dashboard/fixed-assets`, icon: Building2 },
     { name: dict.counterparties, href: `/${lang}/dashboard/counterparties`, icon: UsersRound },
     { name: dict.invoices, href: `/${lang}/dashboard/invoices`, icon: FilePlus },
