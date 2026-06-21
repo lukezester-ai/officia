@@ -30,3 +30,15 @@ export async function generateDds(year: number, month: number) {
     return { success: false, error: error.message };
   }
 }
+
+export async function generateProfitTaxAction(year: number) {
+  try {
+    const { tenantId } = await requireTenant();
+
+    await TaxEngine.generateProfitTax(tenantId, year);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
