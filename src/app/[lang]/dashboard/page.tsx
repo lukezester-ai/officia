@@ -50,56 +50,52 @@ export default async function DashboardPage() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white rounded-2xl p-5 shadow-lg shadow-indigo-200/60 dark:shadow-indigo-900/40">
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5">
-                <TrendingUp size={18} />
-              </div>
-              <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">Приходи</span>
+        {/* Приходи */}
+        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-violet-500/5 transition-all hover:border-violet-500/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-violet-500/20 text-violet-400 rounded-xl p-2.5">
+              <TrendingUp size={18} />
             </div>
-            <div className="text-3xl font-bold tracking-tight mb-1">{fmt(revenue)}</div>
-            <div className="text-sm text-indigo-100">€ от продажби</div>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Приходи</span>
           </div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(revenue)}</div>
+          <div className="text-sm text-zinc-500">€ от продажби</div>
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 via-rose-600 to-pink-700 text-white rounded-2xl p-5 shadow-lg shadow-rose-200/60 dark:shadow-rose-900/40">
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5">
-                <ShoppingCart size={18} />
-              </div>
-              <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">Разходи</span>
+        {/* Разходи */}
+        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-amber-500/5 transition-all hover:border-amber-500/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-amber-500/20 text-amber-400 rounded-xl p-2.5">
+              <ShoppingCart size={18} />
             </div>
-            <div className="text-3xl font-bold tracking-tight mb-1">{fmt(expenses)}</div>
-            <div className="text-sm text-rose-100">€ от покупки</div>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Разходи</span>
           </div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(expenses)}</div>
+          <div className="text-sm text-zinc-500">€ от покупки</div>
         </div>
 
-        <div className={`relative overflow-hidden bg-gradient-to-br ${netProfit >= 0 ? 'from-emerald-500 via-emerald-600 to-teal-700 shadow-emerald-200/60' : 'from-orange-500 via-orange-600 to-red-700 shadow-orange-200/60'} text-white rounded-2xl p-5 shadow-lg`}>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5">
-                <Wallet size={18} />
-              </div>
-              <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">Резултат</span>
+        {/* Резултат */}
+        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-emerald-500/5 transition-all hover:border-emerald-500/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`rounded-xl p-2.5 ${netProfit >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+              <Wallet size={18} />
             </div>
-            <div className="text-3xl font-bold tracking-tight mb-1">{fmt(netProfit)}</div>
-            <div className={`text-sm ${netProfit >= 0 ? 'text-emerald-100' : 'text-orange-100'}`}>€ нетна печалба</div>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Резултат</span>
           </div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(netProfit)}</div>
+          <div className="text-sm text-zinc-500">€ нетна печалба</div>
         </div>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 text-white rounded-2xl p-5 shadow-lg shadow-amber-200/60 dark:shadow-amber-900/40">
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5">
-                <AlertCircle size={18} />
-              </div>
-              <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">{outstanding.length} бр.</span>
+        {/* Чакащи плащания */}
+        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-rose-500/5 transition-all hover:border-rose-500/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-rose-500/20 text-rose-400 rounded-xl p-2.5">
+              <AlertCircle size={18} />
             </div>
-            <div className="text-3xl font-bold tracking-tight mb-1">{fmt(outstandingAmount)}</div>
-            <div className="text-sm text-amber-100">€ неплатени</div>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{outstanding.length} бр.</span>
           </div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(outstandingAmount)}</div>
+          <div className="text-sm text-zinc-500">€ за събиране</div>
         </div>
       </div>
 

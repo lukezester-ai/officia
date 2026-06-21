@@ -11,10 +11,10 @@ function fmt(n: number) {
 }
 
 const STATUS: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Чернова', color: 'bg-gray-50 text-gray-600 border-gray-200' },
-  issued: { label: 'Издадена', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  paid: { label: 'Платена', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  cancelled: { label: 'Анулирана', color: 'bg-rose-50 text-rose-600 border-rose-200' },
+  draft: { label: 'Чернова', color: 'bg-white/5 text-zinc-400 border-white/10' },
+  issued: { label: 'Издадена', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
+  paid: { label: 'Платена', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+  cancelled: { label: 'Анулирана', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
 };
 
 export function InvoiceTable({ items, onAction }: {
@@ -80,12 +80,12 @@ export function InvoiceTable({ items, onAction }: {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2 items-center">
-                    {inv.aiStatus === 'needs_review' && <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200"><Zap size={10} className="mr-1"/>AI Преглед</Badge>}
-                    {inv.aiStatus === 'duplicate_suspected' && <Badge variant="outline" className="text-rose-600 bg-rose-50 border-rose-200"><Zap size={10} className="mr-1"/>Дубликат</Badge>}
+                    {inv.aiStatus === 'needs_review' && <Badge variant="outline" className="text-amber-400 bg-amber-500/10 border-amber-500/20"><Zap size={10} className="mr-1"/>AI Преглед</Badge>}
+                    {inv.aiStatus === 'duplicate_suspected' && <Badge variant="outline" className="text-rose-400 bg-rose-500/10 border-rose-500/20"><Zap size={10} className="mr-1"/>Дубликат</Badge>}
                     {inv.matchedTransactionId ? (
-                      <Badge variant="outline" className="text-emerald-600 bg-emerald-50 border-emerald-200"><DollarSign size={10} className="mr-1"/>Платена</Badge>
+                      <Badge variant="outline" className="text-emerald-400 bg-emerald-500/10 border-emerald-500/20"><DollarSign size={10} className="mr-1"/>Платена</Badge>
                     ) : (
-                      (inv.status === 'issued') && <Badge variant="outline" className="text-gray-500 bg-gray-50">Чака плащане</Badge>
+                      (inv.status === 'issued') && <Badge variant="outline" className="text-zinc-400 bg-white/5 border-white/10">Чака плащане</Badge>
                     )}
                   </div>
                 </TableCell>
@@ -93,23 +93,23 @@ export function InvoiceTable({ items, onAction }: {
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 justify-end">
                     {inv.status === 'draft' && (
                       <Button variant="ghost" size="sm"
-                        className="h-7 text-xs gap-1 text-indigo-600 hover:bg-indigo-50"
+                        className="h-7 text-xs gap-1 text-violet-400 hover:bg-violet-500/10"
                         disabled={busy === inv.id + 'issue'}
                         onClick={(e) => handle(e, 'issue', inv.id)}>
                         <Send size={11} /> Издай
                       </Button>
                     )}
-                    {inv.status === 'issued' && (
+                    {inv.status === 'issued' && !inv.matchedTransactionId && (
                       <Button variant="ghost" size="sm"
-                        className="h-7 text-xs gap-1 text-emerald-600 hover:bg-emerald-50"
+                        className="h-7 text-xs gap-1 text-emerald-400 hover:bg-emerald-500/10"
                         disabled={busy === inv.id + 'paid'}
                         onClick={(e) => handle(e, 'paid', inv.id)}>
-                        <CheckCircle size={11} /> Платена
+                        <CheckCircle size={11} /> Към платени
                       </Button>
                     )}
                     {(inv.status === 'draft' || inv.status === 'issued') && (
                       <Button variant="ghost" size="sm"
-                        className="h-7 text-xs text-rose-500 hover:bg-rose-50"
+                        className="h-7 text-xs gap-1 text-rose-400 hover:bg-rose-500/10"
                         disabled={busy === inv.id + 'cancel'}
                         onClick={(e) => handle(e, 'cancel', inv.id)}>
                         <XCircle size={11} /> Анулирай

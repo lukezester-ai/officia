@@ -26,20 +26,14 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: dict.settings, href: `/${lang}/dashboard/settings`, icon: Settings },
   ];
   return (
-    <div
-      className="w-64 h-screen flex flex-col fixed left-0 top-0 z-50"
-      style={{ background: 'oklch(0.09 0.03 264)' }}
-    >
+    <div className="w-64 h-screen flex flex-col fixed left-0 top-0 z-50 bg-[#0A0F1C] border-r border-white/5">
       <div className="px-5 py-5 flex items-center gap-2.5">
-        <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: 'oklch(0.51 0.22 264)' }}
-        >
+        <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-violet-600">
           <Sparkles size={16} className="text-white" />
         </div>
         <span className="text-white font-bold text-lg tracking-tight">Officia</span>
       </div>
-      <div className="mx-4 mb-4 h-px" style={{ background: 'oklch(1 0 0 / 8%)' }} />
+      <div className="mx-4 mb-4 h-px bg-white/10" />
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isDashboardHome = item.href === `/${lang}/dashboard`;
@@ -52,22 +46,21 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-sm font-medium ${
                 isActive
-                  ? 'text-white shadow-sm'
-                  : 'text-white/55 hover:text-white/90 hover:bg-white/6'
+                  ? 'bg-white/10 text-white shadow-sm border border-white/5'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
               }`}
-              style={isActive ? { background: 'oklch(0.51 0.22 264)' } : undefined}
             >
-              <item.icon size={17} />
+              <item.icon size={17} className={isActive ? "text-violet-400" : ""} />
               {item.name}
             </Link>
           );
         })}
       </nav>
-      <div className="mx-4 mb-3 h-px" style={{ background: 'oklch(1 0 0 / 8%)' }} />
+      <div className="mx-4 mb-3 h-px bg-white/10" />
       <div className="px-4 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
           <UserButton afterSignOutUrl="/" />
-          <span className="text-sm font-medium text-white/70 truncate">{dict.profile}</span>
+          <span className="text-sm font-medium text-zinc-400 truncate">{dict.profile}</span>
         </div>
         <ThemeToggle />
       </div>

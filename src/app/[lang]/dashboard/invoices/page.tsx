@@ -60,42 +60,42 @@ export default function InvoicesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-white/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5">
+            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
               <FileText size={14} /> Общо
             </CardTitle>
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{invoices.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-white tabular-nums">{invoices.length}</div></CardContent>
         </Card>
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-white/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5">
-              <Clock size={14} className="text-gray-500" /> Чернови
+            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
+              <Clock size={14} className="text-zinc-500" /> Чернови
             </CardTitle>
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-gray-600">{draft.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-zinc-400 tabular-nums">{draft.length}</div></CardContent>
         </Card>
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-violet-500/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5">
-              <Send size={14} className="text-indigo-600" /> Издадени
+            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
+              <Send size={14} className="text-violet-400" /> Издадени
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-indigo-600">{issued.length}</div>
-            <div className="text-xs text-muted-foreground">{fmt(totalIssued)} €</div>
+            <div className="text-2xl font-bold text-violet-400 tabular-nums drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]">{issued.length}</div>
+            <div className="text-xs text-zinc-500 tabular-nums">{fmt(totalIssued)} €</div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-emerald-500/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-1.5">
-              <CheckCircle size={14} className="text-emerald-600" /> Платени
+            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
+              <CheckCircle size={14} className="text-emerald-400" /> Платени
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{paid.length}</div>
-            <div className="text-xs text-muted-foreground">{fmt(totalPaid)} €</div>
+            <div className="text-2xl font-bold text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">{paid.length}</div>
+            <div className="text-xs text-zinc-500 tabular-nums">{fmt(totalPaid)} €</div>
           </CardContent>
         </Card>
       </div>
