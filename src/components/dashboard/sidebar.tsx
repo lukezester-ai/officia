@@ -12,6 +12,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: dict.dashboard, href: `/${lang}/dashboard`, icon: LayoutDashboard },
     { name: dict.accounting, href: `/${lang}/dashboard/accounting`, icon: FileText },
     { name: dict.hr, href: `/${lang}/dashboard/hr`, icon: Users },
+    { name: "ТРЗ (Заплати)", href: `/${lang}/dashboard/payroll`, icon: Receipt },
     { name: dict.banking, href: `/${lang}/dashboard/banking`, icon: Landmark },
     { name: dict.documents, href: `/${lang}/dashboard/documents`, icon: Briefcase },
     { name: "AI Задачи", href: `/${lang}/dashboard/tasks`, icon: CheckSquare },
