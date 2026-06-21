@@ -1,6 +1,5 @@
-// @ts-nocheck
 'use client';
-
+// Fix client side crash by avoiding next/image for blob URLs
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User, Paperclip, X, File as FileIcon } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
-import Image from 'next/image';
+import { Attachment } from 'ai';
 
 export default function AIAssistantPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
@@ -93,15 +92,15 @@ export default function AIAssistantPage() {
                     </div>
 
                     {/* Визуализация на прикачените файлове */}
-                    {msg.experimental_attachments?.map((attachment, index) => (
+                    {msg.experimental_attachments?.map((attachment: Attachment, index: number) => (
                       <div key={index} className="mt-3">
                         {attachment.contentType?.startsWith('image/') ? (
                           <div className="relative w-48 h-48 rounded-lg overflow-hidden border border-white/20">
-                            <Image
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                               src={attachment.url}
                               alt="Прикачен файл"
-                              fill
-                              className="object-cover"
+                              className="object-cover w-full h-full"
                             />
                           </div>
                         ) : (
@@ -153,7 +152,8 @@ export default function AIAssistantPage() {
                   <div key={index} className="relative flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2 max-w-[200px]">
                     {file.type.startsWith('image/') ? (
                       <div className="w-10 h-10 relative shrink-0 rounded overflow-hidden">
-                        <Image src={URL.createObjectURL(file)} alt="preview" fill className="object-cover" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={URL.createObjectURL(file)} alt="preview" className="object-cover w-full h-full" />
                       </div>
                     ) : (
                       <FileIcon size={24} className="text-indigo-500 shrink-0" />
