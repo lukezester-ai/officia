@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from 'lucide-react';
 import { getDashboardData } from './actions';
 import Link from 'next/link';
+import { MorningBriefing } from '@/components/dashboard/MorningBriefing';
 import { getInvoices } from './invoices/actions';
 import { getPurchaseInvoices } from './purchase-invoices/actions-read';
 
@@ -47,6 +48,9 @@ export default async function DashboardPage() {
           {now.toLocaleDateString('bg-BG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
       </div>
+
+      {/* Proactive AI Briefing */}
+      <MorningBriefing />
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
