@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, Send, User, Paperclip, X, File as FileIcon } from 'lucide-react';
+import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -18,14 +18,46 @@ const initialAiMessages = [
 ];
 
 export default function AIAssistantPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/ai/chat',
     initialMessages: initialAiMessages,
   } as any) as any;
 
   const [files, setFiles] = useState<FileList | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const toggleListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Вашият браузър не поддържа гласово разпознаване. Моля, използвайте Google Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'bg-BG';
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsListening(true);
+    
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0].transcript)
+        .join('');
+      
+      setInput(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error(event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -236,10 +268,20 @@ export default function AIAssistantPage() {
               <Input 
                 value={input}
                 onChange={handleInputChange}
-                placeholder="Попитай асистента или прикачи фактура за сканиране..."
-                className="flex-1 rounded-xl bg-white/5 border-white/10 focus-visible:ring-violet-500 text-white placeholder:text-zinc-500 py-6 pl-12 text-[15px]"
+                placeholder={isListening ? "Слушам ви..." : "Попитай асистента или прикачи фактура за сканиране..."}
+                className="flex-1 rounded-xl bg-white/5 border-white/10 focus-visible:ring-violet-500 text-white placeholder:text-zinc-500 py-6 pl-12 pr-12 text-[15px]"
                 disabled={isLoading}
               />
+
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`absolute right-[140px] top-1/2 -translate-y-1/2 transition-colors ${isListening ? 'text-rose-500 animate-pulse' : 'text-zinc-400 hover:text-violet-400'}`}
+                title="Гласово въвеждане"
+              >
+                <Mic size={20} />
+              </button>
+
               <Button 
                 type="submit" 
                 disabled={(!input.trim() && (!files || files.length === 0)) || isLoading}
