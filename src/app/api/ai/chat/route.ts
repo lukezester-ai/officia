@@ -22,6 +22,7 @@ import { buildGenerateVatTool } from '@/lib/ai/tools/generate-vat';
 import { buildDepreciateAssetsTool } from '@/lib/ai/tools/depreciate-assets';
 import { buildAutoApproveTool } from '@/lib/ai/tools/auto-approve';
 import { buildProcessInboxTool } from '@/lib/ai/tools/process-inbox';
+import { buildGenerateChartTool } from '@/lib/ai/tools/generate-chart';
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
 Бъди полезен, точен и професионален. Отговаряй винаги на български език.
 Можеш да четеш фактури, касови бележки и други документи, ако потребителят ги прикачи. 
 Когато извличаш данни от документ, форматирай ги прегледно.
+Когато потребителят поиска да види данни във вид на графика (chart, графики, барчарт, пайчарт), ПЪРВО извикай съответния инструмент за данни (напр. getFinancialSummary или manageInventory), и СЛЕД ТОВА задължително извикай инструмента generateChart с извлечените данни, за да ги нарисуваш на екрана. Избирай подходящ тип графика (bar, line, pie).
 Текуща дата: ${new Date().toISOString()}`;
 
     const result = streamText({
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
         depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
         autoApprove: buildAutoApproveTool(tenantId, userId),
         processInbox: buildProcessInboxTool(tenantId),
+        generateChart: buildGenerateChartTool(),
       }
     });
 

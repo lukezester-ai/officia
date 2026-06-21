@@ -11,6 +11,7 @@ import { buildGenerateVatTool } from './generate-vat';
 import { buildDepreciateAssetsTool } from './depreciate-assets';
 import { buildAutoApproveTool } from './auto-approve';
 import { buildProcessInboxTool } from './process-inbox';
+import { buildGenerateChartTool } from './generate-chart';
 
 // Dummy instantiated tools just to get their descriptions for the API endpoint
 const dummyId = '00000000-0000-0000-0000-000000000000';
@@ -28,4 +29,5 @@ export const tools = {
   depreciateAssets: buildDepreciateAssetsTool(dummyId, dummyId),
   autoApprove: buildAutoApproveTool(dummyId, dummyId),
   processInbox: buildProcessInboxTool(dummyId),
+  generateChart: buildGenerateChartTool(),
 };
