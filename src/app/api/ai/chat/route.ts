@@ -18,6 +18,7 @@ import { buildCreateExpenseTool } from '@/lib/ai/tools/create-expense';
 import { buildCreateJournalEntryTool } from '@/lib/ai/tools/create-journal-entry';
 import { buildManageHRTool } from '@/lib/ai/tools/manage-hr';
 import { buildManageInventoryTool } from '@/lib/ai/tools/manage-inventory';
+import { buildGenerateVatTool } from '@/lib/ai/tools/generate-vat';
 
 export async function POST(req: NextRequest) {
   try {
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
         createJournalEntry: buildCreateJournalEntryTool(tenantId, userId),
         manageHR: buildManageHRTool(tenantId),
         manageInventory: buildManageInventoryTool(tenantId),
+        generateVat: buildGenerateVatTool(tenantId),
       }
     });
 
