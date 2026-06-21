@@ -4,7 +4,7 @@ import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { eq } from 'drizzle-orm';
 import { ReconciliationEngine } from '@/lib/accounting/reconciliation-engine';
-import { tool } from 'ai';
+
 
 function simpleTextSimilarity(a: string, b: string): number {
   if (!a || !b) return 0;
@@ -38,13 +38,13 @@ function calculateMatchScore(tx: any, candidate: any): number {
   return Math.min(score, 1.0);
 }
 
-export const bankMatchTool = tool({
+export const bankMatchTool = {
   description: "Съпоставя банкови транзакции с фактури или разходи чрез AI. Използвай го, когато потребителят иска да съпостави (reconcile) банкови транзакции.",
   parameters: z.object({
     bankTransactionId: z.string().describe("ID на банковата транзакция за съпоставяне"),
     confidenceThreshold: z.number().default(0.75).describe("Минимален праг на увереност (0 до 1)"),
   }),
-  execute: async (args: any) => {
+  execute: async (args: { bankTransactionId: string, confidenceThreshold?: number }) => {
     try {
       const { bankTransactionId, confidenceThreshold = 0.75 } = args;
       
@@ -94,4 +94,4 @@ export const bankMatchTool = tool({
       return { success: false, error: error.message };
     }
   }
-});
+};
