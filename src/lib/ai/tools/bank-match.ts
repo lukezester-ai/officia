@@ -1,100 +1,126 @@
+// @ts-nocheck
+import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
-import { eq } from 'drizzle-orm';
-import { ReconciliationEngine } from '@/lib/accounting/reconciliation-engine';
+import { invoices } from '@/lib/db/schema/invoices';
+import { eq, and, inArray } from 'drizzle-orm';
 
-
-function simpleTextSimilarity(a: string, b: string): number {
-  if (!a || !b) return 0;
-  const wordsA = a.toLowerCase().split(/\s+/);
-  const wordsB = b.toLowerCase().split(/\s+/);
-  const intersection = wordsA.filter(word => wordsB.includes(word)).length;
-  return intersection / Math.max(wordsA.length, wordsB.length);
-}
-
-function calculateMatchScore(tx: any, candidate: any): number {
-  let score = 0;
-
-  // Amount
-  const candAmount = candidate.type === 'invoice' ? parseFloat(candidate.target.total) : parseFloat(candidate.target.amount);
-  const amountDiff = Math.abs(Math.abs(parseFloat(tx.amount)) - Math.abs(candAmount));
-  if (amountDiff < 0.01) score += 0.6;
-  else if (amountDiff < 5) score += 0.3;
-
-  // Date
-  if (candidate.target.date && tx.date) {
-    const dateDiff = Math.abs(new Date(tx.date).getTime() - new Date(candidate.target.date).getTime()) / (1000 * 3600 * 24);
-    if (dateDiff < 1) score += 0.25;
-    else if (dateDiff < 3) score += 0.1;
-  }
-
-  // Description
-  const candDesc = candidate.target.description || candidate.target.invoiceNumber || '';
-  const descSimilarity = simpleTextSimilarity(tx.description || '', candDesc);
-  score += descSimilarity * 0.15;
-
-  return Math.min(score, 1.0);
-}
-
-import { tool } from 'ai';
-
-export const bankMatchTool = tool({
-  description: "Съпоставя банкови транзакции с фактури или разходи чрез AI. Използвай го, когато потребителят иска да съпостави (reconcile) банкови транзакции.",
+export const buildBankMatchTool = (tenantId: string) => tool({
+  description: "Автоматично сканира всички несъпоставени (unreconciled) банкови транзакции и ги засича с отворени неплатени фактури. Използвай го, когато потребителят попита дали има платени фактури или поиска банково засичане.",
   parameters: z.object({
-    bankTransactionId: z.string().describe("ID на банковата транзакция за съпоставяне"),
-    confidenceThreshold: z.number().default(0.75).describe("Минимален праг на увереност (0 до 1)"),
+    confidenceThreshold: z.number().optional().default(0.80).describe("Минимален праг за съвпадение (0-1). По подразбиране е 0.80.")
   }),
-  // @ts-ignore
-  execute: async (args: { bankTransactionId: string, confidenceThreshold?: number }) => {
+  execute: async ({ confidenceThreshold }) => {
     try {
-      const { bankTransactionId, confidenceThreshold = 0.75 } = args;
-      
-      const txs = await db.select().from(bankTransactions).where(eq(bankTransactions.id, bankTransactionId));
-      const tx = txs[0];
-
-      if (!tx) {
-        return { success: false, message: "Транзакцията не е намерена" };
+      // 1. Вземаме всички банкови сметки на фирмата
+      const accounts = await db.select({ id: bankAccounts.id }).from(bankAccounts).where(eq(bankAccounts.tenantId, tenantId));
+      if (accounts.length === 0) {
+        return { success: true, message: "Не бяха открити банкови сметки за тази фирма в системата.", matched: 0 };
       }
-      
-      const accounts = await db.select().from(bankAccounts).where(eq(bankAccounts.id, tx.accountId));
-      const tenantId = accounts.length > 0 ? accounts[0].tenantId : 'default';
+      const accountIds = accounts.map(a => a.id);
 
-      // 1. Използваме съществуващия ReconciliationEngine
-      const candidates = await ReconciliationEngine.suggestMatches(tenantId || 'default');
-      
-      // 2. Филтрираме само кандидатите за тази транзакция и добавяме AI scoring
-      const relevantCandidates = candidates.filter(c => c.transaction.id === tx.id);
-      
-      const scoredCandidates = relevantCandidates.map(candidate => ({
-        ...candidate,
-        score: calculateMatchScore(tx, candidate),
-      })).filter(c => c.score >= confidenceThreshold)
-        .sort((a, b) => b.score - a.score);
+      // 2. Вземаме всички несъпоставени банкови преводи
+      const unReconciledTxs = await db.select()
+        .from(bankTransactions)
+        .where(
+          and(
+            inArray(bankTransactions.accountId, accountIds),
+            eq(bankTransactions.isReconciled, false)
+          )
+        );
 
-      if (scoredCandidates.length > 0) {
-        const best = scoredCandidates[0];
+      // Филтрираме само входящите преводи (положителна сума)
+      const incomingTxs = unReconciledTxs.filter(tx => parseFloat(tx.amount || '0') > 0);
+
+      if (incomingTxs.length === 0) {
+        return { success: true, message: "Няма чакащи входящи преводи за съпоставяне. Всичко е изчистено!", matched: 0 };
+      }
+
+      // 3. Вземаме всички отворени (неплатени) фактури
+      const allInvoices = await db.select()
+        .from(invoices)
+        .where(eq(invoices.tenantId, tenantId));
         
-        // В реално приложение тук ще отбележим транзакцията като съпоставена в базата данни:
-        await db.update(bankTransactions).set({ isReconciled: true }).where(eq(bankTransactions.id, tx.id));
+      const openInvoices = allInvoices.filter(i => i.status !== 'paid' && i.type === 'sale');
+
+      if (openInvoices.length === 0) {
+        return { success: true, message: `Намерени са ${incomingTxs.length} превода, но нямате неплатени фактури, с които да ги засечем.`, matched: 0 };
+      }
+
+      // 4. Алгоритъм за съпоставяне (Match)
+      let matchCount = 0;
+      let matchedDetails = [];
+
+      for (const tx of incomingTxs) {
+        const txAmount = parseFloat(tx.amount || '0');
+        const txDesc = (tx.description || '').toLowerCase();
         
-        return {
-          success: true,
-          matchedWith: best.target,
-          type: best.type,
-          confidence: best.score,
-          message: `Успешно съпоставено с ${best.type} #${best.matchId} (${(best.score * 100).toFixed(1)}% увереност)`
-        };
+        let bestMatch = null;
+        let highestScore = 0;
+
+        for (const inv of openInvoices) {
+           const invAmount = parseFloat(inv.totalAmount || '0');
+           let score = 0;
+           
+           // Точно съвпадение на сумата дава най-голяма тежест
+           if (Math.abs(txAmount - invAmount) < 0.01) {
+             score += 0.6;
+           }
+
+           // Проверка дали номерът на фактурата е в основанието за плащане
+           if (inv.invoiceNumber && txDesc.includes(inv.invoiceNumber.toLowerCase())) {
+             score += 0.4;
+           }
+
+           // Проверка на името на контрагента
+           if (inv.clientName && tx.counterpartyName && tx.counterpartyName.toLowerCase().includes(inv.clientName.toLowerCase())) {
+             score += 0.2;
+           }
+
+           if (score > highestScore) {
+             highestScore = score;
+             bestMatch = inv;
+           }
+        }
+
+        // Ако намерим добро съвпадение
+        if (bestMatch && highestScore >= confidenceThreshold) {
+          // Отбелязваме в базата
+          await db.update(bankTransactions)
+            .set({ 
+               isReconciled: true, 
+               matchedInvoiceId: bestMatch.id,
+               matchStatus: 'confirmed',
+               matchConfidence: highestScore.toString()
+            })
+            .where(eq(bankTransactions.id, tx.id));
+            
+          await db.update(invoices)
+            .set({ status: 'paid' })
+            .where(eq(invoices.id, bestMatch.id));
+            
+          matchCount++;
+          matchedDetails.push(`Фактура №${bestMatch.invoiceNumber} (${bestMatch.totalAmount} лв.) беше платена чрез превод от ${tx.counterpartyName || 'Неизвестен'}`);
+          
+          // Премахваме фактурата от списъка за да не се плати два пъти с два превода
+          const index = openInvoices.findIndex(i => i.id === bestMatch.id);
+          if (index > -1) openInvoices.splice(index, 1);
+        }
       }
 
       return {
-        success: false,
-        candidates: scoredCandidates.length > 0 ? scoredCandidates : relevantCandidates,
-        message: "Няма достатъчно добро съвпадение. Моля, съпостави ръчно."
+        success: true,
+        matched: matchCount,
+        message: matchCount > 0 
+           ? `Успешно съпоставих ${matchCount} плащания:\n` + matchedDetails.map(m => `- ${m}`).join('\n')
+           : `Сканирах ${incomingTxs.length} превода и ${openInvoices.length} отворени фактури, но не намерих сигурни съвпадения.`,
       };
-    } catch (error: any) {
-      return { success: false, error: error.message };
+
+    } catch (err: any) {
+      console.error("AI Bank Match Error:", err);
+      return { success: false, message: `Грешка при банково засичане: ${err.message}` };
     }
   }
 });

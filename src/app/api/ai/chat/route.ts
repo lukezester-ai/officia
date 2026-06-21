@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { streamText, tool } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
-import { bankMatchTool } from '@/lib/ai/tools/bank-match';
+import { buildBankMatchTool } from '@/lib/ai/tools/bank-match';
 import { requireTenant } from '@/lib/auth/get-tenant';
 
 // Прост in-memory rate limiter за MVP (в production се ползва Redis/Upstash)
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         createInvoice: buildCreateInvoiceTool(tenantId, userId),
         getFinancialSummary: buildGetFinancialSummaryTool(tenantId),
         searchDocuments: buildSearchDocumentsTool(tenantId),
-        bankMatch: bankMatchTool,
+        bankMatch: buildBankMatchTool(tenantId),
       }
     });
 
