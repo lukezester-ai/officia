@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,19 +45,19 @@ export function InvoiceDrawer({ invoice, open, onOpenChange }: { invoice: any, o
           <div className="space-y-3">
             <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">Бързи действия</h3>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="justify-start gap-2" onClick={() => toast.info('AI предлага осчетоводяване...')}>
-                <FileText size={16} className="text-indigo-500" />
-                Предложи осчетоводяване
+              <Button variant="outline" className="justify-start gap-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 border-white/10 bg-white/5" onClick={() => window.open(`/invoice-print/${invoice.id}`, '_blank')}>
+                <FileText size={16} />
+                Свали PDF
               </Button>
-              <Button variant="outline" className="justify-start gap-2" onClick={() => toast.info('Търсене за дубликати...')}>
+              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={() => toast.info('Търсене за дубликати...')}>
                 <CheckCircle size={16} className="text-emerald-500" />
                 Провери дубликат
               </Button>
-              <Button variant="outline" className="justify-start gap-2" onClick={() => toast.info('Свързване с банка...')}>
+              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={() => toast.info('Свързване с банка...')}>
                 <DollarSign size={16} className="text-amber-500" />
-                Свържи с транзакция
+                Свържи с банка
               </Button>
-              <Button variant="outline" className="justify-start gap-2">
+              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300">
                 <Clock size={16} />
                 Създай задача
               </Button>
