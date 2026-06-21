@@ -21,6 +21,7 @@ import { buildManageInventoryTool } from '@/lib/ai/tools/manage-inventory';
 import { buildGenerateVatTool } from '@/lib/ai/tools/generate-vat';
 import { buildDepreciateAssetsTool } from '@/lib/ai/tools/depreciate-assets';
 import { buildAutoApproveTool } from '@/lib/ai/tools/auto-approve';
+import { buildProcessInboxTool } from '@/lib/ai/tools/process-inbox';
 
 export async function POST(req: NextRequest) {
   try {
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         generateVat: buildGenerateVatTool(tenantId),
         depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
         autoApprove: buildAutoApproveTool(tenantId, userId),
+        processInbox: buildProcessInboxTool(tenantId),
       }
     });
 
