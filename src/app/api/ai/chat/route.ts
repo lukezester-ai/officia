@@ -13,6 +13,7 @@ const MAX_TEXT_LENGTH = 15000; // 15,000 символа за защита на A
 
 import { buildCreateInvoiceTool } from '@/lib/ai/tools/create-invoice';
 import { buildGetFinancialSummaryTool } from '@/lib/ai/tools/get-financial-summary';
+import { buildSearchDocumentsTool } from '@/lib/ai/tools/search-documents';
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
       tools: {
         createInvoice: buildCreateInvoiceTool(tenantId, userId),
         getFinancialSummary: buildGetFinancialSummaryTool(tenantId),
+        searchDocuments: buildSearchDocumentsTool(tenantId),
         bankMatch: bankMatchTool,
       }
     });
