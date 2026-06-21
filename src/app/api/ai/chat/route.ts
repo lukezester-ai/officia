@@ -16,6 +16,7 @@ import { buildGetFinancialSummaryTool } from '@/lib/ai/tools/get-financial-summa
 import { buildSearchDocumentsTool } from '@/lib/ai/tools/search-documents';
 import { buildCreateExpenseTool } from '@/lib/ai/tools/create-expense';
 import { buildCreateJournalEntryTool } from '@/lib/ai/tools/create-journal-entry';
+import { buildManageHRTool } from '@/lib/ai/tools/manage-hr';
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
         bankMatch: buildBankMatchTool(tenantId),
         createExpense: buildCreateExpenseTool(tenantId, userId),
         createJournalEntry: buildCreateJournalEntryTool(tenantId, userId),
+        manageHR: buildManageHRTool(tenantId),
       }
     });
 
