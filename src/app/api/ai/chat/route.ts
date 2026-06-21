@@ -11,28 +11,7 @@ const RATE_LIMIT_WINDOW_MS = 60000; // 1 минута
 const MAX_REQUESTS_PER_WINDOW = 10;
 const MAX_TEXT_LENGTH = 15000; // 15,000 символа за защита на AI кредити
 
-// Dummy tool as example
-const createInvoiceTool = tool({
-  description: "Създава нова продажна фактура. Използвай този инструмент, когато потребителят иска да издаде фактура.",
-  parameters: z.object({
-    counterpartyId: z.string().describe("ID на контрагента (клиента)"),
-    items: z.array(z.object({
-      description: z.string().describe("Описание на стоката/услугата"),
-      quantity: z.number().describe("Количество"),
-      unitPrice: z.number().describe("Единична цена без ДДС"),
-      vatRate: z.number().describe("Данъчна ставка (напр. 20 за стандартна, 0 за ВОД)").optional().default(20),
-    })),
-    dueDate: z.string().optional().describe("Дата на падеж във формат YYYY-MM-DD"),
-    notes: z.string().optional().describe("Допълнителни бележки към фактурата"),
-  }),
-  // @ts-expect-error AI SDK tool execute type might not match
-  execute: async (args: any) => {
-    return {
-      success: true,
-      message: `Фактурата за контрагент ${args.counterpartyId} е генерирана успешно с ${args.items?.length || 0} артикула.`,
-    };
-  },
-});
+import { buildCreateInvoiceTool } from '@/lib/ai/tools/create-invoice';
 
 export async function POST(req: NextRequest) {
   try {
@@ -88,7 +67,7 @@ export async function POST(req: NextRequest) {
       system: context,
       messages: messages,
       tools: {
-        createInvoice: createInvoiceTool,
+        createInvoice: buildCreateInvoiceTool(tenantId, userId),
         bankMatch: bankMatchTool,
       }
     });
