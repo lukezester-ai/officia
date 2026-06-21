@@ -106,12 +106,21 @@ export default async function VatPage({
               </div>
             </div>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 transition-colors px-4 py-2 rounded-xl text-sm font-medium"
-          >
-            <Printer size={14} /> PDF / Pechat
-          </button>
+          <div className="flex gap-2">
+            <a
+              href={`/api/accounting/vat-export?year=${period.split('-')[0]}&month=${period.split('-')[1]}`}
+              className="flex items-center gap-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-colors px-4 py-2 rounded-xl text-sm font-medium print:hidden shadow-sm"
+              download
+            >
+              <FileText size={14} /> НАП Експорт (ZIP)
+            </a>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 transition-colors px-4 py-2 rounded-xl text-sm font-medium print:hidden"
+            >
+              <Printer size={14} /> PDF / Pechat
+            </button>
+          </div>
         </div>
 
         {/* Period selector */}
