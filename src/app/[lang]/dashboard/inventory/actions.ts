@@ -91,7 +91,7 @@ export async function addInventoryMovement(data: {
     const { tenantId } = await requireTenant();
     
     // Ensure a division exists
-    let divisions = await db.select().from(companyDivisions).where(eq(companyDivisions.tenantId, tenantId)).limit(1);
+    const divisions = await db.select().from(companyDivisions).where(eq(companyDivisions.tenantId, tenantId)).limit(1);
     let divisionId = '';
     
     if (divisions.length === 0) {

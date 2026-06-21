@@ -8,16 +8,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User, Paperclip, X, File as FileIcon } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 
+const initialAiMessages = [
+  {
+    id: '1',
+    role: 'assistant',
+    content: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
+  }
+];
+
 export default function AIAssistantPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/ai/chat',
-    initialMessages: [
-      {
-        id: '1',
-        role: 'assistant',
-        content: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
-      }
-    ]
+    initialMessages: initialAiMessages,
   } as any) as any;
 
   const [files, setFiles] = useState<FileList | null>(null);
