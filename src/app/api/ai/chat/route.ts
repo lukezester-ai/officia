@@ -12,6 +12,7 @@ const MAX_REQUESTS_PER_WINDOW = 10;
 const MAX_TEXT_LENGTH = 15000; // 15,000 символа за защита на AI кредити
 
 import { buildCreateInvoiceTool } from '@/lib/ai/tools/create-invoice';
+import { buildGetFinancialSummaryTool } from '@/lib/ai/tools/get-financial-summary';
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
       messages: messages,
       tools: {
         createInvoice: buildCreateInvoiceTool(tenantId, userId),
+        getFinancialSummary: buildGetFinancialSummaryTool(tenantId),
         bankMatch: bankMatchTool,
       }
     });
