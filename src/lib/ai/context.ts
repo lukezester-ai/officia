@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 export async function buildRichContext(tenantId: string, userId: string): Promise<string> {
   // TODO: Тук ще извличаме реални данни от базата за конкретния tenant
   // Например: текущ cash balance, предстоящи плащания, неплатени фактури
@@ -12,11 +12,12 @@ export async function buildRichContext(tenantId: string, userId: string): Promis
   
   Бизнес контекст:
   - Фирмата е регистрирана по ДДС.
-  - Основна валута: BGN
+  - Основна валута: EUR
   - Последни действия: Създадена е фактура #10023.
-  - Текущ паричен баланс: 25,400 BGN
+  - Текущ паричен баланс: 25,400 EUR
   
   Допълнителни насоки:
   Всички финансови операции трябва да бъдат съобразени със счетоводните стандарти в България.
   `;
 }
+

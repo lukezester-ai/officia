@@ -7,7 +7,7 @@ import { BookOpen, Plus, Trash2, Save, ArrowLeft, CheckCircle, AlertCircle } fro
 const ACCOUNTS = [
   { code: "411", name: "Клиенти" },
   { code: "401", name: "Доставчици" },
-  { code: "501", name: "Каса в лева" },
+  { code: "501", name: "Каса в евро" },
   { code: "503", name: "Разплащателна сметка" },
   { code: "601", name: "Разходи за материали" },
   { code: "602", name: "Разходи за външни услуги" },
@@ -154,8 +154,8 @@ export default function NewJournalEntry(props: { params: Promise<{ lang: string 
             <div className="grid grid-cols-12 gap-2 px-2 pb-1">
               <div className="col-span-3 text-xs text-zinc-500">Сметка</div>
               <div className="col-span-4 text-xs text-zinc-500">Описание</div>
-              <div className="col-span-2 text-xs text-zinc-500 text-right">Дебит (лв.)</div>
-              <div className="col-span-2 text-xs text-zinc-500 text-right">Кредит (лв.)</div>
+              <div className="col-span-2 text-xs text-zinc-500 text-right">Дебит (€)</div>
+              <div className="col-span-2 text-xs text-zinc-500 text-right">Кредит (€)</div>
               <div className="col-span-1"></div>
             </div>
 

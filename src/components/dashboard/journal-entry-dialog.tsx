@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 import { useState } from 'react';
 import { Plus, Trash2, BookOpen, AlertCircle } from 'lucide-react';
@@ -82,7 +82,7 @@ export function JournalEntryDialog({ accounts, onAdd }: Props) {
               <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
                 <span className="col-span-4">Сметка</span>
                 <span className="col-span-3">Вид</span>
-                <span className="col-span-3">Сума (BGN)</span>
+                <span className="col-span-3">Сума (EUR)</span>
                 <span className="col-span-2" />
               </div>
               {lines.map((line, idx) => (
@@ -124,8 +124,8 @@ export function JournalEntryDialog({ accounts, onAdd }: Props) {
 
           <div className={`flex items-center justify-between p-3 rounded-lg text-sm ${isBalanced ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-muted'}`}>
             <div className="flex gap-6">
-              <span>Дебит: <strong className="text-blue-600">{totalDebit.toFixed(2)} лв.</strong></span>
-              <span>Кредит: <strong className="text-rose-600">{totalCredit.toFixed(2)} лв.</strong></span>
+              <span>Дебит: <strong className="text-blue-600">{totalDebit.toFixed(2)} €</strong></span>
+              <span>Кредит: <strong className="text-rose-600">{totalCredit.toFixed(2)} €</strong></span>
             </div>
             {!isBalanced && totalDebit > 0 && (
               <div className="flex items-center gap-1 text-amber-600 text-xs"><AlertCircle size={13} /> Небалансирано</div>
@@ -144,3 +144,4 @@ export function JournalEntryDialog({ accounts, onAdd }: Props) {
     </Dialog>
   );
 }
+

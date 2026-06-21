@@ -113,17 +113,17 @@ export default function BankingPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold mt-2">
-                  {parseFloat(acc.balance || '0').toFixed(2)} {acc.currency || 'BGN'}
+                  {parseFloat(acc.balance || '0').toFixed(2)} {acc.currency || 'EUR'}
                 </div>
               </CardContent>
             </Card>
           ))}
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground font-medium">Общо салдо (BGN)</CardTitle>
+              <CardTitle className="text-sm text-muted-foreground font-medium">Общо салдо (EUR)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{totalBalance.toFixed(2)} лв.</div>
+              <div className="text-3xl font-bold text-primary">{totalBalance.toFixed(2)} €</div>
             </CardContent>
           </Card>
         </div>
@@ -168,7 +168,7 @@ export default function BankingPage() {
                       <TableCell className={`font-semibold ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`}>
                         <div className="flex items-center gap-1">
                           {isIncome ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                          {Math.abs(amount).toFixed(2)} {trx.currency || 'BGN'}
+                          {Math.abs(amount).toFixed(2)} {trx.currency || 'EUR'}
                         </div>
                       </TableCell>
                       <TableCell>

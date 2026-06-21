@@ -170,7 +170,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             <div className="bg-gradient-to-br from-indigo-600 to-violet-700 border border-indigo-500/30 rounded-2xl p-8 text-left relative overflow-hidden">
               <div className="absolute top-4 right-4 bg-white/20 text-xs font-semibold px-2.5 py-1 rounded-full">Популярен</div>
               <div className="text-sm text-indigo-200 font-medium mb-2 uppercase tracking-wider">Про</div>
-              <div className="text-4xl font-bold mb-1">49 лв.<span className="text-lg font-normal text-indigo-200">/мес</span></div>
+              <div className="text-4xl font-bold mb-1">49 €<span className="text-lg font-normal text-indigo-200">/мес</span></div>
               <div className="text-indigo-200 text-sm mb-6">Пълен достъп до всички функции</div>
               <div className="space-y-3 text-sm text-indigo-100 mb-8">
                 {['Неограничени фактури', 'AI анализ на документи', 'Банкова синхронизация', 'До 10 потребители', 'Приоритетна поддръжка'].map(i => (

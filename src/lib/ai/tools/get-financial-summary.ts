@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -18,8 +18,9 @@ export const getFinancialSummaryTool = tool({
       revenue: 45000,
       expenses: 28000,
       netProfit: 17000,
-      currency: "BGN",
+      currency: "EUR",
       message: `Успешно извлечена справка за период: ${period}.`,
     };
   },
 });
+

@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { processDocumentImage } from '@/lib/ai/agents/ocr';
 
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       await new Promise(resolve => setTimeout(resolve, 2000));
       return NextResponse.json({
         totalAmount: 1450.00,
-        currency: 'BGN',
+        currency: 'EUR',
         invoiceNumber: `INV-${Math.floor(10000 + Math.random() * 90000)}`,
         date: new Date().toISOString().split('T')[0],
         counterpartyName: 'ТехМарт България ЕООД',
@@ -33,3 +33,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || 'Failed to process document' }, { status: 500 });
   }
 }
+

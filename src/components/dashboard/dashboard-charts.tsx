@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -39,7 +39,7 @@ export function DashboardCharts({ revenueData, invoiceData }: { revenueData: any
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
-                  tickFormatter={(value) => `${value} лв`} 
+                  tickFormatter={(value) => `${value} €`} 
                 />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
                 <Tooltip 
@@ -100,3 +100,4 @@ export function DashboardCharts({ revenueData, invoiceData }: { revenueData: any
     </div>
   );
 }
+

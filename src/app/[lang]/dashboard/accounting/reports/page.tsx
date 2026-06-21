@@ -93,7 +93,7 @@ export default function ReportsPage() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Общо Приходи</p>
-                <p className="text-3xl font-bold mt-2 text-gray-900">{ytdRev.toLocaleString('bg-BG', { style: 'currency', currency: 'BGN' })}</p>
+                <p className="text-3xl font-bold mt-2 text-gray-900">{ytdRev.toLocaleString('bg-BG', { style: 'currency', currency: 'EUR' })}</p>
               </div>
               <div className="p-3 rounded-xl bg-green-50 text-green-600">
                 <TrendingUp size={24} />
@@ -106,7 +106,7 @@ export default function ReportsPage() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Общо Разходи</p>
-                <p className="text-3xl font-bold mt-2 text-gray-900">{ytdExp.toLocaleString('bg-BG', { style: 'currency', currency: 'BGN' })}</p>
+                <p className="text-3xl font-bold mt-2 text-gray-900">{ytdExp.toLocaleString('bg-BG', { style: 'currency', currency: 'EUR' })}</p>
               </div>
               <div className="p-3 rounded-xl bg-red-50 text-red-600">
                 <TrendingDown size={24} />
@@ -120,7 +120,7 @@ export default function ReportsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-500">Нетна Печалба</p>
                 <p className={`text-3xl font-bold mt-2 ${netProfit >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
-                  {netProfit.toLocaleString('bg-BG', { style: 'currency', currency: 'BGN' })}
+                  {netProfit.toLocaleString('bg-BG', { style: 'currency', currency: 'EUR' })}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600">
@@ -149,7 +149,7 @@ export default function ReportsPage() {
                   <BarChart data={data?.monthlyData || []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} tickFormatter={(value) => `${value} лв`} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} tickFormatter={(value) => `${value} €`} />
                     <RechartsTooltip cursor={{fill: '#f9fafb'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                     <Legend iconType="circle" />
                     <Bar dataKey="Приходи" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
@@ -173,7 +173,7 @@ export default function ReportsPage() {
                   <thead className="bg-gray-50 text-gray-500 font-medium">
                     <tr>
                       <th className="px-6 py-3">Показател</th>
-                      <th className="px-6 py-3 text-right">Сума (BGN)</th>
+                      <th className="px-6 py-3 text-right">Сума (EUR)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -216,11 +216,11 @@ export default function ReportsPage() {
                     <tbody className="divide-y divide-gray-100">
                       <tr>
                         <td className="py-3 text-gray-600">Текущи активи</td>
-                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalAssets || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} лв</td>
+                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalAssets || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
                       </tr>
                       <tr className="bg-gray-50/50">
                         <td className="py-3 px-2 font-bold text-gray-900">Общо Сума на Актива</td>
-                        <td className="py-3 px-2 font-bold text-right text-gray-900">{Math.abs(Number(data?.balanceSheet?.totalAssets || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} лв</td>
+                        <td className="py-3 px-2 font-bold text-right text-gray-900">{Math.abs(Number(data?.balanceSheet?.totalAssets || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
                       </tr>
                     </tbody>
                   </table>
@@ -231,15 +231,15 @@ export default function ReportsPage() {
                     <tbody className="divide-y divide-gray-100">
                       <tr>
                         <td className="py-3 text-gray-600">Собствен капитал</td>
-                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalEquity || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} лв</td>
+                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalEquity || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
                       </tr>
                       <tr>
                         <td className="py-3 text-gray-600">Текущи задължения</td>
-                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalLiabilities || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} лв</td>
+                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalLiabilities || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
                       </tr>
                       <tr className="bg-gray-50/50">
                         <td className="py-3 px-2 font-bold text-gray-900">Общо Сума на Пасива</td>
-                        <td className="py-3 px-2 font-bold text-right text-gray-900">{Math.abs(Number(data?.balanceSheet?.totalLiabilitiesAndEquity || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} лв</td>
+                        <td className="py-3 px-2 font-bold text-right text-gray-900">{Math.abs(Number(data?.balanceSheet?.totalLiabilitiesAndEquity || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
                       </tr>
                     </tbody>
                   </table>

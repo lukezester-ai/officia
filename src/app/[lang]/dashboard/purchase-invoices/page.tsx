@@ -81,7 +81,7 @@ export default function PurchaseInvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-indigo-600">{approved.length}</div>
-            <div className="text-xs text-muted-foreground">{fmt(totalApproved)} лв.</div>
+            <div className="text-xs text-muted-foreground">{fmt(totalApproved)} €</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm">
@@ -92,7 +92,7 @@ export default function PurchaseInvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">{paid.length}</div>
-            <div className="text-xs text-muted-foreground">{fmt(totalPaid)} лв.</div>
+            <div className="text-xs text-muted-foreground">{fmt(totalPaid)} €</div>
           </CardContent>
         </Card>
       </div>

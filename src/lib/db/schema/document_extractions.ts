@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, numeric, jsonb } from "drizzle-orm/pg-core";
+﻿import { pgTable, text, timestamp, uuid, numeric, jsonb } from "drizzle-orm/pg-core";
 import { documents } from "./documents";
 
 export const documentExtractions = pgTable("document_extractions", {
@@ -12,10 +12,11 @@ export const documentExtractions = pgTable("document_extractions", {
   dueDate: text("due_date"),
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }),
   vatAmount: numeric("vat_amount", { precision: 12, scale: 2 }),
-  currency: text("currency").default("BGN"),
+  currency: text("currency").default("EUR"),
   summary: text("summary"),
   rawJson: jsonb("raw_json"), // The full extraction output
   confidence: numeric("confidence", { precision: 3, scale: 2 }), // 0.00 to 1.00
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+

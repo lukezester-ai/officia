@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 export interface BankingAnalysisResult {
   intent: 'reconciliation' | 'categorization' | 'anomaly_detection' | 'unknown';
   transactionsProcessed?: number;
@@ -31,7 +31,7 @@ export class BankingAgent {
     if (lowerText.includes('аномали') || lowerText.includes('странни')) {
       return {
         intent: 'anomaly_detection',
-        anomaliesFound: ['Дублирано плащане към Еконт от 45.50 лв на 12-ти май.'],
+        anomaliesFound: ['Дублирано плащане към Еконт от 45.50 € на 12-ти май.'],
         suggestedAction: 'Открита е аномалия: потенциално двойно плащане. Прегледайте извлечението.'
       };
     }
@@ -42,3 +42,4 @@ export class BankingAgent {
     };
   }
 }
+

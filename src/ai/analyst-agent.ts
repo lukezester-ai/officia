@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 export interface AnalystAnalysisResult {
   intent: 'financial_summary' | 'expense_report' | 'unknown';
   metrics?: {
@@ -22,7 +22,7 @@ export class AnalystAgent {
           expenses: 84000,
           profit: 41000
         },
-        suggestedAction: 'Генериран е финансов отчет за текущия месец. Нетната печалба е 41,000 лв.'
+        suggestedAction: 'Генериран е финансов отчет за текущия месец. Нетната печалба е 41,000 €'
       };
     }
 
@@ -39,3 +39,4 @@ export class AnalystAgent {
     };
   }
 }
+

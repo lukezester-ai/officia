@@ -123,7 +123,7 @@ export async function getCounterparty360Data(id: string) {
     // AI Notes logic
     const aiNotes = [];
     if (unpaidInvoices.length > 0) {
-      aiNotes.push(`Контрагентът има ${unpaidInvoices.length} неплатени фактури за общо ${totalUnpaid.toLocaleString('bg-BG')} лв.`);
+      aiNotes.push(`Контрагентът има ${unpaidInvoices.length} неплатени фактури за общо ${totalUnpaid.toLocaleString('bg-BG')} €`);
     }
     const overdue = unpaidInvoices.filter(i => i.dueDate && new Date(i.dueDate) < new Date());
     if (overdue.length > 0) {

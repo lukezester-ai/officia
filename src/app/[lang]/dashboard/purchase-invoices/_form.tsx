@@ -141,7 +141,7 @@ export function NewPurchaseInvoiceDialog({ onCreated }: { onCreated: () => void 
               <Bot size={18} className="text-[#4F46E5]" />
             </div>
             <Input 
-              placeholder="Постави текст от фактура или напиши 'Фактура от Еконт за 50лв'..." 
+              placeholder="Постави текст от фактура или напиши 'Фактура от Еконт за 50€'..." 
               value={aiPrompt}
               onChange={e => setAiPrompt(e.target.value)}
               className="bg-white border-white focus-visible:ring-[#4F46E5]/30 shadow-sm"
@@ -154,7 +154,7 @@ export function NewPurchaseInvoiceDialog({ onCreated }: { onCreated: () => void 
               disabled={loadingAi || !aiPrompt.trim()}
             >
               <Sparkles size={16} className="mr-2" />
-              {loadingAi ? 'Анализ...' : 'AI Попълване'}
+              {loadingAi ? 'Анализ...' : 'AI Попъ€ане'}
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -219,15 +219,15 @@ export function NewPurchaseInvoiceDialog({ onCreated }: { onCreated: () => void 
           <div className="rounded-lg bg-muted/50 p-4 space-y-1.5 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Данъчна основа:</span>
-              <span className="font-mono">{fmt(totals.net)} лв.</span>
+              <span className="font-mono">{fmt(totals.net)} €</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">ДДС:</span>
-              <span className="font-mono text-indigo-600">{fmt(totals.vat)} лв.</span>
+              <span className="font-mono text-indigo-600">{fmt(totals.vat)} €</span>
             </div>
             <div className="flex justify-between font-semibold text-base border-t pt-1.5 mt-1.5">
               <span>Сума за плащане:</span>
-              <span className="font-mono">{fmt(totals.total)} лв.</span>
+              <span className="font-mono">{fmt(totals.total)} €</span>
             </div>
           </div>
           <div className="space-y-1.5">

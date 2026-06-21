@@ -18,7 +18,7 @@ export async function uploadBankStatement(parsedTransactions: any[]) {
       tenantId: tenant.id,
       accountName: "Main Bank Account",
       iban: "BG12 UNCR 1234 5678 9012 34",
-      currency: "BGN",
+      currency: "EUR",
       balance: "0",
     }).returning();
     account = res[0];

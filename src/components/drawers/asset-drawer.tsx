@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ export function AssetDrawer({ asset, open, onOpenChange }: { asset: any, open: b
               </div>
               <div className="flex justify-between text-sm border-b border-border pb-2">
                 <span className="text-muted-foreground">Стойност на придобиване</span>
-                <span className="font-medium">{parseFloat(asset.acquisitionCost).toLocaleString('bg-BG')} лв.</span>
+                <span className="font-medium">{parseFloat(asset.acquisitionCost).toLocaleString('bg-BG')} €</span>
               </div>
               <div className="flex justify-between text-sm border-b border-border pb-2">
                 <span className="text-muted-foreground">Сметка на актива</span>
@@ -93,3 +93,4 @@ export function AssetDrawer({ asset, open, onOpenChange }: { asset: any, open: b
     </Sheet>
   );
 }
+

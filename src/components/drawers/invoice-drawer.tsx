@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,15 +93,15 @@ export function InvoiceDrawer({ invoice, open, onOpenChange }: { invoice: any, o
             <div className="bg-white dark:bg-slate-950 border border-border rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <div className="text-muted-foreground">Данъчна основа</div>
-                <div className="font-medium text-right">{fmt(parseFloat(invoice.netAmount || '0'))} лв.</div>
+                <div className="font-medium text-right">{fmt(parseFloat(invoice.netAmount || '0'))} €</div>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <div className="text-muted-foreground">ДДС сума</div>
-                <div className="font-medium text-right">{fmt(parseFloat(invoice.vatAmount || '0'))} лв.</div>
+                <div className="font-medium text-right">{fmt(parseFloat(invoice.vatAmount || '0'))} €</div>
               </div>
               <div className="flex justify-between items-center text-base font-bold pt-3 border-t border-border mt-3">
                 <div>Общо за плащане</div>
-                <div>{fmt(parseFloat(invoice.totalAmount || '0'))} лв.</div>
+                <div>{fmt(parseFloat(invoice.totalAmount || '0'))} €</div>
               </div>
             </div>
           </div>
@@ -111,3 +111,4 @@ export function InvoiceDrawer({ invoice, open, onOpenChange }: { invoice: any, o
     </Sheet>
   );
 }
+

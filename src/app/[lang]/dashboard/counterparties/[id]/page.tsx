@@ -108,13 +108,13 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground flex items-center gap-2 mb-1"><TrendingUp size={14}/> Общ оборот</p>
-                <p className="text-2xl font-bold">{fmt(financials.totalVolume)} лв.</p>
+                <p className="text-2xl font-bold">{fmt(financials.totalVolume)} €</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground flex items-center gap-2 mb-1"><DollarSign size={14}/> За плащане</p>
-                <p className="text-2xl font-bold text-amber-600">{fmt(financials.totalUnpaid)} лв.</p>
+                <p className="text-2xl font-bold text-amber-600">{fmt(financials.totalUnpaid)} €</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm hidden lg:block">
@@ -158,7 +158,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                             </div>
                           </div>
                           <div className="text-right font-mono font-semibold">
-                            {fmt(parseFloat(inv.totalAmount || '0'))} лв.
+                            {fmt(parseFloat(inv.totalAmount || '0'))} €
                           </div>
                         </div>
                       ))}
@@ -178,7 +178,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                             <p className="text-xs text-muted-foreground mt-0.5">{tx.date ? new Date(tx.date).toLocaleDateString('bg-BG') : '—'}</p>
                           </div>
                           <div className={`text-right font-mono font-semibold ${parseFloat(tx.amount||'0') > 0 ? 'text-emerald-600' : ''}`}>
-                            {parseFloat(tx.amount||'0') > 0 ? '+' : ''}{fmt(parseFloat(tx.amount||'0'))} лв.
+                            {parseFloat(tx.amount||'0') > 0 ? '+' : ''}{fmt(parseFloat(tx.amount||'0'))} €
                           </div>
                         </div>
                       ))}

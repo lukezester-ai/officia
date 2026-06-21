@@ -67,21 +67,21 @@ export default async function ReportsPage() {
             <Card className="shadow-sm border-0">
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Приходи</p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.revenue)} лв.</h3>
+                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.revenue)} €</h3>
                 <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1"><TrendingUp size={12}/> +12% спрямо м.м.</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm border-0">
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Разходи</p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.expenses)} лв.</h3>
+                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.expenses)} €</h3>
                 <p className="text-xs text-rose-600 mt-2 flex items-center gap-1"><TrendingUp size={12}/> +5% спрямо м.м.</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm border-0 bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900">
               <CardContent className="p-6">
                 <p className="text-sm font-medium opacity-80 mb-2">Нетна печалба (Баланс)</p>
-                <h3 className="text-3xl font-bold">{fmt(data.profit)} лв.</h3>
+                <h3 className="text-3xl font-bold">{fmt(data.profit)} €</h3>
               </CardContent>
             </Card>
           </div>
@@ -98,7 +98,7 @@ export default async function ReportsPage() {
                   <div className="flex justify-between items-center pb-4 border-b">
                     <div>
                       <p className="text-sm text-muted-foreground">Общо неплатени (Чакащи)</p>
-                      <h4 className="text-xl font-bold mt-1">{fmt(data.totalUnpaidSales)} лв.</h4>
+                      <h4 className="text-xl font-bold mt-1">{fmt(data.totalUnpaidSales)} €</h4>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
@@ -121,13 +121,13 @@ export default async function ReportsPage() {
                   <div className="flex justify-between items-center pb-4 border-b">
                     <div>
                       <p className="text-sm text-muted-foreground">Общо задължения</p>
-                      <h4 className="text-xl font-bold mt-1">{fmt(data.totalUnpaidPurchases)} лв.</h4>
+                      <h4 className="text-xl font-bold mt-1">{fmt(data.totalUnpaidPurchases)} €</h4>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-sm text-muted-foreground">За плащане тази седмица</p>
-                      <h4 className="text-xl font-bold mt-1">0.00 лв.</h4>
+                      <h4 className="text-xl font-bold mt-1">0.00 €</h4>
                     </div>
                     <Button size="sm" variant="outline" className="gap-2">Подготви преводи <ArrowRight size={14}/></Button>
                   </div>

@@ -106,9 +106,9 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex gap-4 text-sm">
-          <span className="text-muted-foreground">Дан. основа: <strong className="text-foreground">{fmt(totalNet)} лв.</strong></span>
-          <span className="text-muted-foreground">ДДС: <strong className="text-foreground">{fmt(totalVat)} лв.</strong></span>
-          <span className="text-muted-foreground">Общо: <strong className="text-foreground">{fmt(totalNet + totalVat)} лв.</strong></span>
+          <span className="text-muted-foreground">Дан. основа: <strong className="text-foreground">{fmt(totalNet)} €</strong></span>
+          <span className="text-muted-foreground">ДДС: <strong className="text-foreground">{fmt(totalVat)} €</strong></span>
+          <span className="text-muted-foreground">Общо: <strong className="text-foreground">{fmt(totalNet + totalVat)} €</strong></span>
         </div>
         <AddEntryDialog type={type} year={year} month={month} onAdd={load} />
       </div>
@@ -132,9 +132,9 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
                   <TableCell className="text-sm">{new Date(e.documentDate).toLocaleDateString('bg-BG')}</TableCell>
                   <TableCell className="text-sm font-medium">{e.counterpartyName}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{e.counterpartyVat || '—'}</TableCell>
-                  <TableCell className="text-right text-sm">{fmt(parseFloat(e.netAmount))} лв.</TableCell>
+                  <TableCell className="text-right text-sm">{fmt(parseFloat(e.netAmount))} €</TableCell>
                   <TableCell className="text-right text-sm">{e.vatRate}%</TableCell>
-                  <TableCell className="text-right text-sm font-semibold">{fmt(parseFloat(e.vatAmount))} лв.</TableCell>
+                  <TableCell className="text-right text-sm font-semibold">{fmt(parseFloat(e.vatAmount))} €</TableCell>
                   <TableCell><button onClick={() => handleDelete(e.id)} className="text-muted-foreground hover:text-rose-500 transition-colors p-1"><Trash2 size={13} /></button></TableCell>
                 </TableRow>
               ))}

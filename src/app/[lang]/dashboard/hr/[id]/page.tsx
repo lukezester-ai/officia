@@ -71,7 +71,7 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
                 <div><span className="text-sm text-muted-foreground block mb-1">Дата на започване</span><p className="font-medium">{new Date(emp.startDate).toLocaleDateString('bg-BG')}</p></div>
                 <div><span className="text-sm text-muted-foreground block mb-1">Крайна дата</span><p className="font-medium">{emp.endDate ? new Date(emp.endDate).toLocaleDateString('bg-BG') : 'Безсрочен'}</p></div>
                 <div><span className="text-sm text-muted-foreground block mb-1">Тип заетост</span><p className="font-medium uppercase text-xs tracking-wider mt-1.5">{emp.contractType}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Възнаграждение (Бруто)</span><p className="font-mono">{emp.salary ? `${parseFloat(emp.salary).toLocaleString('bg-BG')} лв.` : '—'}</p></div>
+                <div><span className="text-sm text-muted-foreground block mb-1">Възнаграждение (Бруто)</span><p className="font-mono">{emp.salary ? `${parseFloat(emp.salary).toLocaleString('bg-BG')} €` : '—'}</p></div>
               </div>
             </CardContent>
           </Card>

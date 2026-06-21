@@ -117,7 +117,7 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
                         <p className="text-xs text-muted-foreground">Издадена на {new Date(inv.issueDate).toLocaleDateString('bg-BG')}</p>
                       </TableCell>
                       <TableCell className="text-right font-mono font-semibold text-sm">
-                        {fmt(parseFloat(inv.totalAmount || '0'))} лв.
+                        {fmt(parseFloat(inv.totalAmount || '0'))} €
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">

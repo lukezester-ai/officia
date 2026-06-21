@@ -15,7 +15,7 @@ export default function CurrenciesClient({ initialTrends }: { initialTrends: any
   // Calculator state
   const [calcAmount, setCalcAmount] = useState('100');
   const [calcFrom, setCalcFrom] = useState('EUR');
-  const [calcTo, setCalcTo] = useState('BGN');
+  const [calcTo, setCalcTo] = useState('EUR');
 
   useEffect(() => {
     fetchHistory(selectedCurrency);
@@ -44,15 +44,15 @@ export default function CurrenciesClient({ initialTrends }: { initialTrends: any
   };
 
   const calculateConversion = () => {
-    // If converting TO BGN
-    if (calcTo === 'BGN' && calcFrom !== 'BGN') {
+    // If converting TO EUR
+    if (calcTo === 'EUR' && calcFrom !== 'EUR') {
       const trend = initialTrends.find(t => t.currencyFrom === calcFrom);
       if (trend) {
         return (parseFloat(calcAmount || '0') * trend.currentRate).toFixed(2);
       }
     }
-    // If converting FROM BGN
-    if (calcFrom === 'BGN' && calcTo !== 'BGN') {
+    // If converting FROM EUR
+    if (calcFrom === 'EUR' && calcTo !== 'EUR') {
       const trend = initialTrends.find(t => t.currencyFrom === calcTo);
       if (trend) {
         return (parseFloat(calcAmount || '0') / trend.currentRate).toFixed(2);
@@ -116,7 +116,7 @@ export default function CurrenciesClient({ initialTrends }: { initialTrends: any
         {/* Chart */}
         <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-6">
           <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-            Графика (30 дни) - {selectedCurrency}/{initialTrends[0]?.currencyTo || 'BGN'}
+            Графика (30 дни) - {selectedCurrency}/{initialTrends[0]?.currencyTo || 'EUR'}
           </h3>
           <div className="h-[300px] w-full">
             {historyData.length > 0 ? (
@@ -171,7 +171,7 @@ export default function CurrenciesClient({ initialTrends }: { initialTrends: any
                   onChange={(e) => setCalcFrom(e.target.value)}
                   className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-emerald-500/50"
                 >
-                  <option value="BGN">BGN</option>
+                  <option value="EUR">EUR</option>
                   {initialTrends.map(t => <option key={t.currencyFrom} value={t.currencyFrom}>{t.currencyFrom}</option>)}
                 </select>
               </div>
@@ -182,7 +182,7 @@ export default function CurrenciesClient({ initialTrends }: { initialTrends: any
                   onChange={(e) => setCalcTo(e.target.value)}
                   className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-emerald-500/50"
                 >
-                  <option value="BGN">BGN</option>
+                  <option value="EUR">EUR</option>
                   {initialTrends.map(t => <option key={t.currencyFrom} value={t.currencyFrom}>{t.currencyFrom}</option>)}
                 </select>
               </div>

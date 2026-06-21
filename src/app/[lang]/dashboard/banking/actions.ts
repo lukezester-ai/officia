@@ -38,7 +38,7 @@ export async function createBankAccount(accountData: any) {
       institutionName: accountData.name,
       iban: accountData.iban,
       balance: accountData.balance || '0.00',
-      currency: accountData.currency || 'BGN',
+      currency: accountData.currency || 'EUR',
     }).returning();
 
     revalidatePath('/', 'layout');

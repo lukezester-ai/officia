@@ -90,7 +90,7 @@ export default function ReconciliationClient({ initialSuggestions }: { initialSu
                 <div className="font-medium">{sugg.transaction.counterpartyName || 'Неизвестен наредител'}</div>
                 <div className="text-sm text-zinc-400">{sugg.transaction.description || '-'}</div>
                 <div className="text-lg font-bold mt-2 tabular-nums">
-                  {Number(sugg.transaction.amount).toFixed(2)} BGN
+                  {Number(sugg.transaction.amount).toFixed(2)} EUR
                 </div>
               </div>
 
@@ -115,7 +115,7 @@ export default function ReconciliationClient({ initialSuggestions }: { initialSu
                   {sugg.type === 'invoice' ? sugg.target.clientName : sugg.target.description}
                 </div>
                 <div className="text-lg font-bold mt-2 tabular-nums text-emerald-400">
-                  {Number(sugg.type === 'invoice' ? sugg.target.total : sugg.target.amount).toFixed(2)} BGN
+                  {Number(sugg.type === 'invoice' ? sugg.target.total : sugg.target.amount).toFixed(2)} EUR
                 </div>
               </div>
 

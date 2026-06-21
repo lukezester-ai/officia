@@ -84,7 +84,7 @@ export default function TaxesPage() {
                     </TableCell>
                     <TableCell>
                       <span className={isPayable ? "text-red-600 font-semibold" : "text-emerald-600 font-semibold"}>
-                        {parseFloat(d.totalAmount || '0').toFixed(2)} лв.
+                        {parseFloat(d.totalAmount || '0').toFixed(2)} €
                       </span>
                     </TableCell>
                     <TableCell>

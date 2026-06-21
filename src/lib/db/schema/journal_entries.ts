@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { pgTable, text, uuid, timestamp, numeric, pgEnum } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { accountPlan } from './account_plan';
@@ -40,9 +40,10 @@ export const journalLines = pgTable('journal_lines', {
   analyticalCode: text('analytical_code'), // Напр. ЕИК на клиент/доставчик
   divisionId: uuid('division_id').references(() => companyDivisions.id),
   projectId: uuid('project_id').references(() => projects.id),
-  currency: text('currency').default('BGN'),
+  currency: text('currency').default('EUR'),
   exchangeRate: numeric('exchange_rate', { precision: 15, scale: 6 }).default('1.000000'),
   description: text('description'),
   vatCode: text('vat_code'), // напр. '20', '9', '0'
   createdAt: timestamp('created_at').defaultNow(),
 });
+

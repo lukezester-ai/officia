@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { db } from './db';
 import { tenants } from './schema/tenants';
 import { users } from './schema/users';
@@ -28,7 +28,7 @@ async function seed() {
     // 3. Create Account Plan (411, 503, 703)
     const [acc411, acc503, acc703] = await db.insert(accountPlan).values([
       { tenantId: tenant.id, accountNumber: '411', name: 'Клиенти', type: 'asset' },
-      { tenantId: tenant.id, accountNumber: '503', name: 'Разплащателна сметка в лв', type: 'asset' },
+      { tenantId: tenant.id, accountNumber: '503', name: 'Разплащателна сметка в €', type: 'asset' },
       { tenantId: tenant.id, accountNumber: '703', name: 'Приходи от продажби на услуги', type: 'revenue' },
     ]).returning();
     console.log('✅ Created account plan');
@@ -71,3 +71,4 @@ async function seed() {
 }
 
 seed();
+

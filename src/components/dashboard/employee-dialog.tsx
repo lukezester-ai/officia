@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -69,7 +69,7 @@ export function EmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: an
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Месечна Заплата (BGN)</label>
+            <label className="text-sm font-medium">Месечна Заплата (EUR)</label>
             <Input type="number" step="0.01" value={salary} onChange={(e) => setSalary(e.target.value)} required />
           </div>
           <div className="pt-4 flex justify-end">
@@ -82,3 +82,4 @@ export function EmployeeDialog({ onAddEmployee }: { onAddEmployee: (employee: an
     </Dialog>
   );
 }
+

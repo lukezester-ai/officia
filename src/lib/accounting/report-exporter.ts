@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -79,9 +79,9 @@ export class ReportExporter {
     y += 10;
 
     doc.setFontSize(11);
-    doc.text(`Общо Активи: ${data.totalAssets.toFixed(2)} лв`, 20, y);
+    doc.text(`Общо Активи: ${data.totalAssets.toFixed(2)} €`, 20, y);
     y += 7;
-    doc.text(`Общо Пасиви и Капитал: ${data.totalLiabilitiesAndEquity.toFixed(2)} лв`, 20, y);
+    doc.text(`Общо Пасиви и Капитал: ${data.totalLiabilitiesAndEquity.toFixed(2)} €`, 20, y);
     y += 12;
 
     // Assets Table
@@ -92,7 +92,7 @@ export class ReportExporter {
     const assetsTable = this.prepareTableData(data.assets);
     (doc as any).autoTable({
       startY: y,
-      head: [['Код', 'Наименование', 'Сума (лв)']],
+      head: [['Код', 'Наименование', 'Сума (€)']],
       body: assetsTable,
       theme: 'grid',
       headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
@@ -113,7 +113,7 @@ export class ReportExporter {
     
     (doc as any).autoTable({
       startY: y,
-      head: [['Код', 'Наименование', 'Сума (лв)']],
+      head: [['Код', 'Наименование', 'Сума (€)']],
       body: liabTable,
       theme: 'grid',
       headStyles: { fillColor: [185, 28, 28], textColor: 255, fontStyle: 'bold' },
@@ -177,11 +177,11 @@ export class ReportExporter {
       
       doc.setTextColor(0);
       let y = 50;
-      doc.text(`ДДС Продажби: ${Number(report.salesVAT).toFixed(2)} лв`, 20, y);
+      doc.text(`ДДС Продажби: ${Number(report.salesVAT).toFixed(2)} €`, 20, y);
       y += 10;
-      doc.text(`ДДС Покупки: ${Number(report.purchasesVAT).toFixed(2)} лв`, 20, y);
+      doc.text(`ДДС Покупки: ${Number(report.purchasesVAT).toFixed(2)} €`, 20, y);
       y += 10;
-      doc.text(`ДДС за внасяне: ${Number(report.payableVAT).toFixed(2)} лв`, 20, y);
+      doc.text(`ДДС за внасяне: ${Number(report.payableVAT).toFixed(2)} €`, 20, y);
       
       doc.save(`DDS_${companyName.replace(/\s+/g, '_')}_${report.periodStart}.pdf`);
     }
@@ -284,3 +284,4 @@ export class ReportExporter {
     ]);
   }
 }
+

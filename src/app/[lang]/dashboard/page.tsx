@@ -59,7 +59,7 @@ export default async function DashboardPage() {
               <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">Приходи</span>
             </div>
             <div className="text-3xl font-bold tracking-tight mb-1">{fmt(revenue)}</div>
-            <div className="text-sm text-indigo-100">лв. от продажби</div>
+            <div className="text-sm text-indigo-100">€ от продажби</div>
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default async function DashboardPage() {
               <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">Разходи</span>
             </div>
             <div className="text-3xl font-bold tracking-tight mb-1">{fmt(expenses)}</div>
-            <div className="text-sm text-rose-100">лв. от покупки</div>
+            <div className="text-sm text-rose-100">€ от покупки</div>
           </div>
         </div>
 
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
               <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">Резултат</span>
             </div>
             <div className="text-3xl font-bold tracking-tight mb-1">{fmt(netProfit)}</div>
-            <div className={`text-sm ${netProfit >= 0 ? 'text-emerald-100' : 'text-orange-100'}`}>лв. нетна печалба</div>
+            <div className={`text-sm ${netProfit >= 0 ? 'text-emerald-100' : 'text-orange-100'}`}>€ нетна печалба</div>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
               <span className="text-xs font-medium bg-white/20 px-2.5 py-1 rounded-full">{outstanding.length} бр.</span>
             </div>
             <div className="text-3xl font-bold tracking-tight mb-1">{fmt(outstandingAmount)}</div>
-            <div className="text-sm text-amber-100">лв. неплатени</div>
+            <div className="text-sm text-amber-100">€ неплатени</div>
           </div>
         </div>
       </div>

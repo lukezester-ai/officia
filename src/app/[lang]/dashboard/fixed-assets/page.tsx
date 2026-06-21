@@ -119,14 +119,14 @@ export default function FixedAssetsPage() {
           <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
           <div className="relative flex items-center gap-3">
             <div className="bg-white/20 rounded-xl p-2.5"><Package size={18} /></div>
-            <div><p className="text-sm text-emerald-100">Балансова стойност</p><p className="text-xl font-bold">{fmt(totalBookValue)} лв.</p></div>
+            <div><p className="text-sm text-emerald-100">Балансова стойност</p><p className="text-xl font-bold">{fmt(totalBookValue)} €</p></div>
           </div>
         </div>
         <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl p-5 shadow-lg shadow-amber-200/60 dark:shadow-amber-900/40">
           <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
           <div className="relative flex items-center gap-3">
             <div className="bg-white/20 rounded-xl p-2.5"><TrendingDown size={18} /></div>
-            <div><p className="text-sm text-amber-100">Месечна амортизация</p><p className="text-xl font-bold">{fmt(monthlyDepr)} лв.</p></div>
+            <div><p className="text-sm text-amber-100">Месечна амортизация</p><p className="text-xl font-bold">{fmt(monthlyDepr)} €</p></div>
           </div>
         </div>
       </div>
@@ -155,9 +155,9 @@ export default function FixedAssetsPage() {
                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{a.category || '—'}</TableCell>
                         <TableCell className="text-sm">{new Date(a.acquisitionDate).toLocaleDateString('bg-BG')}</TableCell>
-                        <TableCell className="text-right text-sm">{fmt(parseFloat(a.acquisitionCost))} лв.</TableCell>
+                        <TableCell className="text-right text-sm">{fmt(parseFloat(a.acquisitionCost))} €</TableCell>
                         <TableCell className="text-sm">{METHODS.find(m => m.value === a.depreciationMethod)?.label || a.depreciationMethod}</TableCell>
-                        <TableCell className="text-right text-sm font-semibold">{fmt(bv)} лв.</TableCell>
+                        <TableCell className="text-right text-sm font-semibold">{fmt(bv)} €</TableCell>
                         <TableCell>
                           <Badge variant={isActive ? 'default' : 'secondary'} className={isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 hover:bg-emerald-100' : ''}>
                             {isActive ? 'Активен' : 'Отписан'}

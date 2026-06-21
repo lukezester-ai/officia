@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,11 @@ export function DocumentChat({ documentName, extractedText }: { documentName: st
     setTimeout(() => {
       let answer = 'Тъй като в момента работим със симулиран AI, виждам само базов извлечен текст. В реалната система тук щевърна точна информация от фактурата.';
       if (question.toLowerCase().includes('сума') || question.toLowerCase().includes('общо')) {
-        answer = 'Извлечената обща сума от този документ е 2,400.00 BGN.';
+        answer = 'Извлечената обща сума от този документ е 2,400.00 EUR.';
       } else if (question.toLowerCase().includes('дата')) {
         answer = 'Разчетох датата 01 Юни 2026 г. в горния ляв ъгъл на документа.';
       } else if (question.toLowerCase().includes('ддс')) {
-        answer = 'Размерът на начисленото ДДС е 400.00 BGN според таблицата с артикулите.';
+        answer = 'Размерът на начисленото ДДС е 400.00 EUR според таблицата с артикулите.';
       }
       
       setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
@@ -74,3 +74,4 @@ export function DocumentChat({ documentName, extractedText }: { documentName: st
     </div>
   );
 }
+

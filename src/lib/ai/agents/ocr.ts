@@ -1,11 +1,11 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
 export const documentSchema = z.object({
   totalAmount: z.number().describe('The total amount to be paid or total expense amount. Use 0 if not found.'),
-  currency: z.string().describe('The currency of the amount, e.g. BGN, EUR, USD. Default to BGN if not specified.'),
+  currency: z.string().describe('The currency of the amount, e.g. EUR, EUR, USD. Default to EUR if not specified.'),
   invoiceNumber: z.string().describe('The invoice number or document reference number. Use "Unknown" if not found.'),
   date: z.string().describe('The date of the document in YYYY-MM-DD format. Use "Unknown" if not found.'),
   counterpartyName: z.string().describe('The name of the vendor, supplier, or client issuing the document.'),
@@ -39,3 +39,4 @@ export async function processDocumentImage(base64Image: string, mimeType: string
 
   return object;
 }
+

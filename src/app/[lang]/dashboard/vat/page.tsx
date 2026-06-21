@@ -34,7 +34,7 @@ export default async function VatPage() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground flex items-center gap-2 mb-1"><TrendingDown size={14}/> ДДС Покупки (Дневник на покупките)</p>
-              <p className="text-2xl font-bold">{fmt(data.kpi.totalVatPurchases)} лв.</p>
+              <p className="text-2xl font-bold">{fmt(data.kpi.totalVatPurchases)} €</p>
             </div>
           </CardContent>
         </Card>
@@ -42,7 +42,7 @@ export default async function VatPage() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground flex items-center gap-2 mb-1"><TrendingUp size={14}/> ДДС Продажби (Дневник на продажбите)</p>
-              <p className="text-2xl font-bold">{fmt(data.kpi.totalVatSales)} лв.</p>
+              <p className="text-2xl font-bold">{fmt(data.kpi.totalVatSales)} €</p>
             </div>
           </CardContent>
         </Card>
@@ -52,7 +52,7 @@ export default async function VatPage() {
               <p className="text-sm flex items-center gap-2 mb-1 opacity-80"><DollarSign size={14}/> Резултат за периода</p>
               <p className="text-2xl font-bold">
                 {data.kpi.netVat > 0 ? 'Внасяне: ' : 'Възстановяване: '}
-                {fmt(Math.abs(data.kpi.netVat))} лв.
+                {fmt(Math.abs(data.kpi.netVat))} €
               </p>
             </div>
           </CardContent>

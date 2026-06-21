@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -53,7 +53,7 @@ export function InvoiceDialog({ onAddInvoice }: { onAddInvoice: (invoice: any) =
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Сума (BGN)</label>
+            <label className="text-sm font-medium">Сума (EUR)</label>
             <Input 
               type="number" 
               step="0.01" 
@@ -80,3 +80,4 @@ export function InvoiceDialog({ onAddInvoice }: { onAddInvoice: (invoice: any) =
     </Dialog>
   );
 }
+
