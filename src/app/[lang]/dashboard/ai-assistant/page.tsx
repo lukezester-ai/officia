@@ -72,7 +72,7 @@ export default function AIAssistantPage() {
           
           <ScrollArea className="flex-1 p-6" ref={scrollRef}>
             <div className="space-y-6 pb-4">
-              {messages.map((msg) => (
+              {messages.map((msg: any) => (
                 <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
                     <div className="h-8 w-8 rounded-full bg-[#4F46E5]/10 flex items-center justify-center shrink-0 mt-1">
