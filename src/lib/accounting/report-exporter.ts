@@ -1,55 +1,92 @@
-﻿// @ts-nocheck
-import * as XLSX from 'xlsx';
+// @ts-nocheck
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 export class ReportExporter {
 
   // ==================== EXCEL ====================
-  static exportToExcel(data: any, reportType: string, period: string) {
-    const wb = XLSX.utils.book_new();
+  static async exportToExcel(data: any, reportType: string, period: string) {
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Officia ERP';
+    wb.lastModifiedBy = 'Officia ERP';
+    wb.created = new Date();
+
+    const titleStyle = { font: { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } } };
+    const headerStyle = { font: { bold: true, color: { argb: 'FFFFFFFF' } }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } }, alignment: { vertical: 'middle', horizontal: 'center' } };
+    const moneyFormat = '#,##0.00 \\€';
+
+    const addSummarySheet = (sheetName: string, title: string, rows: any[]) => {
+      const ws = wb.addWorksheet(sheetName, { views: [{ showGridLines: false }] });
+      ws.columns = [{ width: 30 }, { width: 25 }];
+      
+      ws.addRow([title, '']).eachCell(c => { c.font = titleStyle.font; c.fill = titleStyle.fill as any; });
+      ws.addRow(['Период:', period]).font = { bold: true };
+      ws.addRow([]);
+      
+      rows.forEach(r => {
+        const row = ws.addRow(r);
+        if (typeof r[1] === 'number') {
+          row.getCell(2).numFmt = moneyFormat;
+          row.getCell(2).alignment = { horizontal: 'right' };
+        }
+      });
+    };
+
+    const addDataSheet = (sheetName: string, headers: string[], items: any[]) => {
+      const ws = wb.addWorksheet(sheetName);
+      ws.columns = headers.map(h => ({ header: h, key: h, width: 20 }));
+      
+      const headerRow = ws.getRow(1);
+      headerRow.eachCell(c => { c.font = headerStyle.font; c.fill = headerStyle.fill as any; c.alignment = headerStyle.alignment as any; });
+      headerRow.height = 25;
+
+      items.forEach(item => {
+        const row = ws.addRow(item);
+        const amountCell = row.getCell('Сума');
+        if (amountCell) {
+          amountCell.numFmt = moneyFormat;
+          amountCell.alignment = { horizontal: 'right' };
+        }
+      });
+
+      // Auto-fit columns
+      ws.columns.forEach(col => {
+        let maxLen = col.header ? col.header.length : 10;
+        col.eachCell({ includeEmpty: false }, cell => {
+          if (cell.value && cell.value.toString().length > maxLen) {
+            maxLen = cell.value.toString().length;
+          }
+        });
+        col.width = maxLen + 5;
+      });
+    };
 
     if (reportType === 'balance') {
-      // Create separate sheets for Assets, Liabilities, Equity and Summary
-      const summaryData = [
-        ["Баланс - Обобщение", ""],
-        ["Период", period],
-        ["", ""],
-        ["Общо Активи", data.totalAssets],
-        ["Общо Пасиви", data.totalLiabilities],
-        ["Общо Капитал", data.totalEquity],
-        ["Общо Пасиви и Капитал", data.totalLiabilitiesAndEquity],
-        ["Балансиран", Math.abs(data.totalAssets - data.totalLiabilitiesAndEquity) < 1 ? "Да" : "Не"]
-      ];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "Summary");
-
-      const wsAssets = XLSX.utils.json_to_sheet(this.formatCategoryForExcel(data.assets, 'Активи'));
-      XLSX.utils.book_append_sheet(wb, wsAssets, "Assets");
-
-      const wsLiabilities = XLSX.utils.json_to_sheet(this.formatCategoryForExcel(data.liabilities, 'Пасиви'));
-      XLSX.utils.book_append_sheet(wb, wsLiabilities, "Liabilities");
-
-      const wsEquity = XLSX.utils.json_to_sheet(this.formatCategoryForExcel(data.equity, 'Капитал'));
-      XLSX.utils.book_append_sheet(wb, wsEquity, "Equity");
-
+      addSummarySheet('Summary', 'Баланс - Обобщение', [
+        ['Общо Активи', Number(data.totalAssets || 0)],
+        ['Общо Пасиви', Number(data.totalLiabilities || 0)],
+        ['Общо Капитал', Number(data.totalEquity || 0)],
+        ['Общо Пасиви и Капитал', Number(data.totalLiabilitiesAndEquity || 0)],
+        ['Балансиран', Math.abs(data.totalAssets - data.totalLiabilitiesAndEquity) < 1 ? "Да" : "Не"]
+      ]);
+      addDataSheet('Assets', ['Група', 'Код', 'Име', 'Сума'], this.formatCategoryForExcel(data.assets, 'Активи'));
+      addDataSheet('Liabilities', ['Група', 'Код', 'Име', 'Сума'], this.formatCategoryForExcel(data.liabilities, 'Пасиви'));
+      addDataSheet('Equity', ['Група', 'Код', 'Име', 'Сума'], this.formatCategoryForExcel(data.equity, 'Капитал'));
     } else if (reportType === 'pnl') {
-      const summaryData = [
-        ["P&L - Обобщение", ""],
-        ["Период", period],
-        ["", ""],
-        ["Общо Приходи", data.revenue?.total || 0],
-        ["Общо Разходи", data.expenses?.total || 0],
-        ["Нетен Резултат", data.netProfit || 0],
-      ];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "Summary");
-
-      const wsPnL = XLSX.utils.json_to_sheet(this.formatPnLForExcel(data));
-      XLSX.utils.book_append_sheet(wb, wsPnL, "P&L Details");
+      addSummarySheet('Summary', 'P&L - Обобщение', [
+        ['Общо Приходи', Number(data.revenue?.total || 0)],
+        ['Общо Разходи', Number(data.expenses?.total || 0)],
+        ['Нетен Резултат', Number(data.netProfit || 0)]
+      ]);
+      addDataSheet('P&L Details', ['Група', 'Код', 'Име', 'Сума'], this.formatPnLForExcel(data));
     }
 
-    XLSX.utils.book_append_sheet(wb, this.createMetadataSheet(period), "Информация");
-
-    XLSX.writeFile(wb, `${reportType}_${period}.xlsx`);
+    // Write file to browser
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `${reportType}_${period}.xlsx`);
   }
 
   // ==================== PDF ====================
@@ -276,12 +313,7 @@ export class ReportExporter {
   }
 
   private static createMetadataSheet(period: string) {
-    return XLSX.utils.aoa_to_sheet([
-      ["Officia ERP - Финансов Отчет"],
-      ["Генериран на:", new Date().toLocaleDateString('bg-BG')],
-      ["Час:", new Date().toLocaleTimeString('bg-BG')],
-      ["Период:", period]
-    ]);
+    return null; // Not needed with the new exceljs flow
   }
 }
 
