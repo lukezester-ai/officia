@@ -139,15 +139,15 @@ export async function getAICandidates() {
   }
 }
 
-export async function seedMockBankingData() {
+export async function seedMockBankingData(bankName: string = 'UniCredit Bulbank') {
   try {
     const [tenant] = await db.select().from(tenants).limit(1);
     if (!tenant) return { success: false, error: 'Липсва конфигурация за компанията' };
 
     const [newAccount] = await db.insert(bankAccounts).values({
       tenantId: tenant.id,
-      institutionName: 'UniCredit Bulbank',
-      iban: 'BG12UNCR12345678901234',
+      institutionName: bankName,
+      iban: `BG12${bankName.substring(0, 4).toUpperCase()}12345678901234`,
       balance: '15042.50',
       currency: 'BGN',
     }).returning();

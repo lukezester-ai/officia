@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Landmark, Plus, RefreshCw, CheckCircle2, ArrowUpRight, ArrowDownRight, Bot, CreditCard, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { getBankAccounts, getBankTransactions, reconcileTransaction, seedMockBankingData, getAICandidates } from './actions';
+import { BankConnectModal } from '@/components/dashboard/BankConnectModal';
 
 export default function BankingPage() {
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -28,17 +29,8 @@ export default function BankingPage() {
 
   const handleRefresh = async () => { await loadData(); toast.success('Данните са опреснени.'); };
 
-  const handleSeed = async () => {
-    setIsSeeding(true);
-    toast.info('Свързване с демо банка (PSD2)...');
-    const res = await seedMockBankingData();
-    if (res.success) {
-      toast.success('Успешно изтеглени нови транзакции!');
-      await loadData();
-    } else {
-      toast.error('Грешка: ' + res.error);
-    }
-    setIsSeeding(false);
+  const handleOpenConnect = () => {
+    setIsModalOpen(true);
   };
 
   const handleReconcile = async (id: string) => {
@@ -110,8 +102,8 @@ export default function BankingPage() {
           <p className="text-sm text-zinc-400 mt-1">Отворено банкиране и автоматично AI разпознаване на преводи.</p>
         </div>
         <div className="flex gap-3">
-          <Button onClick={handleSeed} disabled={isSeeding} variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
-            <Plus size={16} /> Свържи Банка (Demo)
+          <Button onClick={handleOpenConnect} variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
+            <Plus size={16} /> Свържи Банка
           </Button>
           <Button onClick={handleAIMatch} disabled={isSyncing} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-violet-500/50">
             <Sparkles size={16} className={isSyncing ? 'animate-pulse text-amber-300' : 'text-amber-300'} />
@@ -231,6 +223,12 @@ export default function BankingPage() {
           )}
         </CardContent>
       </Card>
+      
+      <BankConnectModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={loadData} 
+      />
     </div>
   );
 }
