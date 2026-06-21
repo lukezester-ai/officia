@@ -38,12 +38,15 @@ function calculateMatchScore(tx: any, candidate: any): number {
   return Math.min(score, 1.0);
 }
 
-export const bankMatchTool = {
+import { tool } from 'ai';
+
+export const bankMatchTool = tool({
   description: "Съпоставя банкови транзакции с фактури или разходи чрез AI. Използвай го, когато потребителят иска да съпостави (reconcile) банкови транзакции.",
   parameters: z.object({
     bankTransactionId: z.string().describe("ID на банковата транзакция за съпоставяне"),
     confidenceThreshold: z.number().default(0.75).describe("Минимален праг на увереност (0 до 1)"),
   }),
+  // @ts-ignore
   execute: async (args: { bankTransactionId: string, confidenceThreshold?: number }) => {
     try {
       const { bankTransactionId, confidenceThreshold = 0.75 } = args;
@@ -94,4 +97,4 @@ export const bankMatchTool = {
       return { success: false, error: error.message };
     }
   }
-};
+});

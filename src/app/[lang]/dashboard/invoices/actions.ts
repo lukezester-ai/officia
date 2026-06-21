@@ -9,8 +9,10 @@ import { tenants } from '@/lib/db/schema/tenants';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
+import { requireTenant } from '@/lib/auth/get-tenant';
+
 async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
+  const { tenant } = await requireTenant();
   return tenant;
 }
 

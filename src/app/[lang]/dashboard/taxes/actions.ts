@@ -3,17 +3,11 @@ import { db } from '@/lib/db/db';
 import { taxDeclarations } from '@/lib/db/schema/tax_declarations';
 import { TaxEngine } from '@/lib/accounting/tax-engine';
 import { desc, eq } from 'drizzle-orm';
-import { auth } from '@clerk/nextjs/server';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function getDeclarations() {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error('Not authenticated');
-
-    // Намираме първия tenant на потребителя
-    const { users } = await import('@/lib/db/schema/users');
-    const userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
-    const tenantId = userRecords[0]?.tenantId || 'default-tenant';
+    const { tenantId } = await requireTenant();
 
     const records = await db.select()
       .from(taxDeclarations)
@@ -28,12 +22,7 @@ export async function getDeclarations() {
 
 export async function generateDds(year: number, month: number) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error('Not authenticated');
-
-    const { users } = await import('@/lib/db/schema/users');
-    const userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
-    const tenantId = userRecords[0]?.tenantId || 'default-tenant';
+    const { tenantId } = await requireTenant();
 
     await TaxEngine.generateDDSDeclaration(tenantId, year, month);
     return { success: true };
