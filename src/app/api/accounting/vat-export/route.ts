@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     const filename = `NAP_VAT_${year}_${String(month).padStart(2, '0')}.zip`;
 
     // Връщаме ZIP файла като изтегляне
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(zipBuffer as any, {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
