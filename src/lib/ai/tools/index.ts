@@ -12,6 +12,8 @@ import { buildDepreciateAssetsTool } from './depreciate-assets';
 import { buildAutoApproveTool } from './auto-approve';
 import { buildProcessInboxTool } from './process-inbox';
 import { buildGenerateChartTool } from './generate-chart';
+import { buildCheckNraStatusTool } from './check-nra-status';
+import { buildCheckNraLiabilitiesTool } from './check-nra-liabilities';
 
 // Dummy instantiated tools just to get their descriptions for the API endpoint
 const dummyId = '00000000-0000-0000-0000-000000000000';
@@ -30,4 +32,6 @@ export const tools = {
   autoApprove: buildAutoApproveTool(dummyId, dummyId),
   processInbox: buildProcessInboxTool(dummyId),
   generateChart: buildGenerateChartTool(),
+  checkNraStatus: buildCheckNraStatusTool(),
+  checkNraLiabilities: buildCheckNraLiabilitiesTool(),
 };

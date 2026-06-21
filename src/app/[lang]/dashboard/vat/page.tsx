@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, AlertTriangle, TrendingDown, TrendingUp, DollarSign, FileText } from 'lucide-react';
 
+import { VatActions } from '@/components/dashboard/VatActions';
+
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -23,9 +25,7 @@ export default async function VatPage() {
           <h1 className="text-2xl font-bold tracking-tight">ДДС Дневници</h1>
           <p className="text-sm text-muted-foreground mt-0.5">VAT Auditor и генериране на файлове за НАП.</p>
         </div>
-        <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
-          <Download size={16} /> Експорт за НАП
-        </Button>
+        <VatActions />
       </div>
 
       {/* KPI Bar */}

@@ -23,6 +23,8 @@ import { buildDepreciateAssetsTool } from '@/lib/ai/tools/depreciate-assets';
 import { buildAutoApproveTool } from '@/lib/ai/tools/auto-approve';
 import { buildProcessInboxTool } from '@/lib/ai/tools/process-inbox';
 import { buildGenerateChartTool } from '@/lib/ai/tools/generate-chart';
+import { buildCheckNraStatusTool } from '@/lib/ai/tools/check-nra-status';
+import { buildCheckNraLiabilitiesTool } from '@/lib/ai/tools/check-nra-liabilities';
 
 export async function POST(req: NextRequest) {
   try {
@@ -92,6 +94,8 @@ export async function POST(req: NextRequest) {
         autoApprove: buildAutoApproveTool(tenantId, userId),
         processInbox: buildProcessInboxTool(tenantId),
         generateChart: buildGenerateChartTool(),
+        checkNraStatus: buildCheckNraStatusTool(),
+        checkNraLiabilities: buildCheckNraLiabilitiesTool(),
       }
     });
 
