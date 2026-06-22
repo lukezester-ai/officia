@@ -10,8 +10,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const { userId } = await auth();
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
-    const { id } = await params;
-    const invoiceId = parseInt(id, 10);
+    const { id: invoiceIdParam } = await params;
+    const invoiceId = parseInt(invoiceIdParam, 10);
     if (isNaN(invoiceId)) {
       return new NextResponse("Invalid Invoice ID", { status: 400 });
     }
