@@ -29,6 +29,8 @@ export const invoices = pgTable("invoices", {
   aiStatus: text("ai_status"), // ok, needs_review, duplicate_suspected
   aiConfidence: numeric("ai_confidence", { precision: 3, scale: 2 }), // 0.00 - 1.00
   matchedTransactionId: uuid("matched_transaction_id"), // Reference to bank_transactions
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paymentUrl: text("payment_url"),
   reviewStatus: text("review_status").default("pending"), // pending, reviewed, auto_approved
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
