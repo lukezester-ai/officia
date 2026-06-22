@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, CheckCircle, FileText, Brain, Building2, BarChart3, Shield, Zap, Users } from 'lucide-react';
 import TestimonialsFaq from '@/components/TestimonialsFaq';
 import MobileMenu from '@/components/mobile-menu';
+import PricingSection from './PricingSection';
 
 const features = [
   { icon: BarChart3, title: 'Счетоводство', desc: 'Сметкоплан, журнални записи, ДДС дневници, баланс и отчет за П/З.', color: 'from-indigo-500 to-violet-600', bg: 'bg-indigo-50 dark:bg-indigo-950/30', iconCls: 'text-indigo-600' },
@@ -151,41 +152,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         </div>
       </section>
 
-      <section id="pricing" className="py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold tracking-tight mb-4">Прост, честен ценови план</h2>
-          <p className="text-zinc-400 mb-12">Без скрити такси. Без изненади.</p>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white/3 border border-white/10 rounded-2xl p-8 text-left">
-              <div className="text-sm text-zinc-400 font-medium mb-2 uppercase tracking-wider">Стартер</div>
-              <div className="text-4xl font-bold mb-1">Безплатно</div>
-              <div className="text-zinc-500 text-sm mb-6">14 дни · без кредитна карта</div>
-              <div className="space-y-3 text-sm text-zinc-400 mb-8">
-                {['До 50 фактури/месец', 'Базово счетоводство', '1 потребител', 'Email поддръжка'].map(i => (
-                  <div key={i} className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-400" />{i}</div>
-                ))}
-              </div>
-              <Link href={"/sign-up"} className="block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/5">
-                Започни безплатно
-              </Link>
-            </div>
-            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 border border-indigo-500/30 rounded-2xl p-8 text-left relative overflow-hidden">
-              <div className="absolute top-4 right-4 bg-white/20 text-xs font-semibold px-2.5 py-1 rounded-full">Популярен</div>
-              <div className="text-sm text-indigo-200 font-medium mb-2 uppercase tracking-wider">Про</div>
-              <div className="text-4xl font-bold mb-1">49 €<span className="text-lg font-normal text-indigo-200">/мес</span></div>
-              <div className="text-indigo-200 text-sm mb-6">Пълен достъп до всички функции</div>
-              <div className="space-y-3 text-sm text-indigo-100 mb-8">
-                {['Неограничени фактури', 'AI анализ на документи', 'Банкова синхронизация', 'До 10 потребители', 'Приоритетна поддръжка'].map(i => (
-                  <div key={i} className="flex items-center gap-2"><CheckCircle size={14} className="text-white" />{i}</div>
-                ))}
-              </div>
-              <Link href={"/sign-up"} className="block text-center bg-white text-indigo-700 hover:bg-indigo-50 rounded-xl py-3 text-sm font-semibold transition-all">
-                Започни пробния период
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
