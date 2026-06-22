@@ -5,12 +5,13 @@ import { eq } from 'drizzle-orm';
 import { getStripeSessionUrl } from '@/lib/stripe';
 import { auth } from '@clerk/nextjs/server';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth();
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
-    const invoiceId = parseInt(await Promise.resolve(params.id), 10);
+    const { id } = await params;
+    const invoiceId = parseInt(id, 10);
     if (isNaN(invoiceId)) {
       return new NextResponse("Invalid Invoice ID", { status: 400 });
     }
