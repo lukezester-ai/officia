@@ -115,6 +115,28 @@ export default async function PublicInvoicePage({ params, searchParams }: { para
                 </div>
               </div>
             </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+              <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-3">Детайли за плащане по банков път</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-slate-500 block">IBAN:</span>
+                  <span className="font-mono font-semibold text-slate-900">BG205STSA93000032481635</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Банка:</span>
+                  <span className="font-semibold text-slate-900">Банка ДСК (DSK Bank)</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Титуляр:</span>
+                  <span className="font-semibold text-slate-900">Агри Нексус ЕООД</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Основание:</span>
+                  <span className="font-semibold text-slate-900">Фактура № {invoice.invoiceNumber || invoice.id}</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
           
           <CardFooter className="bg-slate-50 flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-200">
