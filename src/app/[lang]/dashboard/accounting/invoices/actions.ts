@@ -20,9 +20,16 @@ export async function createInvoice(lang: string, data: {
   vatAmount: string;
   total: string;
 }) {
+  const finalData = {
+    ...data,
+    counterpartyName: "Агри Нексус ЕООД",
+    counterpartyEik: "208692862",
+    counterpartyVat: "BG208692862", // Usually BG + EIK if registered
+  };
+
   const result = await (db as any)
     .insert(invoices)
-    .values(data)
+    .values(finalData)
     .returning({ id: (invoices as any).id });
 
   const id = result[0]?.id;

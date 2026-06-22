@@ -16,8 +16,7 @@ interface Item {
 }
 
 function genNumber() {
-  const now = new Date();
-  return `INV-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}${String(Math.floor(Math.random() * 900) + 100)}`;
+  return "0000000001";
 }
 
 function today() {
