@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileText, FileSignature, FileKey, Zap, CheckCircle, Clock } from 'lucide-react';
+import { FileText, FileSignature, CheckCircle, Clock } from 'lucide-react';
 import { DocumentDrawer } from '@/components/drawers/document-drawer';
 
 export default function DocumentsClient({ initialDocuments }: { initialDocuments: any[] }) {
   const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
 
   const getDocIcon = (type: string) => {
-    switch(type) {
+    switch (type) {
       case 'contract': return <FileSignature size={16} className="text-emerald-500" />;
       case 'invoice': return <FileText size={16} className="text-indigo-500" />;
       default: return <FileText size={16} className="text-slate-500" />;
@@ -19,7 +19,7 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
   };
 
   const getDocTypeLabel = (type: string) => {
-    switch(type) {
+    switch (type) {
       case 'contract': return 'Договор';
       case 'invoice': return 'Фактура';
       case 'order': return 'Заповед';
@@ -37,9 +37,9 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6">Име на файл</TableHead>
                 <TableHead>Тип документ</TableHead>
-                <TableHead>Контрагент (Извлечен)</TableHead>
+                <TableHead>Контрагент (извлечен)</TableHead>
                 <TableHead>Дата на качване</TableHead>
-                <TableHead>AI Статус</TableHead>
+                <TableHead>AI статус</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -51,8 +51,8 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
                 </TableRow>
               ) : (
                 initialDocuments.map(doc => (
-                  <TableRow 
-                    key={doc.id} 
+                  <TableRow
+                    key={doc.id}
                     className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50"
                     onClick={() => setSelectedDoc(doc)}
                   >
@@ -94,10 +94,10 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
         </CardContent>
       </Card>
 
-      <DocumentDrawer 
-        document={selectedDoc} 
-        open={!!selectedDoc} 
-        onOpenChange={(o) => !o && setSelectedDoc(null)} 
+      <DocumentDrawer
+        document={selectedDoc}
+        open={!!selectedDoc}
+        onOpenChange={(o) => !o && setSelectedDoc(null)}
       />
     </>
   );
