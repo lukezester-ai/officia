@@ -8,7 +8,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-01-27.acacia',
+  apiVersion: '2026-05-27.dahlia',
 });
 
 export async function POST(req: Request) {

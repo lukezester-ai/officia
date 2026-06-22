@@ -8,8 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { CreditCard, CheckCircle, Download, FileText } from 'lucide-react';
 import StripeCheckoutButton from './StripeCheckoutButton';
 
-export default async function PublicInvoicePage({ params, searchParams }: { params: { id: string }, searchParams: { success?: string, canceled?: string } }) {
-  const invoiceId = parseInt(await Promise.resolve(params.id), 10);
+export default async function PublicInvoicePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ success?: string; canceled?: string }>;
+}) {
+  const { id } = await params;
+  const query = await searchParams;
+  const invoiceId = parseInt(id, 10);
   
   if (isNaN(invoiceId)) {
     return notFound();
@@ -24,7 +32,7 @@ export default async function PublicInvoicePage({ params, searchParams }: { para
   const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId));
 
   const isPaid = invoice.status === 'paid' || invoice.status === 'платена';
-  const showSuccessMessage = searchParams.success === 'true';
+  const showSuccessMessage = query.success === 'true';
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -41,7 +49,7 @@ export default async function PublicInvoicePage({ params, searchParams }: { para
               </CardDescription>
             </div>
             
-            <Badge variant={isPaid ? "success" : "secondary"} className="text-lg px-4 py-1">
+            <Badge variant="secondary" className={`text-lg px-4 py-1 ${isPaid ? "bg-emerald-100 text-emerald-700" : ""}`}>
               {isPaid ? "Paid" : invoice.status?.toUpperCase() || "DRAFT"}
             </Badge>
           </CardHeader>
