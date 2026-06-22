@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+// @ts-nocheck
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -67,21 +67,21 @@ export function AiScannerDialog({ onScanned }: { onScanned: () => void }) {
   const handleSave = async () => {
     if (!extractedData) return;
     
-    const formData = new FormData();
-    formData.append('supplierName', extractedData.supplierName);
-    formData.append('supplierEik', extractedData.supplierEik);
-    formData.append('invoiceNumber', extractedData.invoiceNumber);
-    formData.append('issueDate', extractedData.issueDate);
-    formData.append('dueDate', extractedData.dueDate);
-    
-    const res = await createPurchaseInvoice(formData, [
-      {
-        description: "ИТ Оборудване по договор",
-        quantity: "1",
-        unitPrice: extractedData.netAmount,
-        vatRate: "20"
-      }
-    ]);
+    const res = await createPurchaseInvoice({
+      supplierName: extractedData.supplierName,
+      supplierEik: extractedData.supplierEik,
+      invoiceNumber: extractedData.invoiceNumber,
+      issueDate: extractedData.issueDate,
+      dueDate: extractedData.dueDate,
+      lines: [
+        {
+          description: "IT equipment by contract",
+          quantity: 1,
+          unitPrice: parseFloat(extractedData.netAmount) || 0,
+          vatRate: 20,
+        },
+      ],
+    });
 
     if (res.success) {
       toast.success("Фактурата е успешно създадена от AI!");

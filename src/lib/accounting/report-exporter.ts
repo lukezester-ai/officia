@@ -168,6 +168,37 @@ export class ReportExporter {
     doc.save(`Баланс_${companyName.replace(/\s+/g, '_')}_${period}.pdf`);
   }
 
+  static exportToPDF(data: any, reportType: string, period: string, companyName: string) {
+    if (reportType === 'balance') {
+      return this.exportBalanceToPDF(data, companyName, period);
+    }
+
+    const doc = new jsPDF('portrait', 'mm', 'a4');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Profit and Loss', 105, 20, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text(companyName, 105, 28, { align: 'center' });
+    doc.text(period, 105, 35, { align: 'center' });
+
+    const rows = [
+      ['Revenue', Number(data.revenue?.total || 0).toFixed(2)],
+      ['Expenses', Number(data.expenses?.total || 0).toFixed(2)],
+      ['Net result', Number(data.netProfit || 0).toFixed(2)],
+    ];
+
+    (doc as any).autoTable({
+      startY: 48,
+      head: [['Metric', 'Amount']],
+      body: rows,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 58, 138], textColor: 255 },
+    });
+
+    doc.save('pnl_' + period + '.pdf');
+  }
+
   private static prepareTableData(grouped: any) {
     const rows: any[] = [];
     if (!grouped) return rows;

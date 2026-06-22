@@ -1,86 +1,95 @@
-// @ts-nocheck
-import { AccountingAnalyzer } from './accounting-analyzer';
-import { HRAgent } from './hr-agent';
-import { BankingAgent } from './banking-agent';
-import { LegalAgent } from './legal-agent';
-import { AnalystAgent } from './analyst-agent';
+import { getAiCapability } from '@/lib/ai/automation/registry';
+
+export interface OrchestratorSubTask {
+  domain: 'accounting' | 'hr' | 'banking' | 'legal' | 'analyst' | 'documents';
+  suggestedTool: string;
+  requiresHumanReview: boolean;
+  reason: string;
+}
 
 export interface OrchestratorResult {
-  routedTo: 'accounting' | 'hr' | 'banking' | 'legal' | 'analyst' | 'multiple' | 'general';
+  routedTo: 'accounting' | 'hr' | 'banking' | 'legal' | 'analyst' | 'documents' | 'multiple' | 'general';
   response: string;
-  subTasks?: any[];
+  subTasks?: OrchestratorSubTask[];
 }
+
+const routingRules: Array<{
+  domain: OrchestratorSubTask['domain'];
+  tool: string;
+  keywords: string[];
+  reason: string;
+}> = [
+  {
+    domain: 'accounting',
+    tool: 'createInvoice',
+    keywords: ['invoice', 'faktura', 'фактура', 'осчетоводи', 'счетовод'],
+    reason: 'The request looks related to invoice creation or accounting posting.',
+  },
+  {
+    domain: 'banking',
+    tool: 'bankMatch',
+    keywords: ['bank', 'банка', 'извлечение', 'reconcile', 'плащане', 'превод'],
+    reason: 'The request looks related to bank reconciliation or payment matching.',
+  },
+  {
+    domain: 'hr',
+    tool: 'manageHR',
+    keywords: ['hr', 'служител', 'отпуск', 'болничен', 'cv', 'кандидат'],
+    reason: 'The request looks related to employees, leave, hiring, or tasks.',
+  },
+  {
+    domain: 'documents',
+    tool: 'searchDocuments',
+    keywords: ['document', 'документ', 'архив', 'договор', 'receipt', 'касова'],
+    reason: 'The request looks related to document search or document analysis.',
+  },
+  {
+    domain: 'analyst',
+    tool: 'getFinancialSummary',
+    keywords: ['report', 'отчет', 'справка', 'печалба', 'разходи', 'summary', 'chart', 'графика'],
+    reason: 'The request looks related to reporting or analytics.',
+  },
+  {
+    domain: 'legal',
+    tool: 'searchDocuments',
+    keywords: ['legal', 'правен', 'риск', 'неустойка', 'nda'],
+    reason: 'The request looks related to legal review. It should stay advisory until reviewed by a person.',
+  },
+];
 
 export class OrchestratorAgent {
   static async routeAndProcess(text: string): Promise<OrchestratorResult> {
     const lowerText = text.toLowerCase();
-    
-    // 1. Intent Classification Logic (Simplified router)
-    const isAccounting = lowerText.includes('фактура') || lowerText.includes('осчетоводи');
-    const isHR = lowerText.includes('отпуск') || lowerText.includes('cv') || lowerText.includes('служител');
-    const isBanking = lowerText.includes('банка') || lowerText.includes('извлечение') || lowerText.includes('reconcile');
-    const isLegal = lowerText.includes('договор') || lowerText.includes('nda') || lowerText.includes('правн');
-    const isAnalyst = lowerText.includes('отчет') || lowerText.includes('печалба') || lowerText.includes('справка');
+    const matches = routingRules.filter((rule) => rule.keywords.some((keyword) => lowerText.includes(keyword)));
 
-    // Handle complex multi-agent request (e.g., "Осчетоводи фактурата и пусни отпуск на Иван")
-    if ((isAccounting && isHR) || text.includes(' и ')) {
-      // Simulate parallel processing
-      const [accRes, hrRes] = await Promise.all([
-        AccountingAnalyzer.analyzeText(text),
-        HRAgent.processRequest(text)
-      ]);
-      
+    if (matches.length === 0) {
       return {
-        routedTo: 'multiple',
-        response: `Диригентът разпредели задачата:\n\n1. Счетоводство: Фактурата е разпозната (${accRes.invoiceNumber}) и ще бъде отнесена към ${accRes.suggestedAccount}.\n2. Човешки Ресурси: ${hrRes.suggestedAction}`,
+        routedTo: 'general',
+        response: 'Не намерих достатъчно ясен домейн. Мога да насоча заявката към счетоводство, банкиране, HR, документи или анализи, ако добавите повече контекст.',
+        subTasks: [],
       };
     }
 
-    // Single Routing
-    if (isAccounting) {
-      const res = await AccountingAnalyzer.analyzeText(text);
+    const subTasks = matches.map<OrchestratorSubTask>((match) => {
+      const capability = getAiCapability(match.tool);
       return {
-        routedTo: 'accounting',
-        response: `Счетоводен Агент: Обработих фактура ${res.invoiceNumber} от ${res.supplierName}. Предлагам контировка: ${res.suggestedAccount}.`
+        domain: match.domain,
+        suggestedTool: match.tool,
+        requiresHumanReview: capability?.requiresHumanReview ?? true,
+        reason: match.reason,
       };
-    }
+    });
 
-    if (isHR) {
-      const res = await HRAgent.processRequest(text);
-      return {
-        routedTo: 'hr',
-        response: `HR Агент: ${res.suggestedAction}`
-      };
-    }
+    const routedTo = subTasks.length === 1 ? subTasks[0].domain : 'multiple';
+    const toolList = subTasks.map((task) => `${task.domain}:${task.suggestedTool}`).join(', ');
+    const reviewList = subTasks.some((task) => task.requiresHumanReview)
+      ? ' Някои действия изискват човешки преглед преди запис или финално одобрение.'
+      : '';
 
-    if (isBanking) {
-      const res = await BankingAgent.processRequest(text);
-      return {
-        routedTo: 'banking',
-        response: `Банков Агент: ${res.suggestedAction}`
-      };
-    }
-
-    if (isLegal) {
-      const res = await LegalAgent.processRequest(text);
-      return {
-        routedTo: 'legal',
-        response: `Правен Агент: ${res.suggestedAction}`
-      };
-    }
-
-    if (isAnalyst) {
-      const res = await AnalystAgent.processRequest(text);
-      return {
-        routedTo: 'analyst',
-        response: `Анализатор Агент: ${res.suggestedAction}`
-      };
-    }
-
-    // Default Fallback
     return {
-      routedTo: 'general',
-      response: 'Общ Асистент: Не успях да насоча заявката ви към специализиран агент. Мога ли да ви помогна с обща информация?'
+      routedTo,
+      response: `Заявката е маршрутизирана към: ${toolList}.${reviewList}`,
+      subTasks,
     };
   }
 }

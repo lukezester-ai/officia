@@ -59,11 +59,11 @@ export default async function InvoiceDetailPage({
               href={`/${lang}/dashboard/accounting/invoices`}
               className="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center hover:border-white/25 transition-all"
             >
-              <ArrowLeft size={16} />
+              <span aria-hidden="true">&lt;</span>
             </Link>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
-                <FileText size={20} className="text-white" />
+                <span className="text-white" aria-hidden="true">#</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold">{invoiceNumber}</h1>
@@ -79,7 +79,7 @@ export default async function InvoiceDetailPage({
                 await updateInvoiceStatus(inv.id, "paid", lang);
               }}>
                 <button type="submit" className="flex items-center gap-1.5 text-xs bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-xl transition-colors font-medium">
-                  <CheckCircle size={13} /> Platena
+                  <span aria-hidden="true">OK</span> Platena
                 </button>
               </form>
             )}
@@ -89,7 +89,7 @@ export default async function InvoiceDetailPage({
                 await updateInvoiceStatus(inv.id, "sent", lang);
               }}>
                 <button type="submit" className="flex items-center gap-1.5 text-xs bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-xl transition-colors font-medium">
-                  <Send size={13} /> Izprati
+                  <span aria-hidden="true">&gt;</span> Izprati
                   </button>
                </form>
             )}
@@ -97,7 +97,7 @@ export default async function InvoiceDetailPage({
               onClick={() => window.print()}
               className="flex items-center gap-1.5 text-xs bg-white/8 hover:bg-white/15 border border-white/10 px-3 py-2 rounded-xl transition-colors"
             >
-              <Printer size={13} /> PDF / Pechat
+              <span aria-hidden="true">PDF</span> PDF / Pechat
             </button>
           </div>
         </div>

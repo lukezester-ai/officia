@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client";
+// @ts-nocheck
 
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";

@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client";
+// @ts-nocheck
 
 import { ReportExporter } from "@/lib/accounting/report-exporter";
 import { Download } from "lucide-react";

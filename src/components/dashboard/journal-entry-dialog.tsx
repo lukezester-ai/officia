@@ -1,5 +1,5 @@
-﻿// @ts-nocheck
 'use client';
+// @ts-nocheck
 import { useState } from 'react';
 import { Plus, Trash2, BookOpen, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';

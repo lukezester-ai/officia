@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client"
+// @ts-nocheck
 
 import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"
 

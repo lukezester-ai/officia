@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client";
+// @ts-nocheck
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Plus, Trash2, Save, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";

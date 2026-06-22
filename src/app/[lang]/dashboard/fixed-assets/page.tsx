@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { getFixedAssets, createFixedAsset, writeOffAsset } from './actions';
 import { calcCurrentBookValue } from './utils';
@@ -21,6 +21,24 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function normalizeAsset(asset: any) {
+  return {
+    acquisitionDate: String(asset.acquisitionDate || new Date().toISOString()),
+    acquisitionCost: Number(asset.acquisitionCost || 0),
+    salvageValue: Number(asset.salvageValue ?? asset.residualValue ?? 0),
+    usefulLifeMonths: Number(asset.usefulLifeMonths ?? ((asset.usefulLifeYears || 5) * 12)),
+    amortizationMethod: String(asset.amortizationMethod ?? asset.depreciationMethod ?? 'straight_line'),
+  };
+}
+
+function getBookValue(asset: any) {
+  return calcCurrentBookValue(normalizeAsset(asset)).bookValue;
+}
+
+function getMonthlyDepreciation(asset: any) {
+  return calcCurrentBookValue(normalizeAsset(asset)).monthlyDepreciation;
+}
+
 function AddAssetDialog({ onAdd }: { onAdd: () => void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +50,7 @@ function AddAssetDialog({ onAdd }: { onAdd: () => void }) {
     if (!form.name.trim()) { toast.error('Въведи наименование'); return; }
     if (!form.acquisitionCost || parseFloat(form.acquisitionCost) <= 0) { toast.error('Въведи стойност'); return; }
     setLoading(true);
-    const res = await createFixedAsset({ name: form.name, category: form.category, acquisitionDate: form.acquisitionDate, acquisitionCost: parseFloat(form.acquisitionCost), depreciationMethod: form.depreciationMethod, usefulLifeYears: parseInt(form.usefulLifeYears), residualValue: parseFloat(form.residualValue) || 0, notes: form.notes });
+    const res = await createFixedAsset({ inventoryNumber: `FA-${Date.now()}`, name: form.name, acquisitionDate: form.acquisitionDate, acquisitionCost: parseFloat(form.acquisitionCost), salvageValue: parseFloat(form.residualValue) || 0, usefulLifeMonths: (parseInt(form.usefulLifeYears) || 1) * 12, amortizationMethod: form.depreciationMethod });
     if (res.success) { toast.success('Активът е добавен!'); onAdd(); setOpen(false); setForm({ name: '', category: '', acquisitionDate: new Date().toISOString().split('T')[0], acquisitionCost: '', depreciationMethod: 'straight_line', usefulLifeYears: '5', residualValue: '0', notes: '' }); }
     else toast.error('Грешка');
     setLoading(false);
@@ -148,15 +166,15 @@ export default function FixedAssetsPage() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {assets.map((a: any) => {
-                    const bv = calcCurrentBookValue(a);
-                    const isActive = a.status === 'active';
+                    const bv = getBookValue(a);
+                    const isActive = a.isActive !== false && a.status !== 'written_off';
                     return (
                       <TableRow key={a.id} className="hover:bg-muted/30">
                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{a.category || '—'}</TableCell>
                         <TableCell className="text-sm">{new Date(a.acquisitionDate).toLocaleDateString('bg-BG')}</TableCell>
                         <TableCell className="text-right text-sm">{fmt(parseFloat(a.acquisitionCost))} €</TableCell>
-                        <TableCell className="text-sm">{METHODS.find(m => m.value === a.depreciationMethod)?.label || a.depreciationMethod}</TableCell>
+                        <TableCell className="text-sm">{METHODS.find(m => m.value === (a.amortizationMethod || a.depreciationMethod))?.label || a.amortizationMethod || a.depreciationMethod}</TableCell>
                         <TableCell className="text-right text-sm font-semibold">{fmt(bv)} €</TableCell>
                         <TableCell>
                           <Badge variant={isActive ? 'default' : 'secondary'} className={isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 hover:bg-emerald-100' : ''}>

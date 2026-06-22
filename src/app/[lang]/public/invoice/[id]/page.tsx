@@ -41,7 +41,7 @@ export default async function PublicInvoicePage({
           <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
             <div>
               <CardTitle className="text-3xl font-bold flex items-center space-x-2">
-                <FileText className="h-6 w-6 text-blue-600" />
+                <span className="text-blue-600 text-2xl" aria-hidden="true">#</span>
                 <span>Invoice #{invoice.invoiceNumber || invoice.id}</span>
               </CardTitle>
               <CardDescription className="mt-1 text-base">
@@ -57,7 +57,7 @@ export default async function PublicInvoicePage({
           <CardContent className="space-y-8">
             {showSuccessMessage && (
               <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 flex items-center space-x-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <span className="text-green-600 text-2xl" aria-hidden="true">OK</span>
                 <div>
                   <p className="font-semibold">Payment successful!</p>
                   <p className="text-sm">Thank you for your payment. The invoice has been marked as paid.</p>
@@ -149,7 +149,7 @@ export default async function PublicInvoicePage({
           
           <CardFooter className="bg-slate-50 flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-200">
             <Button variant="outline" className="w-full sm:w-auto mb-4 sm:mb-0">
-              <Download className="mr-2 h-4 w-4" /> Download PDF
+              <span className="mr-2" aria-hidden="true">PDF</span> Download PDF
             </Button>
             
             {!isPaid && (
@@ -157,7 +157,7 @@ export default async function PublicInvoicePage({
             )}
             {isPaid && (
               <div className="flex items-center text-green-600 font-semibold">
-                <CheckCircle className="mr-2 h-5 w-5" /> Paid in Full
+                <span className="mr-2" aria-hidden="true">OK</span> Paid in Full
               </div>
             )}
           </CardFooter>

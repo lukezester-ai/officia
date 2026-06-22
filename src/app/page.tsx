@@ -1,5 +1,7 @@
+'use client';
 // @ts-nocheck
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle, Users, Zap, Shield, BarChart3 } from "lucide-react";
 import Link from "next/link";
@@ -24,12 +26,8 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Вход</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Започни безплатно</Link>
-            </Button>
+            <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }))}>Вход</Link>
+            <Link href="/register" className={cn(buttonVariants())}>Започни безплатно</Link>
           </div>
         </div>
       </nav>
@@ -54,14 +52,10 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-10" asChild>
-              <Link href="/register">
-                Започни безплатно <ArrowRight className="ml-2" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-10" asChild>
-              <Link href="#demo">Виж демо</Link>
-            </Button>
+            <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "text-lg px-10")}>
+              Започни безплатно <ArrowRight className="ml-2" />
+            </Link>
+            <Link href="#demo" className={cn(buttonVariants({ size: "lg", variant: "outline" }), "text-lg px-10")}>Виж демо</Link>
           </div>
 
           <p className="text-sm text-zinc-500 mt-6">Без кредитна карта • 14 дни пълен достъп</p>
@@ -137,12 +131,9 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl font-bold mb-6">Готов ли си да автоматизираш офиса си?</h2>
           <p className="text-2xl text-zinc-400 mb-10">Присъедини се към бъдещето на българския бизнес.</p>
-          
-          <Button size="lg" className="text-xl px-12 py-8 rounded-2xl" asChild>
-            <Link href="/register">
+          <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "text-xl px-12 py-8 rounded-2xl")}>
               Създай безплатен акаунт сега
             </Link>
-          </Button>
         </div>
       </section>
 

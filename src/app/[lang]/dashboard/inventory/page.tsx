@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+// @ts-nocheck
 
 import { useState, useEffect } from 'react';
 import { getInventoryData, createInventoryItem, addInventoryMovement } from './actions';
@@ -16,7 +16,7 @@ function fmt(n: number) {
 }
 
 export default function InventoryPage() {
-  const [data, setData] = useState({ items: [], totalStockValue: 0, totalItemsCount: 0 });
+  const [data, setData] = useState<any>({ items: [], totalStockValue: 0, totalItemsCount: 0 });
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -27,7 +27,7 @@ export default function InventoryPage() {
 
   const load = async () => {
     const res = await getInventoryData();
-    if (res.success) setData(res.data);
+    if (res.success && res.data) setData(res.data);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -148,7 +148,7 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]">
-              {data.items.reduce((s, i: any) => s + i.currentQuantity, 0).toLocaleString()} бр.
+              {data.items.reduce((s: number, i: any) => s + i.currentQuantity, 0).toLocaleString()} бр.
             </div>
           </CardContent>
         </Card>

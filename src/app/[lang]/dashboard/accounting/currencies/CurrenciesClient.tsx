@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client";
+// @ts-nocheck
 
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, TrendingUp, TrendingDown, DollarSign, Euro, PoundSterling, Calculator } from 'lucide-react';

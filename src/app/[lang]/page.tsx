@@ -1,4 +1,6 @@
+'use client';
 // @ts-nocheck
+import { use } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, FileText, Brain, Building2, BarChart3, Shield, Zap, Users } from 'lucide-react';
 import TestimonialsFaq from '@/components/TestimonialsFaq';

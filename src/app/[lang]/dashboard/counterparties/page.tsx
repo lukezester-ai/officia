@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+// @ts-nocheck
 import { useState, useEffect, useMemo } from 'react';
 import { getCounterparties, createCounterparty, updateCounterparty, deactivateCounterparty } from './actions';
 import { Card, CardContent } from '@/components/ui/card';

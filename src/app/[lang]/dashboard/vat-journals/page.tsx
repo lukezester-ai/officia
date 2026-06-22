@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { getVatJournals, createVatJournal, deleteVatJournal } from './actions';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,7 +38,7 @@ function AddEntryDialog({ type, year, month, onAdd }: { type: 'sales'|'purchases
     if (!form.counterpartyName.trim()) { toast.error('Въведи контрагент'); return; }
     if (!form.netAmount || parseFloat(form.netAmount) <= 0) { toast.error('Въведи данъчна основа'); return; }
     setLoading(true);
-    const res = await createVatJournal({ type: type === 'sales' ? 'sales' : 'purchase', periodYear: year, periodMonth: month, documentNumber: form.documentNumber, documentDate: form.documentDate, counterpartyName: form.counterpartyName, counterpartyVat: form.counterpartyVat, netAmount: parseFloat(form.netAmount), vatRate: parseFloat(form.vatRate), vatAmount: parseFloat(form.vatAmount) || 0 });
+    const res = await createVatJournal({ type: type === 'sales' ? 'sales' : 'purchases', periodYear: year, periodMonth: month, documentNumber: form.documentNumber, documentDate: form.documentDate, counterpartyName: form.counterpartyName, counterpartyVat: form.counterpartyVat, netAmount: parseFloat(form.netAmount), vatRate: parseFloat(form.vatRate), vatAmount: parseFloat(form.vatAmount) || 0 });
     if (res.success) {
       toast.success('Записано!'); onAdd(); setOpen(false);
       setForm({ documentNumber: '', documentDate: new Date().toISOString().split('T')[0], counterpartyName: '', counterpartyVat: '', netAmount: '', vatRate: '20', vatAmount: '' });
@@ -87,7 +87,7 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
 
   const load = async () => {
     setLoading(true);
-    const res = await getVatJournals({ type: type === 'sales' ? 'sales' : 'purchase', year, month });
+    const res = await getVatJournals(type === 'sales' ? 'sales' : 'purchases', year, month);
     if (res.success) setEntries((res as any).data || []);
     setLoading(false);
   };

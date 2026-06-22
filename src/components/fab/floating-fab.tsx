@@ -1,6 +1,6 @@
-// @ts-nocheck
 "use client";
-import { stateInitializer as useState } from "react";
+// @ts-nocheck
+import { useState } from "react";
 import { Plus, FileText, Building2, Receipt, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";

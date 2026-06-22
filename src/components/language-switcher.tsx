@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use client';
+// @ts-nocheck
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from './ui/button';
 

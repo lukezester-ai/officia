@@ -23,7 +23,7 @@ export default async function DashboardLayout({
         <header className="h-16 bg-background/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-10">
           <div className="flex items-center gap-3 flex-1 max-w-sm">
             <div className="relative w-full">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm" aria-hidden="true">S</span>
               <input
                 type="text"
                 placeholder="Търси..."
@@ -34,7 +34,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-3">
             <LanguageSwitcher currentLang={lang} />
             <button className="relative h-9 w-9 rounded-lg hover:bg-muted flex items-center justify-center transition-colors">
-              <Bell size={17} className="text-muted-foreground" />
+              <span className="text-muted-foreground text-sm" aria-hidden="true">!</span>
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
             </button>
             <div className="w-px h-5 bg-border" />

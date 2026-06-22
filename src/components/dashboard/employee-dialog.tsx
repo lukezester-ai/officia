@@ -1,5 +1,5 @@
-﻿// @ts-nocheck
 'use client';
+// @ts-nocheck
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

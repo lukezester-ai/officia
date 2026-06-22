@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
-import { tools } from '@/lib/ai/tools';
 import { auth } from '@clerk/nextjs/server';
+import { aiAutomationRegistry } from '@/lib/ai/automation/registry';
 
 export async function GET() {
   try {
@@ -11,15 +10,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Връщаме списък с всички достъпни инструменти
-    const availableTools = Object.keys(tools).map((toolKey) => ({
-      name: toolKey,
-      description: (tools as any)[toolKey].description || '',
-    }));
-
-    return NextResponse.json({ tools: availableTools });
+    return NextResponse.json(aiAutomationRegistry);
   } catch (error) {
-    console.error('Error fetching tools:', error);
+    console.error('Error fetching AI automation registry:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
