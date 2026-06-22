@@ -121,7 +121,7 @@ export default async function PublicInvoicePage({ params, searchParams }: { para
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-slate-500 block">IBAN:</span>
-                  <span className="font-mono font-semibold text-slate-900">BG205STSA93000032481635</span>
+                  <span className="font-mono font-semibold text-slate-900">BG20STSA93000032481635</span>
                 </div>
                 <div>
                   <span className="text-slate-500 block">Банка:</span>
