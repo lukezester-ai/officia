@@ -15,17 +15,24 @@ const initialAiMessages = [
   {
     id: '1',
     role: 'assistant',
-    content: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
-  }
+    parts: [
+      {
+        type: 'text',
+        text: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
+      },
+    ],
+  },
 ];
 
 export default function AIAssistantPage() {
-  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     api: '/api/ai/chat',
-    initialMessages: initialAiMessages,
+    messages: initialAiMessages,
   } as any) as any;
 
+  const [input, setInput] = useState('');
   const [files, setFiles] = useState<FileList | null>(null);
+  const isLoading = status === 'submitted' || status === 'streaming';
   const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -86,11 +93,25 @@ export default function AIAssistantPage() {
     }
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const getMessageText = (message: any) => {
+    if (typeof message.content === 'string') return message.content;
+    if (Array.isArray(message.parts)) {
+      return message.parts
+        .filter((part: any) => part?.type === 'text')
+        .map((part: any) => part.text || '')
+        .join('');
+    }
+    return '';
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleSubmit(e, {
-      experimental_attachments: files ? files : undefined,
-    });
+
+    const text = input.trim();
+    if (!text && (!files || files.length === 0)) return;
+
+    await sendMessage(text ? { text, files: files || undefined } : { files: files! });
+    setInput('');
     setFiles(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -124,7 +145,7 @@ export default function AIAssistantPage() {
                   }`}>
                     {/* Визуализация на съдържанието */}
                     <div className="whitespace-pre-wrap font-sans">
-                      {msg.content}
+                      {getMessageText(msg)}
                     </div>
 
                     {/* Визуализация на AI Инструменти (Графики) */}
@@ -240,7 +261,7 @@ export default function AIAssistantPage() {
 
               <Input 
                 value={input}
-                onChange={handleInputChange}
+                onChange={(event) => setInput(event.target.value)}
                 placeholder={isListening ? "Слушам ви..." : "Попитай асистента или прикачи фактура за сканиране..."}
                 className="flex-1 rounded-xl bg-white/5 border-white/10 focus-visible:ring-violet-500 text-white placeholder:text-zinc-500 py-6 pl-12 pr-12 text-[15px]"
                 disabled={isLoading}
