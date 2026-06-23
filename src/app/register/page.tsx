@@ -182,9 +182,8 @@ export default function RegisterPage() {
                   dividerText: "text-zinc-500",
                 },
               }}
-              afterSignUpUrl="/dashboard"
               signInUrl="/sign-in"
-              redirectUrl="/dashboard"
+              forceRedirectUrl="/dashboard"
             />
           </motion.div>
 
