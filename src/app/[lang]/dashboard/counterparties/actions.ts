@@ -3,21 +3,15 @@
 
 import { db } from '@/lib/db/db';
 import { counterparties } from '@/lib/db/schema/counterparties';
-import { tenants } from '@/lib/db/schema/tenants';
-import { eq, desc } from 'drizzle-orm';
+import { requireTenant } from '@/lib/auth/get-tenant';
+import { and, eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-
-async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
-  return tenant;
-}
 
 export async function getCounterparties() {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Липсва Tenant', data: [] };
+    const { tenantId } = await requireTenant();
     const data = await db.select().from(counterparties)
-      .where(eq(counterparties.tenantId, tenant.id))
+      .where(eq(counterparties.tenantId, tenantId))
       .orderBy(desc(counterparties.createdAt));
     return { success: true, data };
   } catch (error: any) {
@@ -38,10 +32,9 @@ export async function createCounterparty(input: {
   notes?: string;
 }) {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Липсва Tenant' };
+    const { tenantId } = await requireTenant();
     const [entry] = await db.insert(counterparties).values({
-      tenantId: tenant.id,
+      tenantId,
       type: input.type,
       name: input.name,
       eik: input.eik || null,
@@ -74,7 +67,8 @@ export async function updateCounterparty(id: string, input: {
   notes?: string;
 }) {
   try {
-    await db.update(counterparties).set(input).where(eq(counterparties.id, id));
+    const { tenantId } = await requireTenant();
+    await db.update(counterparties).set(input).where(and(eq(counterparties.id, id), eq(counterparties.tenantId, tenantId)));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -86,7 +80,7 @@ export async function deactivateCounterparty(id: string) {
   try {
     await db.update(counterparties)
       .set({ isActive: false })
-      .where(eq(counterparties.id, id));
+      .where(and(eq(counterparties.id, id), eq(counterparties.tenantId, tenantId)));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -100,12 +94,13 @@ import { or } from 'drizzle-orm';
 
 export async function getCounterparty360Data(id: string) {
   try {
-    const [counterparty] = await db.select().from(counterparties).where(eq(counterparties.id, id)).limit(1);
+    const { tenantId } = await requireTenant();
+    const [counterparty] = await db.select().from(counterparties).where(and(eq(counterparties.id, id), eq(counterparties.tenantId, tenantId))).limit(1);
     if (!counterparty) return { success: false, error: 'Контрагентът не е намерен' };
 
     // Find invoices (match by counterpartyName, in real app match by ID if linked)
     // Wait, counterparties are linked to invoices by name or ID? Currently invoices just has counterpartyName. Let's match by name.
-    const relatedInvoices = await db.select().from(invoices).where(eq(invoices.counterpartyName, counterparty.name));
+    const relatedInvoices = await db.select().from(invoices).where(and(eq(invoices.tenantId, tenantId), eq(invoices.counterpartyName, counterparty.name)));
     
     // Financials
     const unpaidInvoices = relatedInvoices.filter(i => i.status === 'issued');
@@ -113,7 +108,7 @@ export async function getCounterparty360Data(id: string) {
     const totalVolume = relatedInvoices.reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
     
     // Transactions
-    const relatedTransactions = await db.select().from(bankTransactions).where(eq(bankTransactions.counterpartyName, counterparty.name));
+    const relatedTransactions = await db.select().from(bankTransactions).where(and(eq(bankTransactions.tenantId, tenantId), eq(bankTransactions.counterpartyName, counterparty.name)));
     
     // Documents
     // Since document schema doesn't have counterpartyName directly, we might search metadata or title
