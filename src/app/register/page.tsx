@@ -181,9 +181,6 @@ export default function RegisterPage() {
                   dividerLine: "bg-white/10",
                   dividerText: "text-zinc-500",
                 },
-                layout: {
-                  socialButtonsVariant: "blockButton",
-                },
               }}
               afterSignUpUrl="/dashboard"
               signInUrl="/sign-in"
