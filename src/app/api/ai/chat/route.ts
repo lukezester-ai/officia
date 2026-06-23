@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         createJournalEntry: buildCreateJournalEntryTool(tenantId, userId),
         manageHR: buildManageHRTool(tenantId),
         manageInventory: buildManageInventoryTool(tenantId),
-        generateVat: buildGenerateVatTool(tenantId),
+        generateVat: buildGenerateVatTool(tenantId, userId),
         depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
         autoApprove: buildAutoApproveTool(tenantId, userId),
         processInbox: buildProcessInboxTool(tenantId),

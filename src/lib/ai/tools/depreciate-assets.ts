@@ -6,6 +6,7 @@ import { fixedAssets } from '@/lib/db/schema/fixed_assets';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
 import { eq, and } from 'drizzle-orm';
 import { accountPlan } from '@/lib/db/schema/account_plan';
+import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
 export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => tool({
   description: "Изчислява и начислява месечни амортизации на всички Дълготрайни материални активи (ДМА). Използвай го, когато потребителят иска да начисли амортизациите за месеца.",
@@ -27,7 +28,33 @@ export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => t
          return { success: true, message: "В системата няма регистрирани активни Дълготрайни материални активи (ДМА), за които да се начислява амортизация." };
        }
 
+       let processedAssets = 0;
        let totalDepreciation = 0;
+       for (const asset of assets) {
+          const cost = parseFloat(asset.acquisitionCost || '0');
+          const months = parseFloat(asset.usefulLifeMonths || '1');
+          if (months > 0) {
+             totalDepreciation += cost / months;
+             processedAssets++;
+          }
+       }
+
+       return await queueAiApprovalRequest({
+         tenantId,
+         userId,
+         actionKey: 'depreciateAssets',
+         risk: 'high',
+         title: `Review depreciation for ${month}/${year}`,
+         description: `AI calculated depreciation for ${processedAssets} active asset(s). No journal entry was posted before human approval.`,
+         sourceType: 'fixed_asset',
+         payload: { year, month, assetIds: assets.map((asset) => asset.id) },
+         summary: {
+           processedAssets,
+           totalDepreciation: totalDepreciation.toFixed(2),
+           period: `${month}/${year}`,
+         },
+       });
+
        const journalDate = new Date(year, month, 0); // Последният ден на месеца
 
        // 2. Създаване на Хедър за груповата счетоводна статия (Главна Книга)
@@ -41,8 +68,6 @@ export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => t
          aiStatus: 'verified',
          aiConfidence: '0.99'
        }).returning();
-
-       let processedAssets = 0;
        let linesToInsert = [];
 
        for (const asset of assets) {

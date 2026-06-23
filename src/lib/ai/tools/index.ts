@@ -27,7 +27,7 @@ export const tools = {
   createJournalEntry: buildCreateJournalEntryTool(dummyId, dummyId),
   manageHR: buildManageHRTool(dummyId),
   manageInventory: buildManageInventoryTool(dummyId),
-  generateVat: buildGenerateVatTool(dummyId),
+  generateVat: buildGenerateVatTool(dummyId, dummyId),
   depreciateAssets: buildDepreciateAssetsTool(dummyId, dummyId),
   autoApprove: buildAutoApproveTool(dummyId, dummyId),
   processInbox: buildProcessInboxTool(dummyId),

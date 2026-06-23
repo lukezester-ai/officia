@@ -6,8 +6,9 @@ import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { invoices } from '@/lib/db/schema/invoices';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { eq, and, sql } from 'drizzle-orm';
+import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
-export const buildGenerateVatTool = (tenantId: string) => tool({
+export const buildGenerateVatTool = (tenantId: string, userId?: string) => tool({
   description: "Автоматичен генератор на ДДС дневници. Използвай го, когато потребителят иска да приключи месеца, да сметне ДДС-то или да генерира данъчни/ДДС дневници.",
   parameters: z.object({
     year: z.number().describe("Година (напр. 2024)"),
@@ -41,6 +42,22 @@ export const buildGenerateVatTool = (tenantId: string) => tool({
         if (sales.length === 0 && purchases.length === 0) {
            return { success: true, message: `Няма фактури за продажби или покупки за месец ${month}/${year}. Няма данни за генериране на ДДС дневници.` };
         }
+
+        return await queueAiApprovalRequest({
+          tenantId,
+          userId,
+          actionKey: 'generateVat',
+          risk: 'critical',
+          title: `Review VAT journals for ${month}/${year}`,
+          description: `AI prepared VAT journal generation for ${sales.length} sale invoice(s) and ${purchases.length} purchase invoice(s). Existing VAT journals for the period will not be changed until approved.`,
+          sourceType: 'vat_journal',
+          payload: { year, month, startDate, endDate },
+          summary: {
+            salesCount: sales.length,
+            purchasesCount: purchases.length,
+            period: `${month}/${year}`,
+          },
+        });
 
         // 3. Изчистваме старите записи за този месец/година (за да можем да генерираме наново без дублажи)
         await db.delete(vatJournals).where(

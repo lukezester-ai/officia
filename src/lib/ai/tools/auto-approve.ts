@@ -5,6 +5,7 @@ import { db } from '@/lib/db/db';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { employees } from '@/lib/db/schema/employees';
 import { eq, and, sql } from 'drizzle-orm';
+import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
 export const buildAutoApproveTool = (tenantId: string, userId: string) => tool({
   description: "Автоматичен HR Мениджър. Сканира чакащите молби за отпуска, проверява за конфликти (застъпващи се отпуски в същия отдел) и автоматично ги одобрява, ако няма проблем. Използвай го, когато потребителят иска да разгледа/одобри молбите за отпуск.",
@@ -35,6 +36,30 @@ export const buildAutoApproveTool = (tenantId: string, userId: string) => tool({
       if (pendingRequests.length === 0) {
          return { success: true, message: "В момента няма чакащи молби за отпуска за разглеждане." };
       }
+
+      return await queueAiApprovalRequest({
+        tenantId,
+        userId,
+        actionKey: 'autoApprove',
+        risk: 'high',
+        title: 'Review AI leave approvals',
+        description: `AI found ${pendingRequests.length} pending leave request(s). Approval must be confirmed by a human before HR records change.`,
+        sourceType: 'leave_request',
+        payload: {
+          requestIds: pendingRequests.map((request) => request.id),
+        },
+        summary: {
+          pendingCount: pendingRequests.length,
+          requests: pendingRequests.map((request) => ({
+            id: request.id,
+            employeeId: request.employeeId,
+            employeeName: `${request.firstName || ''} ${request.lastName || ''}`.trim(),
+            department: request.department,
+            startDate: request.startDate,
+            endDate: request.endDate,
+          })),
+        },
+      });
 
       let approvedCount = 0;
       let skippedCount = 0;

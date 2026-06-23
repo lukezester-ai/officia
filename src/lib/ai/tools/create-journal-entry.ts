@@ -5,6 +5,7 @@ import { db } from '@/lib/db/db';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
 import { accountPlan } from '@/lib/db/schema/account_plan';
 import { eq, and, or, ilike } from 'drizzle-orm';
+import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
 export const buildCreateJournalEntryTool = (tenantId: string, userId: string) => tool({
   description: "Създава двустранна счетоводна статия (Journal Entry). Използвай го, когато потребителят иска да осчетоводи нещо (напр. 'осчетоводи наем', 'създай контировка').",
@@ -17,6 +18,23 @@ export const buildCreateJournalEntryTool = (tenantId: string, userId: string) =>
   }),
   execute: async ({ description, amount, debitAccountCode, creditAccountCode, date }) => {
     try {
+      return await queueAiApprovalRequest({
+        tenantId,
+        userId,
+        actionKey: 'createJournalEntry',
+        risk: 'high',
+        title: 'Review AI journal entry',
+        description: `Proposed journal entry for ${amount}: ${description}`,
+        sourceType: 'journal_entry',
+        payload: { description, amount, debitAccountCode, creditAccountCode, date },
+        summary: {
+          debitAccountCode,
+          creditAccountCode,
+          amount,
+          date: date || new Date().toISOString().slice(0, 10),
+        },
+      });
+
       const entryDate = date ? new Date(date) : new Date();
 
       // Помощна функция: намира сметката по номер или име, или я създава
