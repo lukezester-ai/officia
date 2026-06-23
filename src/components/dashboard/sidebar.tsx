@@ -61,7 +61,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
       <div className="mx-4 mb-3 h-px bg-white/10" />
       <div className="px-4 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
           <span className="text-sm font-medium text-zinc-400 truncate">{dict.profile}</span>
         </div>
         <ThemeToggle />
