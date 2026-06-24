@@ -5,6 +5,9 @@ import { Menu, X } from 'lucide-react';
 
 export default function MobileMenu({ lang }: { lang: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
+  const signInHref = `/sign-in?redirect_url=${authRedirect}`;
+  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
 
   return (
     <div className="md:hidden">
@@ -20,8 +23,8 @@ export default function MobileMenu({ lang }: { lang: string }) {
           <a href="#features" onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors py-2 text-lg font-medium">Функции</a>
           <a href="#pricing" onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors py-2 text-lg font-medium">Цени</a>
           <div className="h-px bg-white/10 my-2" />
-          <Link href="/sign-in" onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors py-2 text-lg font-medium">Вход</Link>
-          <Link href="/sign-up" onClick={() => setIsOpen(false)} className="bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-4 py-3 rounded-xl font-medium text-center text-lg mt-2">
+          <Link href={signInHref} onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors py-2 text-lg font-medium">Вход</Link>
+          <Link href={signUpHref} onClick={() => setIsOpen(false)} className="bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-4 py-3 rounded-xl font-medium text-center text-lg mt-2">
             Започни безплатно
           </Link>
         </div>

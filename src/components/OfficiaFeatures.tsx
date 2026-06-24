@@ -366,7 +366,10 @@ const featureCards: FeatureCardData[] = [
   },
 ];
 
-export default function OfficiaFeatures() {
+export default function OfficiaFeatures({ lang }: { lang: string }) {
+  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
+  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
+
   return (
     <section id="features" className="overflow-hidden bg-[#09090f] px-4 py-24 selection:bg-purple-500 selection:text-white md:px-8">
       <div className="mx-auto max-w-7xl">
@@ -423,7 +426,7 @@ export default function OfficiaFeatures() {
               </p>
             </div>
             <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
-              <CTAButton href="/sign-up" variant="primary" label="Започни безплатно" />
+              <CTAButton href={signUpHref} variant="primary" label="Започни безплатно" />
               <CTAButton href="/bg/dashboard" variant="secondary" label="Демонстрация" />
             </div>
           </div>

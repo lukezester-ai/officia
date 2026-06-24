@@ -94,6 +94,9 @@ function MetricsStrip({ skipAnimations }: { skipAnimations: boolean }) {
 }
 
 export default function OfficiaHero({ lang }: { lang: string }) {
+  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
+  const signInHref = `/sign-in?redirect_url=${authRedirect}`;
+  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
   const shouldReduceMotion = useReducedMotion();
   const skip = shouldReduceMotion ?? false;
 
@@ -126,8 +129,8 @@ export default function OfficiaHero({ lang }: { lang: string }) {
             <a href="#social-proof" className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Клиенти</a>
           </div>
           <div className="hidden items-center gap-4 md:flex">
-            <Link href="/sign-in" className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Вход</Link>
-            <Link href="/sign-up" className="rounded-lg bg-gradient-to-b from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-700/30 transition-transform hover:scale-[1.02] active:scale-[0.98]">Започни безплатно</Link>
+            <Link href={signInHref} className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Вход</Link>
+            <Link href={signUpHref} className="rounded-lg bg-gradient-to-b from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-700/30 transition-transform hover:scale-[1.02] active:scale-[0.98]">Започни безплатно</Link>
           </div>
           <MobileMenu lang={lang} />
         </div>
@@ -153,7 +156,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
             </motion.p>
 
             <motion.div initial={skip ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.65 }} className="flex flex-col items-center gap-4 sm:flex-row">
-              <Link href="/sign-up" className="officia-cta-shimmer group flex items-center gap-2 rounded-2xl bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] px-8 py-5 text-lg font-bold text-white shadow-[0_8px_32px_rgba(109,40,217,0.45)] transition-transform hover:scale-[1.02] active:scale-[0.97]">
+              <Link href={signUpHref} className="officia-cta-shimmer group flex items-center gap-2 rounded-2xl bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] px-8 py-5 text-lg font-bold text-white shadow-[0_8px_32px_rgba(109,40,217,0.45)] transition-transform hover:scale-[1.02] active:scale-[0.97]">
                 <span>Започни безплатно</span>
                 <ArrowRight className="h-5 w-5 transition-transform duration-150 group-hover:translate-x-1" />
               </Link>

@@ -151,7 +151,9 @@ function TestimonialCard({ quote, name, title, company, size, initials, isFeatur
   );
 }
 
-export default function OfficiaSocialProof() {
+export default function OfficiaSocialProof({ lang }: { lang: string }) {
+  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
+  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
   const prefersReduced = useReducedMotion();
 
   return (
@@ -176,7 +178,7 @@ export default function OfficiaSocialProof() {
         <div className="text-center">
           <motion.div initial={{ opacity: 0, scale: prefersReduced ? 1 : 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="inline-flex flex-col items-center">
             <h3 className="mb-8 text-xl font-medium text-slate-200">Присъедини се към 500+ фирми</h3>
-            <Link href="/sign-up" className="group mb-4 flex items-center gap-3 rounded-full bg-[#7c3aed] px-10 py-4 font-bold text-white shadow-[0_12px_40px_rgba(124,58,237,0.25)] transition-all hover:bg-[#6d28d9] hover:scale-[1.02] active:scale-[0.98]">
+            <Link href={signUpHref} className="group mb-4 flex items-center gap-3 rounded-full bg-[#7c3aed] px-10 py-4 font-bold text-white shadow-[0_12px_40px_rgba(124,58,237,0.25)] transition-all hover:bg-[#6d28d9] hover:scale-[1.02] active:scale-[0.98]">
               <span>Започни безплатно</span>
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>

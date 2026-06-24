@@ -82,7 +82,10 @@ const plans: PricingPlan[] = [
 
 const footerLinks = ["99.9% uptime", "GDPR compliant", "Поддръжка на BG/EN"];
 
-export default function PricingSection() {
+export default function PricingSection({ lang }: { lang: string }) {
+  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
+  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
+  const registerHref = `/register?redirect_url=${authRedirect}`;
   const [billingCycle, setBillingCycle] = React.useState<BillingCycle>("annual");
   const reducedMotion = useReducedMotion();
   const transition = reducedMotion
@@ -278,7 +281,7 @@ export default function PricingSection() {
                 </ul>
 
                 <Link
-                  href={plan.isEnterprise ? "/register" : "/sign-up"}
+                  href={plan.isEnterprise ? registerHref : signUpHref}
                   className={cn(
                     "flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors",
                     plan.ctaVariant === "solid"
