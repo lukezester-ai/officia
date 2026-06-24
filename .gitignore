@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# local agent tooling
+.agents/
+skills-lock.json
+
+# local Clerk state
+.clerk/
+
+# archives / local exports
+*.rar
+*.zip
+
+# generated PWA assets
+/public/sw.js
+/public/workbox-*.js
+/public/swe-worker-*.js
