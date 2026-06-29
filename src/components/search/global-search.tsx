@@ -1,28 +1,70 @@
 "use client";
+
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Search, FileText, Users, Building2, Receipt, BarChart2, Landmark, Settings, ShoppingCart, X, Bot, Inbox, CheckSquare } from "lucide-react";
+import {
+  Search,
+  FileText,
+  Users,
+  Building2,
+  Receipt,
+  BarChart2,
+  Landmark,
+  Settings,
+  ShoppingCart,
+  X,
+  Bot,
+  CheckSquare,
+  Package,
+  Loader2,
+} from "lucide-react";
+import { searchEntities, type EntitySearchResult } from "@/lib/search/entity-search";
 
-type Page = { label: string; href: string; Icon: React.ComponentType<{ size?: number; className?: string }>; group: string };
+type IconType = React.ComponentType<{ size?: number; className?: string }>;
 
-const PAGES: Page[] = [
-  { label: "Главно табло", href: "/dashboard", Icon: BarChart2, group: "Навигация" },
-  { label: "Счетоводство", href: "/dashboard/accounting", Icon: BarChart2, group: "Навигация" },
-  { label: "Фактури", href: "/dashboard/invoices", Icon: Receipt, group: "Навигация" },
-  { label: "Нова фактура", href: "/dashboard/accounting/invoices/new", Icon: Receipt, group: "Бързи действия" },
-  { label: "Покупки", href: "/dashboard/purchase-invoices", Icon: ShoppingCart, group: "Навигация" },
-  { label: "Документи", href: "/dashboard/documents", Icon: FileText, group: "Навигация" },
-  { label: "Контрагенти", href: "/dashboard/counterparties", Icon: Building2, group: "Навигация" },
-  { label: "Банкиране", href: "/dashboard/banking", Icon: Landmark, group: "Навигация" },
-  { label: "Кадри (HR)", href: "/dashboard/hr", Icon: Users, group: "Навигация" },
-  { label: "AI Задачи", href: "/dashboard/tasks", Icon: CheckSquare, group: "Навигация" },
-  { label: "AI Асистент", href: "/dashboard/ai-assistant", Icon: Bot, group: "Навигация" },
-  { label: "Отчети", href: "/dashboard/accounting/reports", Icon: BarChart2, group: "Навигация" },
-  { label: "ДДС журнал", href: "/dashboard/vat-journals", Icon: FileText, group: "Навигация" },
-  { label: "Настройки", href: "/dashboard/settings", Icon: Settings, group: "Навигация" },
-  { label: "Нов служител", href: "/dashboard/hr/new", Icon: Users, group: "Бързи действия" },
-  { label: "Нов журнален запис", href: "/dashboard/accounting/journal/new", Icon: FileText, group: "Бързи действия" },
+type SearchItem = {
+  key: string;
+  label: string;
+  subtitle: string;
+  href: string;
+  group: string;
+  Icon: IconType;
+};
+
+const PAGES: Omit<SearchItem, "key">[] = [
+  { label: "Главно табло", href: "/dashboard", Icon: BarChart2, group: "Раздели", subtitle: "Навигация" },
+  { label: "Счетоводство", href: "/dashboard/accounting", Icon: BarChart2, group: "Раздели", subtitle: "Навигация" },
+  { label: "Фактури", href: "/dashboard/invoices", Icon: Receipt, group: "Раздели", subtitle: "Навигация" },
+  { label: "Нова фактура", href: "/dashboard/accounting/invoices/new", Icon: Receipt, group: "Действия", subtitle: "Бързо действие" },
+  { label: "Покупки", href: "/dashboard/purchase-invoices", Icon: ShoppingCart, group: "Раздели", subtitle: "Навигация" },
+  { label: "Документи", href: "/dashboard/documents", Icon: FileText, group: "Раздели", subtitle: "Навигация" },
+  { label: "Контрагенти", href: "/dashboard/counterparties", Icon: Building2, group: "Раздели", subtitle: "Навигация" },
+  { label: "Банкиране", href: "/dashboard/banking", Icon: Landmark, group: "Раздели", subtitle: "Навигация" },
+  { label: "Кадри (HR)", href: "/dashboard/hr", Icon: Users, group: "Раздели", subtitle: "Навигация" },
+  { label: "Склад", href: "/dashboard/inventory", Icon: Package, group: "Раздели", subtitle: "Навигация" },
+  { label: "ДДС журнал", href: "/dashboard/vat-journals", Icon: FileText, group: "Раздели", subtitle: "Навигация" },
+  { label: "Данъци", href: "/dashboard/taxes", Icon: FileText, group: "Раздели", subtitle: "Навигация" },
+  { label: "AI Задачи", href: "/dashboard/tasks", Icon: CheckSquare, group: "Раздели", subtitle: "Навигация" },
+  { label: "AI Асистент", href: "/dashboard/ai-assistant", Icon: Bot, group: "Раздели", subtitle: "Навигация" },
+  { label: "Отчети", href: "/dashboard/accounting/reports", Icon: BarChart2, group: "Раздели", subtitle: "Навигация" },
+  { label: "Настройки", href: "/dashboard/settings", Icon: Settings, group: "Раздели", subtitle: "Навигация" },
+  { label: "Нов служител", href: "/dashboard/hr/new", Icon: Users, group: "Действия", subtitle: "Бързо действие" },
+  { label: "Нов журнален запис", href: "/dashboard/accounting/journal/new", Icon: FileText, group: "Действия", subtitle: "Бързо действие" },
 ];
+
+const ENTITY_ICONS: Record<EntitySearchResult["kind"], IconType> = {
+  invoice: Receipt,
+  counterparty: Building2,
+  employee: Users,
+  document: FileText,
+};
+
+const ENTITY_GROUPS: Record<EntitySearchResult["kind"], string> = {
+  invoice: "Фактури",
+  counterparty: "Контрагенти",
+  employee: "Служители",
+  document: "Документи",
+};
 
 type SearchContextValue = {
   open: boolean;
@@ -37,6 +79,21 @@ function useSearchContext() {
     throw new Error("SearchTrigger/GlobalSearch must be used within SearchProvider");
   }
   return ctx;
+}
+
+function entityToSearchItem(entity: EntitySearchResult): SearchItem {
+  return {
+    key: entity.id,
+    label: entity.label,
+    subtitle: entity.subtitle,
+    href: entity.href,
+    group: ENTITY_GROUPS[entity.kind],
+    Icon: ENTITY_ICONS[entity.kind],
+  };
+}
+
+function pageToSearchItem(page: Omit<SearchItem, "key">, index: number): SearchItem {
+  return { key: `page-${page.href}-${index}`, ...page };
 }
 
 export function SearchProvider({ children }: { children: React.ReactNode }) {
@@ -56,33 +113,75 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  return (
-    <SearchContext.Provider value={{ open, setOpen }}>
-      {children}
-    </SearchContext.Provider>
-  );
+  return <SearchContext.Provider value={{ open, setOpen }}>{children}</SearchContext.Provider>;
 }
 
 export function GlobalSearch() {
   const { open, setOpen } = useSearchContext();
   const [query, setQuery] = useState("");
   const [sel, setSel] = useState(0);
+  const [entityResults, setEntityResults] = useState<SearchItem[]>([]);
+  const [entityLoading, setEntityLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const params = useParams();
   const lang = (params.lang as string) || "bg";
 
-  const filtered = query.trim()
-    ? PAGES.filter((page) => page.label.toLowerCase().includes(query.toLowerCase()))
-    : PAGES.slice(0, 10);
+  const trimmedQuery = query.trim();
+  const pageResults = trimmedQuery
+    ? PAGES.filter((page) => {
+        const haystack = `${page.label} ${page.subtitle} ${page.group}`.toLowerCase();
+        return haystack.includes(trimmedQuery.toLowerCase());
+      }).map(pageToSearchItem)
+    : PAGES.slice(0, 8).map(pageToSearchItem);
+
+  const results = trimmedQuery.length >= 2 ? [...entityResults, ...pageResults] : pageResults;
 
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 30);
       setQuery("");
       setSel(0);
+      setEntityResults([]);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (trimmedQuery.length < 2) {
+      setEntityResults([]);
+      setEntityLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setEntityLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const entities = await searchEntities(trimmedQuery);
+        if (!cancelled) {
+          setEntityResults(entities.map(entityToSearchItem));
+        }
+      } catch {
+        if (!cancelled) {
+          setEntityResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setEntityLoading(false);
+        }
+      }
+    }, 280);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [trimmedQuery]);
+
+  useEffect(() => {
+    setSel(0);
+  }, [results.length, trimmedQuery]);
 
   const go = useCallback(
     (href: string) => {
@@ -95,14 +194,14 @@ export function GlobalSearch() {
   const onKey = (event: React.KeyboardEvent) => {
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setSel((value) => Math.min(value + 1, filtered.length - 1));
+      setSel((value) => Math.min(value + 1, results.length - 1));
     }
     if (event.key === "ArrowUp") {
       event.preventDefault();
       setSel((value) => Math.max(value - 1, 0));
     }
-    if (event.key === "Enter" && filtered[sel]) {
-      go(filtered[sel].href);
+    if (event.key === "Enter" && results[sel]) {
+      go(results[sel].href);
     }
   };
 
@@ -116,9 +215,9 @@ export function GlobalSearch() {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="border-b border-white/8 px-4 py-3">
-          <p className="text-sm font-semibold text-white">Бърза навигация</p>
+          <p className="text-sm font-semibold text-white">Търсене в Officia</p>
           <p className="mt-0.5 text-xs text-zinc-500">
-            Търси раздел или действие — фактури, HR, банка, документи, настройки…
+            Раздели, фактури, контрагенти, служители и документи
           </p>
         </div>
         <div className="flex items-center gap-3 border-b border-white/8 px-4 py-3.5">
@@ -126,14 +225,12 @@ export function GlobalSearch() {
           <input
             ref={inputRef}
             value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setSel(0);
-            }}
+            onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKey}
-            placeholder="Напиши име на раздел, напр. „фактури“ или „отчети“"
+            placeholder="Фактура, ЕИК, служител, раздел…"
             className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
           />
+          {entityLoading && <Loader2 size={15} className="shrink-0 animate-spin text-zinc-500" />}
           <kbd className="hidden items-center gap-1 rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-600 sm:flex">
             Esc
           </kbd>
@@ -142,19 +239,24 @@ export function GlobalSearch() {
           </button>
         </div>
         <div className="max-h-80 overflow-y-auto py-1.5">
-          {!query.trim() && (
+          {!trimmedQuery && (
             <div className="px-4 py-2 text-xs text-zinc-500">
-              Показани са най-често използваните раздели. Започни да пишеш, за да филтрираш.
+              Започни да пишеш за данни (мин. 2 символа) или избери раздел по-долу.
             </div>
           )}
-          {filtered.length === 0 ? (
-            <div className="py-10 text-center text-sm text-zinc-500">Няма резултати за „{query}"</div>
+          {trimmedQuery.length === 1 && (
+            <div className="px-4 py-2 text-xs text-zinc-500">Още един символ за търсене в данни…</div>
+          )}
+          {results.length === 0 ? (
+            <div className="py-10 text-center text-sm text-zinc-500">
+              {entityLoading ? "Търсене…" : `Няма резултати за „${query}"`}
+            </div>
           ) : (
-            filtered.map((page, index) => (
+            results.map((item, index) => (
               <button
-                key={page.href}
+                key={item.key}
                 type="button"
-                onClick={() => go(page.href)}
+                onClick={() => go(item.href)}
                 onMouseEnter={() => setSel(index)}
                 className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                   index === sel ? "bg-white/8 text-white" : "text-zinc-300 hover:bg-white/5"
@@ -165,11 +267,13 @@ export function GlobalSearch() {
                     index === sel ? "bg-indigo-600/30" : "bg-white/5"
                   }`}
                 >
-                  <page.Icon size={15} className={index === sel ? "text-indigo-400" : "text-zinc-400"} />
+                  <item.Icon size={15} className={index === sel ? "text-indigo-400" : "text-zinc-400"} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">{page.label}</div>
-                  <div className="text-[11px] text-zinc-500">{page.group}</div>
+                  <div className="truncate text-sm font-medium">{item.label}</div>
+                  <div className="truncate text-[11px] text-zinc-500">
+                    {item.group} · {item.subtitle}
+                  </div>
                 </div>
               </button>
             ))
@@ -193,13 +297,13 @@ export function SearchTrigger() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      aria-label="Бърза навигация — намери страница или действие"
-      title="Бърза навигация между раздели (Ctrl+K)"
-      className="flex w-full max-w-md items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-sm text-zinc-400 transition-all hover:border-white/15 hover:bg-white/8 hover:text-white"
+      aria-label="Търсене в раздели и данни"
+      title="Търсене (Ctrl+K)"
+      className="flex w-full max-w-md items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-sm text-zinc-400 transition-all hover:border-white/15 hover:bg-white/8 hover:text-white lg:max-w-lg"
     >
       <Search size={14} className="shrink-0" />
       <span className="flex-1 truncate text-left text-xs sm:text-sm">
-        Намери раздел — фактури, HR, документи…
+        Търси фактура, контрагент, раздел…
       </span>
       <kbd className="hidden shrink-0 rounded border border-white/10 px-1 py-0.5 text-[10px] sm:inline">Ctrl K</kbd>
     </button>
