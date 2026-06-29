@@ -113,7 +113,7 @@ export async function searchEntities(query: string): Promise<EntitySearchResult[
       kind: 'invoice',
       label: invoice.invoiceNumber ? `Фактура ${invoice.invoiceNumber}` : `Фактура #${invoice.id}`,
       subtitle: `${name} · ${invoice.totalAmount ?? '0'} € · ${invoice.status ?? '—'}`,
-      href: `/dashboard/accounting/invoices/${invoice.id}`,
+      href: `/dashboard/invoices?open=${invoice.id}`,
     });
   }
 

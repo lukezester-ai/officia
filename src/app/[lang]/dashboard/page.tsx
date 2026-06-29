@@ -4,15 +4,18 @@ import { getDashboardData } from './actions';
 import Link from 'next/link';
 import { MorningBriefing } from '@/components/dashboard/MorningBriefing';
 import { getInvoices } from './invoices/actions';
+import { getDictionary, Locale } from '@/lib/get-dictionary';
 
 const UNPAID_LIKE = ['issued', 'sent', 'pending', 'издадена', 'изпратена'];
 
-function fmt(n: number) {
-  return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function fmt(n: number, locale: string) {
+  return n.toLocaleString(locale === 'en' ? 'en-GB' : 'bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default async function DashboardPage(props: { params: Promise<{ lang: string }> }) {
   const { lang } = await props.params;
+  const dict = await getDictionary(lang as Locale);
+  const t = dict.dashboard;
   const data = await getDashboardData().catch(() => null);
   
   // We keep pulling raw invoice data just in case we need the lists for now
@@ -31,16 +34,17 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
   const outstandingAmount = outstanding.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
 
   const now = new Date();
+  const dateLocale = lang === 'en' ? 'en-GB' : 'bg-BG';
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Оперативен център</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Какво изисква вниманието ти днес</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t.operationalCenter}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t.operationalSubtitle}</p>
         </div>
         <div className="text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-lg font-medium">
-          {now.toLocaleDateString('bg-BG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          {now.toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
       </div>
 
@@ -55,9 +59,9 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
             <div className="bg-violet-500/20 text-violet-400 rounded-xl p-2.5">
               <TrendingUp size={18} />
             </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Приходи</span>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{t.revenue}</span>
           </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(revenue)}</div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(revenue, lang)}</div>
           <div className="text-sm text-zinc-500">€ от продажби{periodLabel ? ` · ${periodLabel}` : ''}</div>
         </div>
 
@@ -67,9 +71,9 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
             <div className="bg-amber-500/20 text-amber-400 rounded-xl p-2.5">
               <ShoppingCart size={18} />
             </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Разходи</span>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{t.expenses}</span>
           </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(expenses)}</div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(expenses, lang)}</div>
           <div className="text-sm text-zinc-500">€ разходи за месеца</div>
         </div>
 
@@ -81,8 +85,8 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
             </div>
             <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Резултат</span>
           </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(netProfit)}</div>
-          <div className="text-sm text-zinc-500">€ нетна печалба</div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(netProfit, lang)}</div>
+          <div className="text-sm text-zinc-500">€ {t.netProfit.toLowerCase()}</div>
         </div>
 
         {/* Чакащи плащания */}
@@ -93,7 +97,7 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
             </div>
             <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{outstanding.length} бр.</span>
           </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(outstandingAmount)}</div>
+          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(outstandingAmount, lang)}</div>
           <div className="text-sm text-zinc-500">€ за събиране</div>
         </div>
       </div>

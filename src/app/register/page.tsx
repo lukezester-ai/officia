@@ -181,7 +181,7 @@ export default function RegisterPage() {
                 },
               }}
               signInUrl="/sign-in"
-              forceRedirectUrl="/bg/dashboard"
+              fallbackRedirectUrl="/dashboard"
             />
           </motion.div>
 

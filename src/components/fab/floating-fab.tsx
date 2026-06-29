@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 const ACTIONS = [
-  { label: "Нова фактура", href: "/dashboard/accounting/invoices/new", Icon: Receipt, color: "from-indigo-500 to-violet-600" },
+  { label: "Нова фактура", href: "/dashboard/invoices?new=1", Icon: Receipt, color: "from-indigo-500 to-violet-600" },
   { label: "Документи", href: "/dashboard/documents", Icon: FileText, color: "from-blue-500 to-cyan-600" },
   { label: "Контрагенти", href: "/dashboard/counterparties", Icon: Building2, color: "from-emerald-500 to-teal-600" },
   { label: "Покупки", href: "/dashboard/purchase-invoices", Icon: ShoppingCart, color: "from-amber-500 to-orange-600" },

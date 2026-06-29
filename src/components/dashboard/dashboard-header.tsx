@@ -6,7 +6,15 @@ import { UserButton } from '@clerk/nextjs';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { GlobalSearch, SearchTrigger } from '@/components/search/global-search';
 
-export function DashboardHeader({ lang }: { lang: string }) {
+type HeaderLabels = {
+  searchPlaceholder: string;
+  searchAria: string;
+  searchTitle: string;
+  notificationsAria: string;
+  notificationsTitle: string;
+};
+
+export function DashboardHeader({ lang, labels }: { lang: string; labels: HeaderLabels }) {
   return (
     <>
       <GlobalSearch />
@@ -18,8 +26,8 @@ export function DashboardHeader({ lang }: { lang: string }) {
           <LanguageSwitcher currentLang={lang} />
           <Link
             href={`/${lang}/dashboard/tasks`}
-            aria-label="Задачи и известия"
-            title="Задачи и AI inbox"
+            aria-label={labels.notificationsAria}
+            title={labels.notificationsTitle}
             className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Bell size={18} />

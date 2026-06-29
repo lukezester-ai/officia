@@ -25,13 +25,17 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
-  const [open, setOpen] = useState(false);
+export function NewInvoiceDialog({ onCreated, defaultOpen }: { onCreated: () => void; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState('');
   const [form, setForm] = useState(freshForm());
   const [lines, setLines] = useState([emptyLine()]);
+
+  useEffect(() => {
+    if (defaultOpen) setOpen(true);
+  }, [defaultOpen]);
 
   useEffect(() => {
     if (open) getCounterpartiesForSelect().then(r => { if (r.success) setClients(r.data); });

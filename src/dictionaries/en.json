@@ -1,23 +1,85 @@
 {
-    "sidebar":  {
-                    "dashboard":  "Dashboard",
-                    "accounting":  "Accounting",
-                    "hr":  "HR",
-                    "banking":  "Banking",
-                    "documents":  "Documents",
-                    "aiAssistant":  "AI Assistant",
-                    "reports":  "Reports",
-                    "vatJournals":  "VAT Journals",
-                    "fixedAssets":  "Fixed Assets",
-                    "counterparties":  "Counterparties",
-                    "invoices":  "Invoices",
-                    "settings":  "Settings",
-                    "logout":  "Log Out",
-                    "profile":  "My Profile"
-                },
-    "dashboard":  {
-                      "title":  "Welcome to Officia",
-                      "subtitle":  "Your smart office manager"
-                  },
-    "purchaseInvoices":  "Purchase Invoices"
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "accounting": "Accounting",
+    "hr": "HR",
+    "payroll": "Payroll (TRZ)",
+    "banking": "Banking",
+    "documents": "Documents",
+    "aiTasks": "AI Tasks",
+    "aiAssistant": "AI Assistant",
+    "reports": "Reports",
+    "vatJournals": "VAT Journals",
+    "inventory": "Inventory",
+    "fixedAssets": "Fixed Assets",
+    "counterparties": "Counterparties",
+    "invoices": "Invoices",
+    "purchaseInvoices": "Purchase Invoices",
+    "taxes": "Taxes",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "profile": "My Profile"
+  },
+  "dashboard": {
+    "title": "Welcome to Officia",
+    "subtitle": "Your smart office manager",
+    "operationalCenter": "Operations center",
+    "operationalSubtitle": "What needs your attention today",
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "netProfit": "Net profit",
+    "outstanding": "Outstanding invoices"
+  },
+  "header": {
+    "searchPlaceholder": "Search invoice, counterparty, section…",
+    "searchAria": "Search sections and data",
+    "searchTitle": "Search (Ctrl+K)",
+    "notificationsAria": "Tasks and notifications",
+    "notificationsTitle": "Tasks and AI inbox"
+  },
+  "search": {
+    "title": "Search Officia",
+    "subtitle": "Sections, invoices, counterparties, employees and documents",
+    "placeholder": "Invoice, EIK, employee, section…",
+    "hintEmpty": "Start typing for data (min. 2 chars) or pick a section below.",
+    "hintOneChar": "One more character to search data…",
+    "searching": "Searching…",
+    "noResults": "No results for",
+    "navHint": "↑↓ navigate",
+    "openHint": "↵ open",
+    "closeHint": "Esc close",
+    "groups": {
+      "sections": "Sections",
+      "actions": "Actions",
+      "navigation": "Navigation",
+      "quickAction": "Quick action",
+      "invoices": "Invoices",
+      "counterparties": "Counterparties",
+      "employees": "Employees",
+      "documents": "Documents"
+    },
+    "pages": {
+      "home": "Home dashboard",
+      "accounting": "Accounting",
+      "invoices": "Invoices",
+      "newInvoice": "New invoice",
+      "purchases": "Purchases",
+      "documents": "Documents",
+      "counterparties": "Counterparties",
+      "banking": "Banking",
+      "hr": "HR",
+      "inventory": "Inventory",
+      "vatJournal": "VAT journal",
+      "taxes": "Taxes",
+      "aiTasks": "AI Tasks",
+      "aiAssistant": "AI Assistant",
+      "reports": "Reports",
+      "settings": "Settings",
+      "newEmployee": "New employee",
+      "newJournalEntry": "New journal entry"
+    }
+  },
+  "common": {
+    "loading": "Loading…"
+  }
 }

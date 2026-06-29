@@ -182,8 +182,8 @@ export default function TaxesPage() {
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                        <a 
-                         href="#" 
-                         onClick={(e) => { e.preventDefault(); toast('PDF експортът изисква извикване към сървъра (TBD)'); }}
+                         href={`/api/tax-declarations/${d.id}/pdf`}
+                         download
                          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100"
                        >
                          <Download size={14} className="mr-1.5"/> PDF Справка

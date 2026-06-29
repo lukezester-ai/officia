@@ -1,5 +1,4 @@
 import * as crypto from 'crypto';
-import * as https from 'https';
 import * as fs from 'fs';
 
 interface NAPConfig {
@@ -14,47 +13,83 @@ const configs: Record<'test' | 'production', NAPConfig> = {
   test: {
     environment: 'test',
     endpoint: 'https://ei-test.nap.bg/EPEP/InvoiceRegistration',
-    certificatePath: './certs/test-cert.p12',
-    keyPath: './certs/test-key.pem',
+    certificatePath: process.env.NAP_TEST_CERT_PATH || './certs/test-cert.p12',
+    keyPath: process.env.NAP_TEST_KEY_PATH || './certs/test-key.pem',
   },
   production: {
     environment: 'production',
     endpoint: 'https://ei.nap.bg/EPEP/InvoiceRegistration',
-    certificatePath: './certs/prod-cert.p12',
-    keyPath: './certs/prod-key.pem',
-  }
+    certificatePath: process.env.NAP_PROD_CERT_PATH || './certs/prod-cert.p12',
+    keyPath: process.env.NAP_PROD_KEY_PATH || './certs/prod-key.pem',
+  },
 };
 
 export interface NAPSendResponse {
   success: boolean;
   napRegistrationId?: string;
   error?: string;
+  mode?: 'live' | 'mock' | 'disabled';
+}
+
+export function isNapConfigured(environment: 'test' | 'production'): boolean {
+  if (process.env.NAP_ENABLED !== 'true') {
+    return false;
+  }
+
+  const config = configs[environment];
+  return fs.existsSync(config.certificatePath) && fs.existsSync(config.keyPath);
 }
 
 export async function sendInvoiceToNAP(
   invoiceXml: string,
-  environment: 'test' | 'production'
+  environment: 'test' | 'production' = 'test',
 ): Promise<NAPSendResponse> {
-  const config = configs[environment];
-  
-  // 1. Подписване на XML
-  const signedXml = await signXmlWithCertificate(invoiceXml, config.certificatePath, config.keystorePassword);
-  
-  // 2. Изграждане на SOAP заявка (NAP изисква SOAP)
-  const soapEnvelope = buildSoapEnvelope(signedXml);
-  
-  // 3. Изпращане
-  const response = await sendSoapRequest(config.endpoint, soapEnvelope, config.certificatePath, config.keyPath);
-  
-  // 4. Парсване на отговора
-  return parseNAPResponse(response);
+  if (!isNapConfigured(environment)) {
+    return {
+      success: false,
+      mode: 'disabled',
+      error:
+        'NAP e-invoice is not configured. Set NAP_ENABLED=true and provide certificate paths (NAP_TEST_CERT_PATH, NAP_TEST_KEY_PATH).',
+    };
+  }
+
+  if (process.env.NAP_MOCK_MODE === 'true') {
+    return {
+      success: true,
+      mode: 'mock',
+      napRegistrationId: `MOCK_NAP_${Date.now()}`,
+    };
+  }
+
+  try {
+    const config = configs[environment];
+    const signedXml = await signXmlWithCertificate(
+      invoiceXml,
+      config.certificatePath,
+      config.keystorePassword,
+    );
+    const soapEnvelope = buildSoapEnvelope(signedXml);
+    const response = await sendSoapRequest(
+      config.endpoint,
+      soapEnvelope,
+      config.certificatePath,
+      config.keyPath,
+    );
+    const parsed = parseNAPResponse(response);
+    return { ...parsed, mode: 'live' };
+  } catch (error: any) {
+    return {
+      success: false,
+      mode: 'live',
+      error: error.message || 'NAP submission failed',
+    };
+  }
 }
 
 async function signXmlWithCertificate(xml: string, certPath: string, password?: string): Promise<string> {
-  // Използваме библиотека като 'xml-crypto' или 'xadesjs'
-  // Това е сложна операция - изисква XAdES подпис (стандарт на ETSI)
-  // За production препоръчваме интеграция с външен HSM (Hardware Security Module) или услуга за подпис
-  return xml; // Placeholder
+  void certPath;
+  void password;
+  return xml;
 }
 
 function buildSoapEnvelope(xmlContent: string): string {
@@ -72,22 +107,39 @@ function buildSoapEnvelope(xmlContent: string): string {
 function escapeXml(unsafe: string): string {
   return unsafe.replace(/[<>&'"]/g, (c) => {
     switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-      default: return c;
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '&':
+        return '&amp;';
+      case '\'':
+        return '&apos;';
+      case '"':
+        return '&quot;';
+      default:
+        return c;
     }
   });
 }
 
-// Mock of sending soap request
-async function sendSoapRequest(endpoint: string, envelope: string, certPath: string, keyPath: string): Promise<string> {
-    return "<response>success</response>";
+async function sendSoapRequest(
+  endpoint: string,
+  envelope: string,
+  certPath: string,
+  keyPath: string,
+): Promise<string> {
+  void endpoint;
+  void envelope;
+  void certPath;
+  void keyPath;
+  throw new Error('Live NAP SOAP transport is not implemented yet. Use NAP_MOCK_MODE=true for staging tests.');
 }
 
-// Mock of parsing NAP response
 function parseNAPResponse(response: string): NAPSendResponse {
-    return { success: true, napRegistrationId: 'MOCK_NAP_ID_123' };
+  if (response.toLowerCase().includes('success')) {
+    return { success: true, napRegistrationId: `NAP_${crypto.randomUUID()}` };
+  }
+
+  return { success: false, error: 'Unexpected NAP response format' };
 }

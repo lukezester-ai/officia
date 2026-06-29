@@ -204,7 +204,7 @@ export default async function VatPage({
               <Calculator size={40} className="text-zinc-700 mx-auto mb-4" />
               <p className="text-zinc-500 text-sm">Nyama faktury za tozi period</p>
               <Link
-                href={`/${lang}/dashboard/accounting/invoices/new`}
+                href={`/${lang}/dashboard/invoices?new=1`}
                 className="inline-flex items-center gap-2 mt-4 text-xs bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-xl transition-colors"
               >
                 Nova faktura

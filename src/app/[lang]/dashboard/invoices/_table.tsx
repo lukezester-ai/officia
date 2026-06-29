@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,13 +17,23 @@ const STATUS: Record<string, { label: string; color: string }> = {
   cancelled: { label: 'Анулирана', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
 };
 
-export function InvoiceTable({ items, onAction }: {
+export function InvoiceTable({ items, onAction, initialOpenId }: {
   items: any[];
   onAction: (action: string, id: string) => Promise<void>;
+  initialOpenId?: string | null;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!initialOpenId || items.length === 0) return;
+    const inv = items.find((item) => String(item.id) === initialOpenId);
+    if (inv) {
+      setSelectedInvoice(inv);
+      setDrawerOpen(true);
+    }
+  }, [initialOpenId, items]);
 
   const handle = async (e: React.MouseEvent, action: string, id: string) => {
     e.stopPropagation();

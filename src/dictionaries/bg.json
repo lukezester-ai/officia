@@ -3,21 +3,83 @@
     "dashboard": "Табло",
     "accounting": "Счетоводство",
     "hr": "Кадри",
+    "payroll": "ТРЗ (Заплати)",
     "banking": "Банка",
     "documents": "Архив",
+    "aiTasks": "AI Задачи",
     "aiAssistant": "AI Асистент",
     "reports": "Отчети",
     "vatJournals": "ДДС Дневници",
+    "inventory": "Склад (Наличности)",
     "fixedAssets": "Дълготрайни активи",
     "counterparties": "Контрагенти",
     "invoices": "Фактури",
+    "purchaseInvoices": "Покупни фактури",
+    "taxes": "Данъци",
     "settings": "Настройки",
     "logout": "Изход",
     "profile": "Моят Профил"
   },
   "dashboard": {
     "title": "Добре дошли в Officia",
-    "subtitle": "Вашият интелигентен офис мениджър"
+    "subtitle": "Вашият интелигентен офис мениджър",
+    "operationalCenter": "Оперативен център",
+    "operationalSubtitle": "Какво изисква вниманието ти днес",
+    "revenue": "Приходи",
+    "expenses": "Разходи",
+    "netProfit": "Нетна печалба",
+    "outstanding": "Неплатени фактури"
   },
-  "purchaseInvoices": "Покупни фактури"
+  "header": {
+    "searchPlaceholder": "Търси фактура, контрагент, раздел…",
+    "searchAria": "Търсене в раздели и данни",
+    "searchTitle": "Търсене (Ctrl+K)",
+    "notificationsAria": "Задачи и известия",
+    "notificationsTitle": "Задачи и AI inbox"
+  },
+  "search": {
+    "title": "Търсене в Officia",
+    "subtitle": "Раздели, фактури, контрагенти, служители и документи",
+    "placeholder": "Фактура, ЕИК, служител, раздел…",
+    "hintEmpty": "Започни да пишеш за данни (мин. 2 символа) или избери раздел по-долу.",
+    "hintOneChar": "Още един символ за търсене в данни…",
+    "searching": "Търсене…",
+    "noResults": "Няма резултати за",
+    "navHint": "↑↓ навигация",
+    "openHint": "↵ отвори",
+    "closeHint": "Esc затвори",
+    "groups": {
+      "sections": "Раздели",
+      "actions": "Действия",
+      "navigation": "Навигация",
+      "quickAction": "Бързо действие",
+      "invoices": "Фактури",
+      "counterparties": "Контрагенти",
+      "employees": "Служители",
+      "documents": "Документи"
+    },
+    "pages": {
+      "home": "Главно табло",
+      "accounting": "Счетоводство",
+      "invoices": "Фактури",
+      "newInvoice": "Нова фактура",
+      "purchases": "Покупки",
+      "documents": "Документи",
+      "counterparties": "Контрагенти",
+      "banking": "Банкиране",
+      "hr": "Кадри (HR)",
+      "inventory": "Склад",
+      "vatJournal": "ДДС журнал",
+      "taxes": "Данъци",
+      "aiTasks": "AI Задачи",
+      "aiAssistant": "AI Асистент",
+      "reports": "Отчети",
+      "settings": "Настройки",
+      "newEmployee": "Нов служител",
+      "newJournalEntry": "Нов журнален запис"
+    }
+  },
+  "common": {
+    "loading": "Зареждане…"
+  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   Search,
@@ -31,44 +31,59 @@ type SearchItem = {
   Icon: IconType;
 };
 
-const PAGES: Omit<SearchItem, "key">[] = [
-  { label: "Главно табло", href: "/dashboard", Icon: BarChart2, group: "Раздели", subtitle: "Навигация" },
-  { label: "Счетоводство", href: "/dashboard/accounting", Icon: BarChart2, group: "Раздели", subtitle: "Навигация" },
-  { label: "Фактури", href: "/dashboard/invoices", Icon: Receipt, group: "Раздели", subtitle: "Навигация" },
-  { label: "Нова фактура", href: "/dashboard/accounting/invoices/new", Icon: Receipt, group: "Действия", subtitle: "Бързо действие" },
-  { label: "Покупки", href: "/dashboard/purchase-invoices", Icon: ShoppingCart, group: "Раздели", subtitle: "Навигация" },
-  { label: "Документи", href: "/dashboard/documents", Icon: FileText, group: "Раздели", subtitle: "Навигация" },
-  { label: "Контрагенти", href: "/dashboard/counterparties", Icon: Building2, group: "Раздели", subtitle: "Навигация" },
-  { label: "Банкиране", href: "/dashboard/banking", Icon: Landmark, group: "Раздели", subtitle: "Навигация" },
-  { label: "Кадри (HR)", href: "/dashboard/hr", Icon: Users, group: "Раздели", subtitle: "Навигация" },
-  { label: "Склад", href: "/dashboard/inventory", Icon: Package, group: "Раздели", subtitle: "Навигация" },
-  { label: "ДДС журнал", href: "/dashboard/vat-journals", Icon: FileText, group: "Раздели", subtitle: "Навигация" },
-  { label: "Данъци", href: "/dashboard/taxes", Icon: FileText, group: "Раздели", subtitle: "Навигация" },
-  { label: "AI Задачи", href: "/dashboard/tasks", Icon: CheckSquare, group: "Раздели", subtitle: "Навигация" },
-  { label: "AI Асистент", href: "/dashboard/ai-assistant", Icon: Bot, group: "Раздели", subtitle: "Навигация" },
-  { label: "Отчети", href: "/dashboard/accounting/reports", Icon: BarChart2, group: "Раздели", subtitle: "Навигация" },
-  { label: "Настройки", href: "/dashboard/settings", Icon: Settings, group: "Раздели", subtitle: "Навигация" },
-  { label: "Нов служител", href: "/dashboard/hr/new", Icon: Users, group: "Действия", subtitle: "Бързо действие" },
-  { label: "Нов журнален запис", href: "/dashboard/accounting/journal/new", Icon: FileText, group: "Действия", subtitle: "Бързо действие" },
-];
-
-const ENTITY_ICONS: Record<EntitySearchResult["kind"], IconType> = {
-  invoice: Receipt,
-  counterparty: Building2,
-  employee: Users,
-  document: FileText,
+type SearchLabels = {
+  title: string;
+  subtitle: string;
+  placeholder: string;
+  hintEmpty: string;
+  hintOneChar: string;
+  searching: string;
+  noResults: string;
+  navHint: string;
+  openHint: string;
+  closeHint: string;
+  groups: {
+    sections: string;
+    actions: string;
+    navigation: string;
+    quickAction: string;
+    invoices: string;
+    counterparties: string;
+    employees: string;
+    documents: string;
+  };
+  pages: {
+    home: string;
+    accounting: string;
+    invoices: string;
+    newInvoice: string;
+    purchases: string;
+    documents: string;
+    counterparties: string;
+    banking: string;
+    hr: string;
+    inventory: string;
+    vatJournal: string;
+    taxes: string;
+    aiTasks: string;
+    aiAssistant: string;
+    reports: string;
+    settings: string;
+    newEmployee: string;
+    newJournalEntry: string;
+  };
 };
 
-const ENTITY_GROUPS: Record<EntitySearchResult["kind"], string> = {
-  invoice: "Фактури",
-  counterparty: "Контрагенти",
-  employee: "Служители",
-  document: "Документи",
+type HeaderLabels = {
+  searchPlaceholder: string;
+  searchAria: string;
+  searchTitle: string;
 };
 
 type SearchContextValue = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  labels: { search: SearchLabels; header: HeaderLabels };
 };
 
 const SearchContext = createContext<SearchContextValue | null>(null);
@@ -81,13 +96,51 @@ function useSearchContext() {
   return ctx;
 }
 
-function entityToSearchItem(entity: EntitySearchResult): SearchItem {
+const ENTITY_ICONS: Record<EntitySearchResult["kind"], IconType> = {
+  invoice: Receipt,
+  counterparty: Building2,
+  employee: Users,
+  document: FileText,
+};
+
+function buildPages(labels: SearchLabels): Omit<SearchItem, "key">[] {
+  const { pages: p, groups: g } = labels;
+  return [
+    { label: p.home, href: "/dashboard", Icon: BarChart2, group: g.sections, subtitle: g.navigation },
+    { label: p.accounting, href: "/dashboard/accounting", Icon: BarChart2, group: g.sections, subtitle: g.navigation },
+    { label: p.invoices, href: "/dashboard/invoices", Icon: Receipt, group: g.sections, subtitle: g.navigation },
+    { label: p.newInvoice, href: "/dashboard/invoices?new=1", Icon: Receipt, group: g.actions, subtitle: g.quickAction },
+    { label: p.purchases, href: "/dashboard/purchase-invoices", Icon: ShoppingCart, group: g.sections, subtitle: g.navigation },
+    { label: p.documents, href: "/dashboard/documents", Icon: FileText, group: g.sections, subtitle: g.navigation },
+    { label: p.counterparties, href: "/dashboard/counterparties", Icon: Building2, group: g.sections, subtitle: g.navigation },
+    { label: p.banking, href: "/dashboard/banking", Icon: Landmark, group: g.sections, subtitle: g.navigation },
+    { label: p.hr, href: "/dashboard/hr", Icon: Users, group: g.sections, subtitle: g.navigation },
+    { label: p.inventory, href: "/dashboard/inventory", Icon: Package, group: g.sections, subtitle: g.navigation },
+    { label: p.vatJournal, href: "/dashboard/vat-journals", Icon: FileText, group: g.sections, subtitle: g.navigation },
+    { label: p.taxes, href: "/dashboard/taxes", Icon: FileText, group: g.sections, subtitle: g.navigation },
+    { label: p.aiTasks, href: "/dashboard/tasks", Icon: CheckSquare, group: g.sections, subtitle: g.navigation },
+    { label: p.aiAssistant, href: "/dashboard/ai-assistant", Icon: Bot, group: g.sections, subtitle: g.navigation },
+    { label: p.reports, href: "/dashboard/accounting/reports", Icon: BarChart2, group: g.sections, subtitle: g.navigation },
+    { label: p.settings, href: "/dashboard/settings", Icon: Settings, group: g.sections, subtitle: g.navigation },
+    { label: p.newEmployee, href: "/dashboard/hr/new", Icon: Users, group: g.actions, subtitle: g.quickAction },
+    { label: p.newJournalEntry, href: "/dashboard/accounting/journal/new", Icon: FileText, group: g.actions, subtitle: g.quickAction },
+  ];
+}
+
+function entityToSearchItem(entity: EntitySearchResult, groups: SearchLabels["groups"]): SearchItem {
+  const groupMap: Record<EntitySearchResult["kind"], string> = {
+    invoice: groups.invoices,
+    counterparty: groups.counterparties,
+    employee: groups.employees,
+    document: groups.documents,
+  };
+
   return {
     key: entity.id,
     label: entity.label,
     subtitle: entity.subtitle,
     href: entity.href,
-    group: ENTITY_GROUPS[entity.kind],
+    group: groupMap[entity.kind],
     Icon: ENTITY_ICONS[entity.kind],
   };
 }
@@ -96,7 +149,13 @@ function pageToSearchItem(page: Omit<SearchItem, "key">, index: number): SearchI
   return { key: `page-${page.href}-${index}`, ...page };
 }
 
-export function SearchProvider({ children }: { children: React.ReactNode }) {
+export function SearchProvider({
+  children,
+  labels,
+}: {
+  children: React.ReactNode;
+  labels: { search: SearchLabels; header: HeaderLabels };
+}) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -113,11 +172,15 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  return <SearchContext.Provider value={{ open, setOpen }}>{children}</SearchContext.Provider>;
+  return (
+    <SearchContext.Provider value={{ open, setOpen, labels }}>{children}</SearchContext.Provider>
+  );
 }
 
 export function GlobalSearch() {
-  const { open, setOpen } = useSearchContext();
+  const { open, setOpen, labels } = useSearchContext();
+  const { search: t } = labels;
+  const pages = useMemo(() => buildPages(t), [t]);
   const [query, setQuery] = useState("");
   const [sel, setSel] = useState(0);
   const [entityResults, setEntityResults] = useState<SearchItem[]>([]);
@@ -129,11 +192,11 @@ export function GlobalSearch() {
 
   const trimmedQuery = query.trim();
   const pageResults = trimmedQuery
-    ? PAGES.filter((page) => {
+    ? pages.filter((page) => {
         const haystack = `${page.label} ${page.subtitle} ${page.group}`.toLowerCase();
         return haystack.includes(trimmedQuery.toLowerCase());
       }).map(pageToSearchItem)
-    : PAGES.slice(0, 8).map(pageToSearchItem);
+    : pages.slice(0, 8).map(pageToSearchItem);
 
   const results = trimmedQuery.length >= 2 ? [...entityResults, ...pageResults] : pageResults;
 
@@ -160,7 +223,7 @@ export function GlobalSearch() {
       try {
         const entities = await searchEntities(trimmedQuery);
         if (!cancelled) {
-          setEntityResults(entities.map(entityToSearchItem));
+          setEntityResults(entities.map((entity) => entityToSearchItem(entity, t.groups)));
         }
       } catch {
         if (!cancelled) {
@@ -177,7 +240,7 @@ export function GlobalSearch() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [trimmedQuery]);
+  }, [trimmedQuery, t.groups]);
 
   useEffect(() => {
     setSel(0);
@@ -215,10 +278,8 @@ export function GlobalSearch() {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="border-b border-white/8 px-4 py-3">
-          <p className="text-sm font-semibold text-white">Търсене в Officia</p>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Раздели, фактури, контрагенти, служители и документи
-          </p>
+          <p className="text-sm font-semibold text-white">{t.title}</p>
+          <p className="mt-0.5 text-xs text-zinc-500">{t.subtitle}</p>
         </div>
         <div className="flex items-center gap-3 border-b border-white/8 px-4 py-3.5">
           <Search size={17} className="shrink-0 text-zinc-400" />
@@ -227,7 +288,7 @@ export function GlobalSearch() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKey}
-            placeholder="Фактура, ЕИК, служител, раздел…"
+            placeholder={t.placeholder}
             className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
           />
           {entityLoading && <Loader2 size={15} className="shrink-0 animate-spin text-zinc-500" />}
@@ -240,16 +301,14 @@ export function GlobalSearch() {
         </div>
         <div className="max-h-80 overflow-y-auto py-1.5">
           {!trimmedQuery && (
-            <div className="px-4 py-2 text-xs text-zinc-500">
-              Започни да пишеш за данни (мин. 2 символа) или избери раздел по-долу.
-            </div>
+            <div className="px-4 py-2 text-xs text-zinc-500">{t.hintEmpty}</div>
           )}
           {trimmedQuery.length === 1 && (
-            <div className="px-4 py-2 text-xs text-zinc-500">Още един символ за търсене в данни…</div>
+            <div className="px-4 py-2 text-xs text-zinc-500">{t.hintOneChar}</div>
           )}
           {results.length === 0 ? (
             <div className="py-10 text-center text-sm text-zinc-500">
-              {entityLoading ? "Търсене…" : `Няма резултати за „${query}"`}
+              {entityLoading ? t.searching : `${t.noResults} „${query}"`}
             </div>
           ) : (
             results.map((item, index) => (
@@ -280,9 +339,9 @@ export function GlobalSearch() {
           )}
         </div>
         <div className="flex gap-4 border-t border-white/8 px-4 py-2 text-[11px] text-zinc-600">
-          <span>↑↓ навигация</span>
-          <span>↵ отвори</span>
-          <span>Esc затвори</span>
+          <span>{t.navHint}</span>
+          <span>{t.openHint}</span>
+          <span>{t.closeHint}</span>
           <span className="ml-auto">Ctrl+K</span>
         </div>
       </div>
@@ -291,20 +350,19 @@ export function GlobalSearch() {
 }
 
 export function SearchTrigger() {
-  const { setOpen } = useSearchContext();
+  const { setOpen, labels } = useSearchContext();
+  const { header: h } = labels;
 
   return (
     <button
       type="button"
       onClick={() => setOpen(true)}
-      aria-label="Търсене в раздели и данни"
-      title="Търсене (Ctrl+K)"
+      aria-label={h.searchAria}
+      title={h.searchTitle}
       className="flex w-full max-w-md items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-sm text-zinc-400 transition-all hover:border-white/15 hover:bg-white/8 hover:text-white lg:max-w-lg"
     >
       <Search size={14} className="shrink-0" />
-      <span className="flex-1 truncate text-left text-xs sm:text-sm">
-        Търси фактура, контрагент, раздел…
-      </span>
+      <span className="flex-1 truncate text-left text-xs sm:text-sm">{h.searchPlaceholder}</span>
       <kbd className="hidden shrink-0 rounded border border-white/10 px-1 py-0.5 text-[10px] sm:inline">Ctrl K</kbd>
     </button>
   );
