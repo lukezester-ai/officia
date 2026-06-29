@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { exchangeRates } from '@/lib/db/schema/exchange_rates';
-import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 
 export interface CurrencyTrend {
   currencyFrom: string;
@@ -11,33 +10,41 @@ export interface CurrencyTrend {
   changePercent: number;
 }
 
+type FrankfurterLatestResponse = {
+  date: string;
+  rates: Record<string, number>;
+};
+
+type FrankfurterHistoryResponse = {
+  rates: Record<string, Record<string, number>>;
+};
+
 export class CurrencyService {
   private static readonly TARGET_CURRENCIES = ['USD', 'GBP', 'CHF', 'JPY'];
   private static readonly BASE_CURRENCY = 'EUR';
-  
-  /**
-   * Fetches latest exchange rates from an open API (Frankfurter - ECB rates)
-   * and saves them to the database.
-   */
+
   static async syncLatestRates() {
     for (const cur of this.TARGET_CURRENCIES) {
       if (cur === this.BASE_CURRENCY) continue;
-      
-      try {
-        const response = await fetch(`https://api.frankfurter.app/latest?from=${cur}&to=${this.BASE_CURRENCY}`);
-        if (!response.ok) continue;
-        
-        const data = await response.json();
-        const rate = data.rates[this.BASE_CURRENCY];
-        const dateStr = data.date; // "YYYY-MM-DD"
 
-        // Check if rate already exists for this date
+      try {
+        const response = await fetch(
+          `https://api.frankfurter.app/latest?from=${cur}&to=${this.BASE_CURRENCY}`,
+        );
+        if (!response.ok) continue;
+
+        const data = (await response.json()) as FrankfurterLatestResponse;
+        const rate = data.rates[this.BASE_CURRENCY];
+        const dateStr = data.date;
+
+        if (rate === undefined) continue;
+
         const existing = await db.query.exchangeRates.findFirst({
           where: and(
             eq(exchangeRates.currencyFrom, cur),
             eq(exchangeRates.currencyTo, this.BASE_CURRENCY),
-            eq(exchangeRates.rateDate, dateStr)
-          )
+            eq(exchangeRates.rateDate, dateStr),
+          ),
         });
 
         if (!existing) {
@@ -54,9 +61,6 @@ export class CurrencyService {
     }
   }
 
-  /**
-   * Returns current and previous day rates to calculate trends
-   */
   static async getTrends(): Promise<CurrencyTrend[]> {
     const trends: CurrencyTrend[] = [];
 
@@ -64,10 +68,10 @@ export class CurrencyService {
       const records = await db.query.exchangeRates.findMany({
         where: and(
           eq(exchangeRates.currencyFrom, cur),
-          eq(exchangeRates.currencyTo, this.BASE_CURRENCY)
+          eq(exchangeRates.currencyTo, this.BASE_CURRENCY),
         ),
         orderBy: [desc(exchangeRates.rateDate)],
-        limit: 2
+        limit: 2,
       });
 
       if (records.length > 0) {
@@ -80,7 +84,7 @@ export class CurrencyService {
           currencyTo: this.BASE_CURRENCY,
           currentRate,
           previousRate,
-          changePercent
+          changePercent,
         });
       }
     }
@@ -88,11 +92,7 @@ export class CurrencyService {
     return trends;
   }
 
-  /**
-   * Fetches history for chart (last 30 days) from external API on the fly or from DB.
-   * We will fetch on the fly for the chart to ensure we have a full curve.
-   */
-  static async getHistory(currencyFrom: string): Promise<{date: string, rate: number}[]> {
+  static async getHistory(currencyFrom: string): Promise<{ date: string; rate: number }[]> {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - 30);
@@ -101,19 +101,23 @@ export class CurrencyService {
     const endStr = endDate.toISOString().split('T')[0];
 
     try {
-      const res = await fetch(`https://api.frankfurter.app/${startStr}..${endStr}?from=${currencyFrom}&to=${this.BASE_CURRENCY}`);
+      const res = await fetch(
+        `https://api.frankfurter.app/${startStr}..${endStr}?from=${currencyFrom}&to=${this.BASE_CURRENCY}`,
+      );
       if (!res.ok) return [];
-      const data = await res.json();
-      
-      const history = [];
+
+      const data = (await res.json()) as FrankfurterHistoryResponse;
+      const history: { date: string; rate: number }[] = [];
+
       for (const [date, rates] of Object.entries(data.rates)) {
-        history.push({
-          date,
-          rate: (rates as any)[this.BASE_CURRENCY]
-        });
+        const rate = rates[this.BASE_CURRENCY];
+        if (rate !== undefined) {
+          history.push({ date, rate });
+        }
       }
+
       return history;
-    } catch (e) {
+    } catch {
       return [];
     }
   }

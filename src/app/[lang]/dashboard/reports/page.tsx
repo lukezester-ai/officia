@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getReportsData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,7 @@ function fmt(n: number) {
 
 export default async function ReportsPage() {
   const res = await getReportsData();
-  const data = res.success ? res.data : {
+  const data = res.success && res.data ? res.data : {
     revenue: 0, expenses: 0, profit: 0, totalUnpaidSales: 0, totalUnpaidPurchases: 0, overdueCount: 0,
     cfoSummary: "Липсват данни.", cfoInsights: []
   };

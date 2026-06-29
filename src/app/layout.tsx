@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Fira_Sans, Fira_Code } from "next/font/google";

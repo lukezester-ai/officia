@@ -1,5 +1,5 @@
-// @ts-nocheck
 'use server';
+import { randomUUID } from 'crypto';
 import { db } from '@/lib/db/db';
 import { purchaseInvoices, purchaseInvoiceLines } from '@/lib/db/schema/purchase-invoices';
 import { counterparties } from '@/lib/db/schema/counterparties';
@@ -36,6 +36,7 @@ export async function createPurchaseInvoice(input: any) {
     const netTotal = computed.reduce((s: number, l: any) => s + l.net, 0);
     const vatTotal = computed.reduce((s: number, l: any) => s + l.vat, 0);
     const [created] = await db.insert(purchaseInvoices).values({
+      id: randomUUID(),
       tenantId: tenant.id,
       invoiceNumber: inv.invoiceNumber,
       issueDate: inv.issueDate || null,
@@ -53,6 +54,7 @@ export async function createPurchaseInvoice(input: any) {
     if (computed.length > 0) {
       await db.insert(purchaseInvoiceLines).values(
         computed.map((l: any, i: number) => ({
+          id: randomUUID(),
           invoiceId: created.id,
           description: l.description,
           quantity: l.quantity.toString(),

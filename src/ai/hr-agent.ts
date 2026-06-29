@@ -1,4 +1,3 @@
-// @ts-nocheck
 export interface HRAnalysisResult {
   intent: 'leave_request' | 'cv_parse' | 'onboarding' | 'unknown';
   employeeName?: string;

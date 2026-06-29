@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
@@ -108,9 +107,8 @@ export async function getAICandidates() {
     const openInvoices = await db.select().from(invoices)
       .where(eq(invoices.status, 'unpaid')); // using standard status if any
 
-    // Fetch unpaid/open expenses
-    const openExpenses = await db.select().from(expenses)
-      .where(eq(expenses.status, 'pending'));
+    // Fetch recent expenses (schema has no status field)
+    const openExpenses = await db.select().from(expenses).limit(50);
 
     const candidates = [
       ...openInvoices.map(inv => ({
@@ -125,11 +123,11 @@ export async function getAICandidates() {
       ...openExpenses.map(exp => ({
         id: exp.id.toString(),
         type: 'expense' as const,
-        counterpartyName: exp.vendorName || 'Unknown',
+        counterpartyName: exp.description || 'Unknown',
         totalAmount: parseFloat(exp.amount || '0'),
-        currency: exp.currency || 'EUR',
-        documentNumber: exp.documentNumber || String(exp.id),
-        date: exp.date ? new Date(exp.date).toISOString() : undefined
+        currency: 'EUR',
+        documentNumber: String(exp.id),
+        date: exp.expenseDate ? new Date(exp.expenseDate).toISOString() : undefined
       }))
     ];
 

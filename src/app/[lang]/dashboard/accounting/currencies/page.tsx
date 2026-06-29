@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { CurrencyService } from "@/lib/accounting/currency-service";
 import CurrenciesClient from "./CurrenciesClient";
 import { auth } from "@clerk/nextjs/server";

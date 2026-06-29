@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +25,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }))}>Вход</Link>
+            <Link href="/sign-in" className={cn(buttonVariants({ variant: "ghost" }))}>Вход</Link>
             <Link href="/register" className={cn(buttonVariants())}>Започни безплатно</Link>
           </div>
         </div>

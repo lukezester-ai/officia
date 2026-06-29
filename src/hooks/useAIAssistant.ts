@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState } from 'react';
+import { useChat } from '@ai-sdk/react';
 
 export interface Message {
   id: string;
@@ -8,59 +7,41 @@ export interface Message {
   toolResults?: any;
 }
 
+function getMessageText(message: any) {
+  if (typeof message.content === 'string') return message.content;
+  if (Array.isArray(message.parts)) {
+    return message.parts
+      .filter((part: any) => part?.type === 'text')
+      .map((part: any) => part.text || '')
+      .join('');
+  }
+  return '';
+}
+
 export function useAIAssistant() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { messages, sendMessage, status, error, setMessages } = useChat({
+    api: '/api/ai/chat',
+  } as any);
 
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
+  const isLoading = status === 'submitted' || status === 'streaming';
 
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content };
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Преобразуваме текущите съобщения във формата, който API-то очаква
-      const history = messages.map(m => ({ role: m.role, content: m.content }));
-
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: content, history }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Възникна грешка при комуникацията с AI.');
-      }
-
-      const data = await response.json();
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.message,
-        toolResults: data.toolResults,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+  const sendUserMessage = async (content: string) => {
+    if (!content.trim() || isLoading) return;
+    await sendMessage({ text: content });
   };
 
   const clearChat = () => setMessages([]);
 
   return {
-    messages,
+    messages: messages.map((message: any) => ({
+      id: message.id,
+      role: message.role,
+      content: getMessageText(message),
+      toolResults: message.toolInvocations,
+    })) as Message[],
     isLoading,
-    error,
-    sendMessage,
+    error: error?.message ?? null,
+    sendMessage: sendUserMessage,
     clearChat,
   };
 }

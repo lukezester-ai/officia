@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { authenticator } from 'otplib';
+import { generateSecret, generateURI, verifySync } from 'otplib';
 import * as qrcode from 'qrcode';
 import { eq } from 'drizzle-orm';
 import { users } from '../db/schema/users';
@@ -21,8 +20,8 @@ const db = {
 };
 
 export async function enable2FA(userId: string): Promise<{ secret: string; qrCode: string }> {
-  const secret = authenticator.generateSecret();
-  const otpauth = authenticator.keyuri(userId, 'Officia', secret);
+  const secret = generateSecret();
+  const otpauth = generateURI({ issuer: 'Officia', label: userId, secret });
   const qrCode = await qrcode.toDataURL(otpauth);
   
   await db.update(users)
@@ -36,7 +35,7 @@ export async function verify2FA(userId: string, token: string): Promise<boolean>
   const user: any = await db.select().from(users).where(eq(users.id, userId)).get();
   if (!user.twoFactorSecret) return false;
   
-  const isValid = authenticator.verify({ token, secret: user.twoFactorSecret });
+  const isValid = verifySync({ token, secret: user.twoFactorSecret }).valid;
   if (isValid) {
     await db.update(users)
       .set({ twoFactorEnabled: true })

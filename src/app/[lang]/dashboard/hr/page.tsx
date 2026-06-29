@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getHrData } from './actions';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +9,7 @@ import Link from 'next/link';
 
 export default async function HrPage() {
   const res = await getHrData();
-  const data = res.success ? res.data : { employees: [], alerts: [] };
+  const data = res.success && res.data ? res.data : { employees: [], alerts: [] };
 
   return (
     <div className="space-y-8 pb-10">

@@ -1,9 +1,7 @@
-// @ts-nocheck
-// Auto-posting rules for double-entry accounting
-// Call createAutoPostings() after creating an invoice or bank transaction
-
-import { db } from "@/lib/db/db";
-import { journalEntries } from "@/lib/db/schema";
+import { db } from '@/lib/db/db';
+import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
+import { accountPlan } from '@/lib/db/schema/account_plan';
+import { and, eq } from 'drizzle-orm';
 
 interface PostingLine {
   account: string;
@@ -12,8 +10,8 @@ interface PostingLine {
   credit: number;
 }
 
-interface AutoPostingInput {
-  type: "sales_invoice" | "purchase_invoice" | "bank_debit" | "bank_credit" | "depreciation";
+export interface AutoPostingInput {
+  type: 'sales_invoice' | 'purchase_invoice' | 'bank_debit' | 'bank_credit' | 'depreciation';
   tenantId: string;
   amount: number;
   vatAmount?: number;
@@ -27,46 +25,51 @@ function buildLines(input: AutoPostingInput): PostingLine[] {
   const vat = input.vatAmount ?? 0;
 
   switch (input.type) {
-    case "sales_invoice":
-      // DR 411 Clients / CR 701 Revenue + CR 4532 VAT
+    case 'sales_invoice':
       return [
-        { account: "411", description: "Вземане от клиент", debit: input.amount, credit: 0 },
-        { account: "701", description: "Приход от продажба", debit: 0, credit: net },
-        ...(vat > 0 ? [{ account: "4532", description: "ДДС продажби", debit: 0, credit: vat }] : []),
+        { account: '411', description: 'Вземане от клиент', debit: input.amount, credit: 0 },
+        { account: '701', description: 'Приход от продажба', debit: 0, credit: net },
+        ...(vat > 0 ? [{ account: '4532', description: 'ДДС продажби', debit: 0, credit: vat }] : []),
       ];
 
-    case "purchase_invoice":
-      // DR 601 Expense + DR 4531 VAT / CR 401 Suppliers
+    case 'purchase_invoice':
       return [
-        { account: "601", description: "Разход за покупка", debit: net, credit: 0 },
-        ...(vat > 0 ? [{ account: "4531", description: "ДДС покупки", debit: vat, credit: 0 }] : []),
-        { account: "401", description: "Задължение към доставчик", debit: 0, credit: input.amount },
+        { account: '601', description: 'Разход за покупка', debit: net, credit: 0 },
+        ...(vat > 0 ? [{ account: '4531', description: 'ДДС покупки', debit: vat, credit: 0 }] : []),
+        { account: '401', description: 'Задължение към доставчик', debit: 0, credit: input.amount },
       ];
 
-    case "bank_debit":
-      // DR 503 Bank / CR 411 Clients
+    case 'bank_debit':
       return [
-        { account: "503", description: "Получено плащане", debit: input.amount, credit: 0 },
-        { account: "411", description: "Погасяване на вземане", debit: 0, credit: input.amount },
+        { account: '503', description: 'Получено плащане', debit: input.amount, credit: 0 },
+        { account: '411', description: 'Погасяване на вземане', debit: 0, credit: input.amount },
       ];
 
-    case "bank_credit":
-      // DR 401 Suppliers / CR 503 Bank
+    case 'bank_credit':
       return [
-        { account: "401", description: "Плащане към доставчик", debit: input.amount, credit: 0 },
-        { account: "503", description: "Изходящо плащане", debit: 0, credit: input.amount },
+        { account: '401', description: 'Плащане към доставчик', debit: input.amount, credit: 0 },
+        { account: '503', description: 'Изходящо плащане', debit: 0, credit: input.amount },
       ];
 
-    case "depreciation":
-      // DR 603 Depreciation expense / CR 241 Accumulated depreciation
+    case 'depreciation':
       return [
-        { account: "603", description: "Амортизационна квота", debit: input.amount, credit: 0 },
-        { account: "241", description: "Начислена амортизация", debit: 0, credit: input.amount },
+        { account: '603', description: 'Амортизационна квота', debit: input.amount, credit: 0 },
+        { account: '241', description: 'Начислена амортизация', debit: 0, credit: input.amount },
       ];
 
     default:
       return [];
   }
+}
+
+async function getAccountIdByNumber(tenantId: string, accountNumber: string) {
+  const [account] = await db
+    .select({ id: accountPlan.id })
+    .from(accountPlan)
+    .where(and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, accountNumber)))
+    .limit(1);
+
+  return account?.id ?? null;
 }
 
 export async function createAutoPostings(input: AutoPostingInput): Promise<void> {
@@ -76,24 +79,45 @@ export async function createAutoPostings(input: AutoPostingInput): Promise<void>
   const entryDate = input.date ?? new Date();
   const refNum = input.reference ?? `AUTO-${Date.now()}`;
 
-  // Insert one row per line (simple flat model compatible with existing schema)
+  const [header] = await db
+    .insert(journalHeaders)
+    .values({
+      tenantId: input.tenantId,
+      journalNumber: refNum,
+      entryDate,
+      description: input.description ?? 'Automatic posting',
+      status: 'posted',
+    })
+    .returning();
+
+  const journalLineValues: Array<typeof journalLines.$inferInsert> = [];
+
   for (const line of lines) {
-    if (line.debit === 0 && line.credit === 0) continue;
-    try {
-      await db.insert(journalEntries as any).values({
-        tenantId: input.tenantId,
-        entryDate,
-        referenceNumber: refNum,
-        description: input.description ?? line.description,
-        debitAccount: line.debit > 0 ? line.account : null,
-        creditAccount: line.credit > 0 ? line.account : null,
-        debitAmount: line.debit > 0 ? String(line.debit) : null,
-        creditAmount: line.credit > 0 ? String(line.credit) : null,
-        isAutomatic: true,
-        createdAt: new Date(),
+    const accountId = await getAccountIdByNumber(input.tenantId, line.account);
+    if (!accountId) continue;
+
+    if (line.debit > 0) {
+      journalLineValues.push({
+        journalId: header.id,
+        accountId,
+        entryType: 'debit',
+        amount: String(line.debit),
+        description: line.description,
       });
-    } catch {
-      // If schema fields differ, fail silently — manual entries still work
     }
+
+    if (line.credit > 0) {
+      journalLineValues.push({
+        journalId: header.id,
+        accountId,
+        entryType: 'credit',
+        amount: String(line.credit),
+        description: line.description,
+      });
+    }
+  }
+
+  if (journalLineValues.length > 0) {
+    await db.insert(journalLines).values(journalLineValues);
   }
 }

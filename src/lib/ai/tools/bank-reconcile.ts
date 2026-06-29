@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 
 export const bankReconcileTool = tool({
   description: "Извършва автоматично равнение (reconciliation) на банкови транзакции със счетоводни записи",
-  parameters: z.object({
+  inputSchema: z.object({
     bankAccountId: z.string().describe("ID на банковата сметка"),
     dateRange: z.object({
       start: z.string(),

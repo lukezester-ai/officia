@@ -11,8 +11,11 @@ export default function StripeCheckoutButton({ invoiceId, amount }: { invoiceId:
   const handleCheckout = async () => {
     setIsLoading(true);
     try {
+      const lang = window.location.pathname.split('/')[1] || 'bg';
       const res = await fetch(`/api/invoices/${invoiceId}/checkout`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang }),
       });
 
       if (!res.ok) {

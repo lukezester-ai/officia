@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -8,7 +7,7 @@ import { eq, and, ilike } from 'drizzle-orm';
 
 export const buildCreateInvoiceTool = (tenantId: string, userId: string) => tool({
   description: "Създава нова продажна фактура към клиент. Използвай този инструмент, когато потребителят иска да издаде фактура.",
-  parameters: z.object({
+  inputSchema: z.object({
     clientName: z.string().describe("Име на клиента (контрагента). Ще бъде потърсен в базата или създаден, ако не съществува."),
     items: z.array(z.object({
       description: z.string().describe("Описание на стоката/услугата"),

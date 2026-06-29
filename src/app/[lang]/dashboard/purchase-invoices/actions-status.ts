@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 import { db } from '@/lib/db/db';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
@@ -26,15 +25,15 @@ export async function approvePurchaseInvoice(id: string) {
       const d = new Date(inv.issueDate || new Date());
       await db.insert(vatJournals).values({
         tenantId: tenant.id,
-        type: 'purchase',
+        type: 'purchases',
         periodYear: d.getFullYear(),
         periodMonth: d.getMonth() + 1,
+        entryDate: inv.issueDate || new Date().toISOString().split('T')[0],
         documentNumber: inv.invoiceNumber,
-        documentDate: inv.issueDate || new Date().toISOString().split('T')[0],
         counterpartyName: inv.supplierName,
         counterpartyVat: inv.supplierVat || '',
         netAmount: inv.netAmount || '0',
-        vatRate: '20',
+        vatRate: 20,
         vatAmount: inv.vatAmount || '0',
       });
       await db.update(purchaseInvoices)

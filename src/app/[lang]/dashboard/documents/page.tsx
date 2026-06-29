@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import DocumentsClient from './DocumentsClient';
 import { getDocuments } from './actions';
@@ -6,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 
 export default async function DocumentsPage() {
-  const res = await getDocuments();
-  const documents = res.success ? res.data : [];
+  const documents = await getDocuments();
 
   return (
     <div className="space-y-6">

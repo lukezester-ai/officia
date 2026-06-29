@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 
 export const analyzeDocumentTool = tool({
   description: "Анализира качен документ (фактура, касова бележка) и извлича данни от него",
-  parameters: z.object({
+  inputSchema: z.object({
     documentId: z.string().describe("ID на документа, качен в системата"),
     documentType: z.enum(["invoice", "receipt", "contract", "other"]).describe("Предполагаем тип на документа"),
   }),

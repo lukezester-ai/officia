@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { pgTable, serial, text, numeric, timestamp, jsonb, uuid, boolean } from "drizzle-orm/pg-core";
 
 export const invoices = pgTable("invoices", {

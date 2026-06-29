@@ -1,6 +1,4 @@
 "use client";
-// @ts-nocheck
-
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, TrendingUp, TrendingDown, DollarSign, Euro, PoundSterling, Calculator } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';

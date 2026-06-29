@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { getFixedAssets, createFixedAsset, writeOffAsset } from './actions';
 import { calcCurrentBookValue } from './utils';

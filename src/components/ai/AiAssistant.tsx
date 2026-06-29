@@ -5,32 +5,46 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, Bot, Mic, MicOff, Paperclip, Minimize2, Maximize2, Loader2, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { useChat } from '@ai-sdk/react';
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  attachments?: string[];
-  toolCalls?: any[];
+const initialMessages = [
+  {
+    id: '1',
+    role: 'assistant' as const,
+    parts: [
+      {
+        type: 'text' as const,
+        text: 'Здравей! Аз съм **Officia AI**. С какво мога да ти помогна днес?',
+      },
+    ],
+  },
+];
+
+function getMessageText(message: any) {
+  if (typeof message.content === 'string') return message.content;
+  if (Array.isArray(message.parts)) {
+    return message.parts
+      .filter((part: any) => part?.type === 'text')
+      .map((part: any) => part.text || '')
+      .join('');
+  }
+  return '';
 }
 
 export default function AiAssistant() {
+  const { messages, sendMessage: sendChatMessage, status, error } = useChat({
+    api: '/api/ai/chat',
+    messages: initialMessages,
+  } as any) as any;
+
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Здравей! Аз съм **Officia AI**. С какво мога да ти помогна днес?',
-      timestamp: new Date(),
-    },
-  ]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const isLoading = status === 'submitted' || status === 'streaming';
 
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [reactions, setReactions] = useState<Record<string, number>>({});
 
@@ -58,53 +72,22 @@ export default function AiAssistant() {
   const sendMessage = async () => {
     if ((!input.trim() && attachments.length === 0) || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input.trim() || "Качени файлове",
-      timestamp: new Date(),
-      attachments: attachments.map(f => f.name),
-    };
+    const text = input.trim();
+    const currentAttachments = [...attachments];
 
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = input;
     setInput('');
     setAttachments([]);
-    setIsLoading(true);
 
-    const formData = new FormData();
-    formData.append('message', currentInput);
-    attachments.forEach(file => formData.append('files', file));
-
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.response || "Не успях да обработя заявката.",
-        timestamp: new Date(),
-        toolCalls: data.toolCalls,
-      }]);
-    } catch (error) {
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: "Възникна грешка при комуникацията. Моля, опитай отново.",
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setIsLoading(false);
+    if (currentAttachments.length > 0) {
+      await sendChatMessage(text ? { text, files: currentAttachments } : { files: currentAttachments });
+      return;
     }
+
+    await sendChatMessage({ text });
   };
 
   const transcribeAudio = async (audioBlob: Blob) => {
-    setIsLoading(true);
+    setIsTranscribing(true);
     const formData = new FormData();
     formData.append('file', audioBlob, 'recording.webm');
     
@@ -123,7 +106,7 @@ export default function AiAssistant() {
       console.error("Whisper error:", error);
       toast.error("Грешка при транскрипцията на аудиото");
     } finally {
-      setIsLoading(false);
+      setIsTranscribing(false);
     }
   };
 
@@ -204,7 +187,9 @@ export default function AiAssistant() {
 
             {/* Messages Area */}
             <div className={`flex-1 overflow-y-auto p-4 space-y-5 bg-muted/20 ${isMinimized ? 'hidden' : ''}`}>
-              {messages.map((msg) => (
+              {messages.map((msg: any) => {
+                const messageText = getMessageText(msg);
+                return (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -216,40 +201,28 @@ export default function AiAssistant() {
                   <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm relative ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-card border text-card-foreground rounded-tl-sm'}`}>
                     <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : 'dark:prose-invert'}`}>
                       <ReactMarkdown>
-                        {msg.content}
+                        {messageText}
                       </ReactMarkdown>
                     </div>
-                    
-                    {msg.attachments && msg.attachments.length > 0 && (
-                      <div className="mt-3 pt-2 border-t border-white/20">
-                        <p className="text-xs opacity-80 font-medium flex items-center gap-1"><Paperclip size={12}/> Прикачени: {msg.attachments.join(', ')}</p>
-                      </div>
-                    )}
 
-                    {msg.toolCalls && msg.toolCalls.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {msg.toolCalls.map((tool, i) => (
-                          <span key={i} className="text-[10px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full font-mono">
-                            🛠️ {tool.toolName || tool.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {msg.toolInvocations?.map((tool: any, i: number) => (
+                      tool.toolName ? (
+                        <span key={i} className="mt-3 inline-block text-[10px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full font-mono">
+                          🛠️ {tool.toolName}
+                        </span>
+                      ) : null
+                    ))}
 
                     <div className={`text-[10px] mt-2 flex items-center justify-between gap-4 ${msg.role === 'user' ? 'text-indigo-200' : 'text-muted-foreground'}`}>
                       <span>
                         {reactions[msg.id] ? `👍 ${reactions[msg.id]}` : ''}
                       </span>
-                      <span>
-                        {msg.timestamp.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
                     </div>
 
-                    {/* Hover Actions */}
                     {hoveredMessageId === msg.id && msg.role === 'assistant' && (
                       <div className="absolute -top-3 -right-2 flex gap-1 bg-background border rounded-lg shadow-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => copyToClipboard(msg.content)}
+                          onClick={() => copyToClipboard(messageText)}
                           className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-md transition-colors"
                           title="Копирай"
                         >
@@ -266,9 +239,15 @@ export default function AiAssistant() {
                     )}
                   </div>
                 </motion.div>
-              ))}
+              )})}
 
-              {isLoading && (
+              {error && (
+                <div className="text-center text-red-500 text-sm py-2">
+                  Възникна грешка при връзката с асистента. Моля, опитайте отново.
+                </div>
+              )}
+
+              {isLoading && messages[messages.length - 1]?.role === 'user' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="bg-card border rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-3">
                     <Loader2 size={16} className="text-indigo-500 animate-spin" />
@@ -328,7 +307,7 @@ export default function AiAssistant() {
                     />
                     <button 
                       onClick={sendMessage} 
-                      disabled={(!input.trim() && attachments.length === 0) || isLoading} 
+                      disabled={(!input.trim() && attachments.length === 0) || isLoading || isTranscribing} 
                       className="m-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shadow-sm shrink-0"
                     >
                       <Send size={16} />

@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import OfficiaHero from '@/components/OfficiaHero';

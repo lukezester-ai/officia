@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -8,7 +7,7 @@ import { eq } from 'drizzle-orm';
 
 export const buildManageInventoryTool = (tenantId: string) => tool({
   description: "Складов робот. Сканира наличностите в склада и автоматично генерира задачи за снабдяване, ако има артикули под критичния минимум. Използвай го, когато потребителят попита за склада, наличностите или поиска автоматична проверка на склада.",
-  parameters: z.object({
+  inputSchema: z.object({
     minThreshold: z.number().optional().default(5).describe("Критичен минимум бройки. Ако наличността падне под това число, се пуска задача за поръчка."),
   }),
   execute: async ({ minThreshold }) => {

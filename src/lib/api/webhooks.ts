@@ -1,15 +1,17 @@
-// @ts-nocheck
 import * as crypto from 'crypto';
 import { and, eq, sql } from 'drizzle-orm';
+import type { InferSelectModel } from 'drizzle-orm';
 import { webhooks } from '../db/schema/webhooks';
+
+type WebhookRecord = InferSelectModel<typeof webhooks>;
 
 // Mock DB wrapper (докато не импортираме реалната връзка)
 const db = {
   select: () => ({
-    from: (table: any) => ({
-      where: async (condition: any) => []
-    })
-  })
+    from: (_table: typeof webhooks) => ({
+      where: async (_condition: unknown): Promise<WebhookRecord[]> => [],
+    }),
+  }),
 };
 
 export async function triggerWebhook(tenantId: string, event: string, payload: any) {

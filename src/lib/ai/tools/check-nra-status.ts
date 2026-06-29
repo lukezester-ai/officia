@@ -1,11 +1,10 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 
 export function buildCheckNraStatusTool() {
   return tool({
     description: 'Извлича детайли за фирма от Търговския регистър и НАП по даден ЕИК / Булстат (VAT номер).',
-    parameters: z.object({
+    inputSchema: z.object({
       eik: z.string().describe('ЕИК (Булстат) номер на фирмата за проверка (напр. 206123456).'),
     }),
     execute: async ({ eik }) => {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { buildCreateInvoiceTool } from './create-invoice';
 import { buildGetFinancialSummaryTool } from './get-financial-summary';
 import { buildSearchDocumentsTool } from './search-documents';

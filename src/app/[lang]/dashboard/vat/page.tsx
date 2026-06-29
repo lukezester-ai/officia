@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getVatData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +15,7 @@ function fmt(n: number) {
 
 export default async function VatPage() {
   const res = await getVatData();
-  const data = res.success ? res.data : { purchases: [], sales: [], problems: [], kpi: { totalVatPurchases: 0, totalVatSales: 0, netVat: 0 } };
+  const data = res.success && res.data ? res.data : { purchases: [], sales: [], problems: [], kpi: { totalVatPurchases: 0, totalVatSales: 0, netVat: 0 } };
 
   return (
     <div className="space-y-6">

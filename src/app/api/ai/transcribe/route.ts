@@ -1,9 +1,13 @@
 ﻿import { NextRequest } from 'next/server';
+import { getAuthenticatedTenant } from '@/lib/auth/api-tenant';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getAuthenticatedTenant();
+    if (!auth.ok) return auth.response;
+
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {

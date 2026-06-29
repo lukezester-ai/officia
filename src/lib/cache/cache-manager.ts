@@ -1,34 +1,75 @@
-// @ts-nocheck
-// В реална среда: import { Redis } from '@upstash/redis';
+import { getRedis } from '@/lib/cache/upstash';
 
-// Mock за да работи TypeScript без реалния пакет
-const Redis = class {
-  constructor(config: any) {}
-  async get(key: string): Promise<any> { return null; }
-  async set(key: string, value: any, options?: any): Promise<void> {}
-  async del(key: string): Promise<void> {}
-};
+type MemoryEntry = { value: unknown; expiresAt: number };
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_URL || '',
-  token: process.env.UPSTASH_REDIS_TOKEN || '',
-});
+const memoryCache = new Map<string, MemoryEntry>();
 
-export async function getCachedData<T>(key: string, fetcher: () => Promise<T>, ttlSeconds: number = 3600): Promise<T> {
-  const cached = await redis.get(key);
-  if (cached) {
-    return cached as T; // Връщаме от паметта (под 50ms)
+function getFromMemory<T>(key: string): T | null {
+  const entry = memoryCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    memoryCache.delete(key);
+    return null;
+  }
+  return entry.value as T;
+}
+
+function setInMemory(key: string, value: unknown, ttlSeconds: number) {
+  memoryCache.set(key, {
+    value,
+    expiresAt: Date.now() + ttlSeconds * 1000,
+  });
+}
+
+export async function getCachedData<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  ttlSeconds: number = 3600,
+): Promise<T> {
+  const redis = getRedis();
+
+  if (redis) {
+    const cached = await redis.get<T>(key);
+    if (cached !== null && cached !== undefined) {
+      return cached;
+    }
+
+    const data = await fetcher();
+    await redis.set(key, data, { ex: ttlSeconds });
+    return data;
   }
 
-  // Ако го няма, дърпаме от базата данни
+  const cached = getFromMemory<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
   const data = await fetcher();
-  
-  // Кешираме резултата с време на живот (TTL)
-  await redis.set(key, data, { ex: ttlSeconds });
-  
+  setInMemory(key, data, ttlSeconds);
   return data;
 }
 
 export async function invalidateCache(key: string): Promise<void> {
-  await redis.del(key);
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(key);
+  }
+  memoryCache.delete(key);
+}
+
+export async function invalidateCachePattern(prefix: string): Promise<void> {
+  const redis = getRedis();
+  if (redis) {
+    const keys = await redis.keys(`${prefix}*`);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+    return;
+  }
+
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith(prefix)) {
+      memoryCache.delete(key);
+    }
+  }
 }

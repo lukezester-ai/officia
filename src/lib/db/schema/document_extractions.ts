@@ -1,4 +1,4 @@
-﻿import { pgTable, text, timestamp, uuid, numeric, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, numeric, jsonb } from "drizzle-orm/pg-core";
 import { documents } from "./documents";
 
 export const documentExtractions = pgTable("document_extractions", {

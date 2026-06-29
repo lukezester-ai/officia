@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { db } from "@/lib/db/db";
@@ -16,7 +15,7 @@ export async function uploadBankStatement(parsedTransactions: any[]) {
   if (!account && tenant) {
     const res = await db.insert(bankAccounts).values({
       tenantId: tenant.id,
-      accountName: "Main Bank Account",
+      institutionName: "Main Bank Account",
       iban: "BG12 UNCR 1234 5678 9012 34",
       currency: "EUR",
       balance: "0",

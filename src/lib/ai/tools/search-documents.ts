@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -7,7 +6,7 @@ import { eq, and, or, ilike } from 'drizzle-orm';
 
 export const buildSearchDocumentsTool = (tenantId: string) => tool({
   description: "Търси в качените документи, договори и фактури на базата на ключови думи в текста или заглавието им.",
-  parameters: z.object({
+  inputSchema: z.object({
     query: z.string().describe("Заявка за търсене (ключова дума, име на фирма, продукт и т.н.)"),
     documentType: z.enum(["all", "invoice", "contract", "receipt"]).optional().describe("Филтър по тип документ. По подразбиране е 'all'."),
   }),
@@ -24,13 +23,12 @@ export const buildSearchDocumentsTool = (tenantId: string) => tool({
       }
       
       // Търсене в заглавието, съдържанието и AI резюмето
-      conditions.push(
-        or(
-          ilike(documents.title, searchPattern),
-          ilike(documents.contentExtracted, searchPattern),
-          ilike(documents.aiSummary, searchPattern)
-        )
+      const textSearch = or(
+        ilike(documents.title, searchPattern),
+        ilike(documents.contentExtracted, searchPattern),
+        ilike(documents.aiSummary, searchPattern),
       );
+      if (textSearch) conditions.push(textSearch);
 
       const results = await db
         .select({
@@ -55,11 +53,12 @@ export const buildSearchDocumentsTool = (tenantId: string) => tool({
         results,
         message: `Намерени са ${results.length} документа отговарящи на заявката.`,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
       console.error("AI Search Documents Error:", err);
       return {
         success: false,
-        message: `Грешка при търсене: ${err.message}`
+        message: `Грешка при търсене: ${message}`
       };
     }
   },

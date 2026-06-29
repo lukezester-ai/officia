@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
@@ -50,12 +49,12 @@ export async function createVatJournal(input: {
       type: input.type,
       periodYear: input.periodYear,
       periodMonth: input.periodMonth,
+      entryDate: input.documentDate,
       documentNumber: input.documentNumber,
-      documentDate: input.documentDate,
       counterpartyName: input.counterpartyName,
       counterpartyVat: input.counterpartyVat || '',
       netAmount: input.netAmount.toString(),
-      vatRate: input.vatRate.toString(),
+      vatRate: input.vatRate,
       vatAmount: input.vatAmount.toString(),
     }).returning();
     revalidatePath('/', 'layout');

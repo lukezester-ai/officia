@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getAccountingData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,7 @@ function fmt(n: number) {
 export default async function AccountingPage(props: { params: Promise<{ lang: string }> }) {
   const params = await props.params;
   const res = await getAccountingData();
-  const data = res.success ? res.data : { headers: [], lines: [], pendingInvoices: [] };
+  const data = res.success && res.data ? res.data : { headers: [], lines: [], pendingInvoices: [] };
 
   const drafts = data.headers.filter(h => h.status === 'draft');
   const problems = data.headers.filter(h => h.aiStatus === 'problem');
@@ -114,7 +113,7 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
                       </TableCell>
                       <TableCell>
                         <p className="text-sm font-medium">{inv.counterpartyName}</p>
-                        <p className="text-xs text-muted-foreground">Издадена на {new Date(inv.issueDate).toLocaleDateString('bg-BG')}</p>
+                        <p className="text-xs text-muted-foreground">Издадена на {inv.issueDate ? new Date(inv.issueDate).toLocaleDateString('bg-BG') : '—'}</p>
                       </TableCell>
                       <TableCell className="text-right font-mono font-semibold text-sm">
                         {fmt(parseFloat(inv.totalAmount || '0'))} €

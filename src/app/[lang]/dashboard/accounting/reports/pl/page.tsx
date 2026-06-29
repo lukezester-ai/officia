@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ReportEngine } from "@/lib/accounting/report-engine";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";

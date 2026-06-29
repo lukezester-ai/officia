@@ -1,6 +1,4 @@
 'use client';
-// @ts-nocheck
-
 import { useState, useEffect } from 'react';
 import { getPurchaseInvoices } from './actions-read';
 import { approvePurchaseInvoice, markPurchaseInvoicePaid, cancelPurchaseInvoice } from './actions-status';

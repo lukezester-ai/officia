@@ -1,8 +1,10 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
 import { counterparties } from '@/lib/db/schema/counterparties';
+import { invoices } from '@/lib/db/schema/invoices';
+import { bankTransactions } from '@/lib/db/schema/bank_transactions';
+import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { and, eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
@@ -78,6 +80,7 @@ export async function updateCounterparty(id: string, input: {
 
 export async function deactivateCounterparty(id: string) {
   try {
+    const { tenantId } = await requireTenant();
     await db.update(counterparties)
       .set({ isActive: false })
       .where(and(eq(counterparties.id, id), eq(counterparties.tenantId, tenantId)));
@@ -87,10 +90,6 @@ export async function deactivateCounterparty(id: string) {
     return { success: false, error: error.message };
   }
 }
-import { invoices } from '@/lib/db/schema/invoices';
-import { bankTransactions } from '@/lib/db/schema/bank_transactions';
-import { documents } from '@/lib/db/schema/documents';
-import { or } from 'drizzle-orm';
 
 export async function getCounterparty360Data(id: string) {
   try {
@@ -108,7 +107,12 @@ export async function getCounterparty360Data(id: string) {
     const totalVolume = relatedInvoices.reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
     
     // Transactions
-    const relatedTransactions = await db.select().from(bankTransactions).where(and(eq(bankTransactions.tenantId, tenantId), eq(bankTransactions.counterpartyName, counterparty.name)));
+    const relatedTransactionRows = await db
+      .select({ tx: bankTransactions })
+      .from(bankTransactions)
+      .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+      .where(and(eq(bankAccounts.tenantId, tenantId), eq(bankTransactions.counterpartyName, counterparty.name)));
+    const relatedTransactions = relatedTransactionRows.map((row) => row.tx);
     
     // Documents
     // Since document schema doesn't have counterpartyName directly, we might search metadata or title

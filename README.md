@@ -49,28 +49,70 @@ npm install
 
 # 3. Настрой променливи (копирай .env.example → .env.local)
 cp .env.example .env.local
+# Windows (PowerShell):
+# Copy-Item .env.example .env.local
 
-# 4. Стартирай базата (Docker)
+# 4. Редактирай .env.local:
+#    - DATABASE_URL вече е за локален Docker (виж docker-compose.yml)
+#    - Задължително: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY + CLERK_SECRET_KEY (Clerk Dashboard)
+#    - За AI: ANTHROPIC_API_KEY
+
+# 5. Стартирай PostgreSQL (Docker — само базата, не целия app)
 docker-compose up -d
 
-# 5. Приложи миграции
+# 6. Приложи миграции
+npm run db:migrate
+# или за dev без migration history:
 npm run db:push
 
-# 6. Стартирай
+# 7. Стартирай Next.js на host машината
 npm run dev
 ```
 
 Отвори http://localhost:3000
 
-### Docker (production-like)
+### Docker
+
+`docker-compose.yml` пуска **само PostgreSQL 15** (порт `5432`). Next.js се стартира с `npm run dev` на host — няма `Dockerfile` за production build в repo.
+
 ```bash
-docker-compose up --build
+docker-compose up -d    # Postgres в background
+docker-compose down     # спиране + запазване на volume db_data
+docker-compose down -v  # спиране + изтриване на данните
 ```
+
+Credentials (съвпадат с `.env.example`):
+- user: `postgres`
+- password: `postgrespassword`
+- database: `officia`
 
 ### 🔧 Настройки за AI и Банки
 
-- `CLAUDE_API_KEY` – за Anthropic (OCR + чат)
-- `NORDIGEN_SECRET_ID` / `NORDIGEN_SECRET_KEY` – за банкови връзки
+- `ANTHROPIC_API_KEY` – за Anthropic Claude (OCR + чат)
+- `OPENAI_API_KEY` – за Whisper транскрипция
+- `DEEPGRAM_API_KEY` – за live speech (optional)
+- `NORDIGEN_SECRET_ID` / `NORDIGEN_SECRET_KEY` – за банкови връзки (optional)
+- `UPSTASH_REDIS_URL` / `UPSTASH_REDIS_TOKEN` – кеш и rate limiting (optional; fallback in-memory locally)
+- `CRON_SECRET` / `AI_WEBHOOK_SECRET` – за scheduled jobs и webhooks
+
+### Database migrations
+
+```bash
+npm run db:generate   # след промяна на schema
+npm run db:migrate      # apply migrations (production/CI)
+npm run db:push         # direct sync (local dev only)
+```
+
+Migrations live in `drizzle/migrations/`.
+
+### Тестове и CI
+
+```bash
+npm run lint
+npm run typecheck
+npm test              # Vitest (unit + lib + tax)
+npm run test:e2e      # Playwright (изисква Clerk keys + E2E_CLERK_USER_EMAIL)
+```
 
 ---
 

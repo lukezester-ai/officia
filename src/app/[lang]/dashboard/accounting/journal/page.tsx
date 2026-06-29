@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from "@/lib/db/db";
 import { journalHeaders } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";

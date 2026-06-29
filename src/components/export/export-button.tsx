@@ -1,5 +1,4 @@
 "use client";
-// @ts-nocheck
 import { useState } from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 

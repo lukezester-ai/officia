@@ -1,11 +1,14 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { matchTransactionWithAI, Transaction, Candidate } from '@/lib/ai/agents/matcher';
+import { getAuthenticatedTenant } from '@/lib/auth/api-tenant';
 
 export async function POST(req: Request) {
   try {
+    const auth = await getAuthenticatedTenant();
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
-    const { transaction, candidates } = body as { transaction: Transaction, candidates: Candidate[] };
+    const { transaction, candidates } = body as { transaction: Transaction; candidates: Candidate[] };
 
     if (!transaction || !candidates) {
       return NextResponse.json({ error: 'Missing transaction or candidates' }, { status: 400 });
@@ -16,7 +19,7 @@ export async function POST(req: Request) {
     }
 
     const matchResult = await matchTransactionWithAI(transaction, candidates);
-    
+
     return NextResponse.json(matchResult);
   } catch (error: any) {
     console.error('Match Error:', error);

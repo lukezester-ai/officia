@@ -1,4 +1,3 @@
-// @ts-nocheck
 ﻿'use client';
 import { useState, useEffect } from 'react';
 import { createPurchaseInvoice, getSuppliersForSelect } from './actions-read';
@@ -50,7 +49,7 @@ export function NewPurchaseInvoiceDialog({ onCreated }: { onCreated: () => void 
           notes: data.notes || p.notes
         }));
         if (data.lines && data.lines.length > 0) {
-          setLines(data.lines.map(l => ({
+          setLines(data.lines.map((l: { description: string; quantity: number; unitPrice: number; vatRate: number }) => ({
             description: l.description,
             quantity: String(l.quantity),
             unitPrice: String(l.unitPrice),

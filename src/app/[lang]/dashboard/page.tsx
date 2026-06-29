@@ -1,39 +1,34 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from 'lucide-react';
 import { getDashboardData } from './actions';
 import Link from 'next/link';
 import { MorningBriefing } from '@/components/dashboard/MorningBriefing';
 import { getInvoices } from './invoices/actions';
-import { getPurchaseInvoices } from './purchase-invoices/actions-read';
+
+const UNPAID_LIKE = ['issued', 'sent', 'pending', 'издадена', 'изпратена'];
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage(props: { params: Promise<{ lang: string }> }) {
+  const { lang } = await props.params;
   const data = await getDashboardData().catch(() => null);
   
   // We keep pulling raw invoice data just in case we need the lists for now
-  const [invRes, purRes] = await Promise.all([
+  const [invRes] = await Promise.all([
     getInvoices().catch(() => ({ success: false, data: [] })),
-    getPurchaseInvoices().catch(() => ({ success: false, data: [] })),
   ]);
 
   const invoices: any[] = invRes.success ? (invRes as any).data : [];
-  const purchases: any[] = purRes.success ? (purRes as any).data : [];
 
-  const revenue = invoices
-    .filter(i => i.status === 'issued' || i.status === 'paid')
-    .reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
+  const revenue = data?.overviewStats?.revenue ?? 0;
+  const expenses = data?.overviewStats?.expenses ?? 0;
+  const netProfit = data?.overviewStats?.netProfit ?? revenue - expenses;
+  const periodLabel = data?.overviewStats?.periodLabel;
 
-  const expenses = purchases
-    .filter(i => i.status === 'approved' || i.status === 'paid')
-    .reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
-
-  const outstanding = invoices.filter(i => i.status === 'issued');
+  const outstanding = invoices.filter(i => UNPAID_LIKE.includes(i.status));
   const outstandingAmount = outstanding.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
-  const netProfit = revenue - expenses;
 
   const now = new Date();
 
@@ -63,7 +58,7 @@ export default async function DashboardPage() {
             <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Приходи</span>
           </div>
           <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(revenue)}</div>
-          <div className="text-sm text-zinc-500">€ от продажби</div>
+          <div className="text-sm text-zinc-500">€ от продажби{periodLabel ? ` · ${periodLabel}` : ''}</div>
         </div>
 
         {/* Разходи */}
@@ -75,7 +70,7 @@ export default async function DashboardPage() {
             <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Разходи</span>
           </div>
           <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(expenses)}</div>
-          <div className="text-sm text-zinc-500">€ от покупки</div>
+          <div className="text-sm text-zinc-500">€ разходи за месеца</div>
         </div>
 
         {/* Резултат */}
@@ -133,7 +128,7 @@ export default async function DashboardPage() {
               <span className="text-muted-foreground">ДДС несъответствия</span>
               <span className="font-semibold text-rose-500">{data?.needsReview?.vatIssues || 0}</span>
             </div>
-            <Link href="/dashboard/ai-inbox" className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
+            <Link href={`/${lang}/dashboard/tasks`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
               Преглед на всички
             </Link>
           </CardContent>
@@ -148,9 +143,9 @@ export default async function DashboardPage() {
               </div>
               AI Inbox
             </CardTitle>
-            {data?.overviewStats?.inboxOpenItems > 0 && (
+            {(data?.overviewStats?.inboxOpenItems ?? 0) > 0 && (
               <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                {data.overviewStats.inboxOpenItems} нови
+                {data?.overviewStats?.inboxOpenItems ?? 0} нови
               </span>
             )}
           </CardHeader>
@@ -165,7 +160,7 @@ export default async function DashboardPage() {
                     <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>
                   </div>
                 ))}
-                <Link href="/dashboard/ai-inbox" className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
+                <Link href={`/${lang}/dashboard/tasks`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
                   Отваряне на Inbox
                 </Link>
               </div>
@@ -182,9 +177,9 @@ export default async function DashboardPage() {
               </div>
               Чакащи одобрения
             </CardTitle>
-            {data?.overviewStats?.approvalsPending > 0 && (
+            {(data?.overviewStats?.approvalsPending ?? 0) > 0 && (
               <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                {data.overviewStats.approvalsPending} чакащи
+                {data?.overviewStats?.approvalsPending ?? 0} чакащи
               </span>
             )}
           </CardHeader>
@@ -193,8 +188,8 @@ export default async function DashboardPage() {
               <p className="text-sm text-muted-foreground py-4 text-center">Нямате задачи за одобрение.</p>
             ) : (
               <div className="flex justify-between items-center text-sm py-2">
-                <span className="text-muted-foreground">Имате {data.overviewStats.approvalsPending} заявки за преглед.</span>
-                <Link href="/dashboard/approvals" className="text-emerald-600 hover:underline font-medium">
+                <span className="text-muted-foreground">Имате {data?.overviewStats?.approvalsPending ?? 0} заявки за преглед.</span>
+                <Link href={`/${lang}/dashboard/tasks`} className="text-emerald-600 hover:underline font-medium">
                   Преглед
                 </Link>
               </div>

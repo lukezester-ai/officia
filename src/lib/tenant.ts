@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { auth } from '@clerk/nextjs/server';
 import { clerkClient } from '@clerk/nextjs/server';
 

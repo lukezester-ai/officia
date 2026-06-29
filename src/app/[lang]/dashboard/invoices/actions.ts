@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
@@ -29,11 +28,18 @@ export async function getInvoices() {
   }
 }
 
+async function parseInvoiceId(id: string): Promise<number | null> {
+  const n = Number(id);
+  return Number.isFinite(n) ? n : null;
+}
+
 export async function getInvoiceWithLines(id: string) {
   try {
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    const invoiceId = await parseInvoiceId(id);
+    if (invoiceId === null) return { success: false, error: 'Невалиден ID', data: null };
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
     if (!invoice) return { success: false, error: 'Не е намерена', data: null };
-    const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, id));
+    const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId));
     return { success: true, data: { ...invoice, lines } };
   } catch (error: any) {
     return { success: false, error: error.message, data: null };
@@ -101,7 +107,7 @@ export async function createInvoice(input: {
           description: l.description,
           quantity: l.quantity.toString(),
           unitPrice: l.unitPrice.toString(),
-          vatRate: l.vatRate,
+          vatRate: l.vatRate.toString(),
           lineNet: l.lineNet.toString(),
           lineVat: l.lineVat.toString(),
           lineTotal: l.lineTotal.toString(),
@@ -121,27 +127,31 @@ export async function issueInvoice(id: string) {
     const tenant = await getTenant();
     if (!tenant) return { success: false, error: 'Липсва Tenant' };
 
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    const invoiceId = await parseInvoiceId(id);
+    if (invoiceId === null) return { success: false, error: 'Невалиден ID' };
+
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
     if (!invoice) return { success: false, error: 'Не е намерена' };
 
-    await db.update(invoices).set({ status: 'issued' }).where(eq(invoices.id, id));
+    await db.update(invoices).set({ status: 'issued' }).where(eq(invoices.id, invoiceId));
 
     if (!invoice.vatPosted) {
-      const issueDate = new Date(invoice.issueDate);
+      const issueDateStr = invoice.issueDate || new Date().toISOString().slice(0, 10);
+      const issueDate = new Date(issueDateStr);
       await db.insert(vatJournals).values({
         tenantId: tenant.id,
         type: 'sales',
         periodYear: issueDate.getFullYear(),
         periodMonth: issueDate.getMonth() + 1,
+        entryDate: issueDateStr,
         documentNumber: invoice.invoiceNumber,
-        documentDate: invoice.issueDate,
         counterpartyName: invoice.counterpartyName,
         counterpartyVat: invoice.counterpartyVat || '',
         netAmount: invoice.netAmount || '0',
-        vatRate: '20',
+        vatRate: 20,
         vatAmount: invoice.vatAmount || '0',
       });
-      await db.update(invoices).set({ vatPosted: true }).where(eq(invoices.id, id));
+      await db.update(invoices).set({ vatPosted: true }).where(eq(invoices.id, invoiceId));
     }
 
     revalidatePath('/', 'layout');
@@ -153,7 +163,9 @@ export async function issueInvoice(id: string) {
 
 export async function markInvoicePaid(id: string) {
   try {
-    await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, id));
+    const invoiceId = await parseInvoiceId(id);
+    if (invoiceId === null) return { success: false, error: 'Невалиден ID' };
+    await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, invoiceId));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -163,7 +175,9 @@ export async function markInvoicePaid(id: string) {
 
 export async function cancelInvoice(id: string) {
   try {
-    await db.update(invoices).set({ status: 'cancelled' }).where(eq(invoices.id, id));
+    const invoiceId = await parseInvoiceId(id);
+    if (invoiceId === null) return { success: false, error: 'Невалиден ID' };
+    await db.update(invoices).set({ status: 'cancelled' }).where(eq(invoices.id, invoiceId));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {

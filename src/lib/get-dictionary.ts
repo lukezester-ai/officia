@@ -1,4 +1,3 @@
-// @ts-nocheck
 import 'server-only'
 
 const dictionaries = {

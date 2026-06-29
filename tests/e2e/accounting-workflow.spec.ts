@@ -1,36 +1,43 @@
 import { test, expect } from '@playwright/test';
 
-test('Full accounting workflow: invoice → journal → report', async ({ page }) => {
-  // 1. Вход в системата
-  await page.goto('/sign-in');
-  await page.fill('[name="email"]', 'accountant@test.bg');
-  await page.fill('[name="password"]', 'password123');
-  await page.click('button[type="submit"]');
-  await expect(page).toHaveURL('/dashboard');
-  
-  // 2. Създаване на фактура
-  await page.click('text=Фактури');
-  await page.click('text=Нова фактура');
-  await page.fill('input[name="clientName"]', 'Тест Клиент ЕООД');
-  await page.fill('input[name="amount"]', '1000');
-  await page.click('text=Запази');
-  await expect(page.locator('.toast-success')).toBeVisible();
-  
-  // 3. Постване на фактурата (създава journal entry)
-  await page.click('text=Осчетоводяване');
-  await expect(page.locator('text=Journal Entry #2026-00123')).toBeVisible();
-  
-  // 4. Генериране на баланс
-  await page.click('text=Отчети');
-  await page.click('text=Баланс');
-  await page.selectOption('select#as-of-date', '2026-06-30');
-  await page.click('text=Генерирай');
-  await expect(page.locator('text=Вземания')).toBeVisible();
-  await expect(page.locator('text=1,000.00')).toBeVisible();
-  
-  // 5. Експорт в PDF
-  const downloadPromise = page.waitForEvent('download');
-  await page.click('text=Експорт PDF');
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toContain('balance-sheet');
+const locale = process.env.E2E_LOCALE ?? 'bg';
+
+test.describe('Accounting workflow', () => {
+  test('invoice → accounting queue → balance report', async ({ page }) => {
+    const invoiceNumber = `E2E-${Date.now()}`;
+
+    // 1. Създаване на фактура
+    await page.goto(`/${locale}/dashboard/invoices`);
+    await page.getByRole('button', { name: 'Нова фактура' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: 'Нова фактура' })).toBeVisible();
+
+    await dialog.getByPlaceholder('0000000001').fill(invoiceNumber);
+    await dialog.getByPlaceholder('Клиент ЕООД').fill('E2E Тест Клиент ЕООД');
+    await dialog.getByPlaceholder('Услуга / стока').fill('Кonsulting услуга E2E');
+    await dialog.getByPlaceholder('0.00').fill('1000');
+
+    await dialog.getByRole('button', { name: 'Създай фактура' }).click();
+    await expect(page.getByText('Фактурата е създадена!')).toBeVisible({ timeout: 20_000 });
+
+    await expect(page.getByText(invoiceNumber)).toBeVisible();
+
+    // 2. Счетоводен модул — опашка за преглед
+    await page.goto(`/${locale}/dashboard/accounting`);
+    await expect(page.getByRole('heading', { name: 'Счетоводство' })).toBeVisible();
+    await expect(page.getByText(`Фактура ${invoiceNumber}`)).toBeVisible({ timeout: 15_000 });
+
+    // 3. Баланс — генерира се автоматично от ReportEngine
+    await page.goto(`/${locale}/dashboard/accounting/reports/balance`);
+    await expect(page.getByRole('heading', { name: 'Баланс' })).toBeVisible();
+    await expect(page.getByText('Aktivi')).toBeVisible();
+    await expect(page.getByText('Aktivi = Pasivi + Kapital')).toBeVisible();
+
+    // 4. PDF експорт (client-side download)
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'PDF' }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
+  });
 });

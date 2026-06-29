@@ -4,14 +4,18 @@ import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2026-05-27.dahlia',
-});
+const stripe = stripeSecretKey
+  ? new Stripe(stripeSecretKey, { apiVersion: '2026-05-27.dahlia' })
+  : null;
 
 export async function POST(req: Request) {
+  if (!stripe || !stripeSecretKey) {
+    return new NextResponse('Stripe is not configured', { status: 500 });
+  }
+
   const body = await req.text();
   const signature = req.headers.get('stripe-signature');
 
@@ -19,32 +23,33 @@ export async function POST(req: Request) {
 
   try {
     if (!signature || !stripeWebhookSecret) {
-      // If we don't have webhook secret in dev, just parse the body (not recommended for production)
-      event = JSON.parse(body);
+      if (process.env.NODE_ENV === 'production') {
+        return new NextResponse('Webhook signature verification required', { status: 400 });
+      }
+      console.warn('[STRIPE_WEBHOOK] Skipping signature verification in development');
+      event = JSON.parse(body) as Stripe.Event;
     } else {
       event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
     }
-  } catch (err: any) {
-    console.error(`Webhook signature verification failed.`, err.message);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Webhook signature verification failed.', message);
+    return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
   }
 
-  // Handle the event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const invoiceIdStr = session.metadata?.invoiceId;
 
     if (invoiceIdStr) {
       const invoiceId = parseInt(invoiceIdStr, 10);
-      
-      // Update invoice to paid
+
       await db.update(invoices).set({
-        status: 'paid'
+        status: 'paid',
+        updatedAt: new Date(),
       }).where(eq(invoices.id, invoiceId));
-      
-      console.log(`✅ Invoice ${invoiceId} marked as paid successfully via Stripe webhook.`);
     }
   }
 
-  return new NextResponse('OK', { status: 200 });
+  return NextResponse.json({ received: true });
 }

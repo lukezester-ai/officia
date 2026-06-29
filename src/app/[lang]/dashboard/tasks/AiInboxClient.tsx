@@ -1,6 +1,4 @@
 "use client";
-// @ts-nocheck
-
 import React, { useState } from 'react';
 import { Check, X, Inbox, AlertTriangle, Clock } from 'lucide-react';
 import { resolveInboxItem } from '../ai-inbox/actions';

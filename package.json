@@ -6,7 +6,20 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/accounting tests/lib tests/tax",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:install": "playwright install chromium",
+    "test:coverage": "vitest run --coverage tests/accounting tests/lib tests/tax tests/integration"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.84",
@@ -21,6 +34,8 @@
     "@types/file-saver": "^2.0.7",
     "@types/iconv-lite": "^0.0.1",
     "@types/qrcode": "^1.5.6",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
     "ai": "^6.0.205",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -34,7 +49,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "jszip": "^3.10.1",
-    "lucide-react": "^1.20.0",
+    "lucide-react": "^0.474.0",
     "negotiator": "^1.0.0",
     "next": "15.5.19",
     "next-themes": "^0.4.6",
@@ -59,7 +74,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@clerk/testing": "^1.13.7",
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@types/jspdf": "^1.3.3",
     "@types/negotiator": "^0.6.4",
@@ -73,6 +90,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.19",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

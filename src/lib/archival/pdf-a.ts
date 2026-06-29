@@ -1,4 +1,3 @@
-// @ts-nocheck
 // В реална среда се инсталира съответната библиотека за PDF/A
 // import { PdfDocument } from '@carbon/ibm-cloud-pdf';
 

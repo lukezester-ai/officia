@@ -1,12 +1,18 @@
-// @ts-nocheck
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
 export const matchSchema = z.object({
-  matchedId: z.string().nullable().describe('The ID of the matched candidate document. Return null if no confident match is found.'),
-  confidenceScore: z.number().min(0).max(100).describe('Confidence score from 0 to 100 representing how sure the AI is about the match.'),
-  reason: z.string().describe('Short explanation of why this match was chosen or why no match was found.')
+  matchedId: z
+    .string()
+    .nullable()
+    .describe('The ID of the matched candidate document. Return null if no confident match is found.'),
+  confidenceScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe('Confidence score from 0 to 100 representing how sure the AI is about the match.'),
+  reason: z.string().describe('Short explanation of why this match was chosen or why no match was found.'),
 });
 
 export interface Transaction {
@@ -42,11 +48,11 @@ Provide a clear reason for your decision in Bulgarian language.`;
     schema: matchSchema,
     messages: [
       { role: 'system', content: systemPrompt },
-      { 
-        role: 'user', 
-        content: `Transaction to match:\n${JSON.stringify(transaction, null, 2)}\n\nCandidates:\n${JSON.stringify(candidates, null, 2)}\n\nPlease find the best match.` 
-      }
-    ]
+      {
+        role: 'user',
+        content: `Transaction to match:\n${JSON.stringify(transaction, null, 2)}\n\nCandidates:\n${JSON.stringify(candidates, null, 2)}\n\nPlease find the best match.`,
+      },
+    ],
   });
 
   return object;

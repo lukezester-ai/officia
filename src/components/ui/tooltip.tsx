@@ -1,6 +1,4 @@
 "use client"
-// @ts-nocheck
-
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "@/lib/utils"

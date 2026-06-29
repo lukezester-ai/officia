@@ -1,6 +1,4 @@
 "use client";
-// @ts-nocheck
-
 import React, { useState } from 'react';
 import { Check, X, Calendar, AlertCircle } from 'lucide-react';
 import { approveTask, rejectTask } from '../documents/actions';

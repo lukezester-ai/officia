@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { tasks } from '@/lib/db/schema/tasks';
 import { documents } from '@/lib/db/schema/documents';
@@ -29,7 +28,7 @@ export class TaskGenerator {
         documentId,
         title: t.title,
         description: t.description,
-        dueDate: t.dueDate ? new Date(t.dueDate) : null,
+        dueDate: t.dueDate ? t.dueDate.slice(0, 10) : null,
         priority: t.priority,
         status: 'suggested'
       }));

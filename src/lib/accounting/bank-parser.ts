@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Papa from 'papaparse';
 
 export interface ParsedTransaction {
@@ -9,16 +8,14 @@ export interface ParsedTransaction {
   counterpartyIban?: string;
 }
 
+type CsvRow = Record<string, string | undefined>;
+
 export class BankStatementParser {
-  /**
-   * Parse a generic CSV with columns: Date, Amount, Description, Counterparty, IBAN
-   * @param csvContent The raw CSV text
-   */
   static parseCSV(csvContent: string): ParsedTransaction[] {
-    const results = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
+    const results = Papa.parse<CsvRow>(csvContent, { header: true, skipEmptyLines: true });
     const transactions: ParsedTransaction[] = [];
 
-    for (const row of results.data as any[]) {
+    for (const row of results.data) {
       const dateStr = row['Date'] || row['Дата'] || row['Дата на вальор'];
       const amountStr = row['Amount'] || row['Сума'] || row['Оборот'];
       const description = row['Description'] || row['Основание'] || row['Детайли'];
@@ -32,7 +29,7 @@ export class BankStatementParser {
         amount: parseFloat(amountStr.replace(/,/g, '')),
         description: description || '',
         counterpartyName: counterpartyName || '',
-        counterpartyIban: counterpartyIban || ''
+        counterpartyIban: counterpartyIban || '',
       });
     }
 

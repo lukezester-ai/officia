@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { pgTable, text, timestamp, uuid, boolean, integer } from 'drizzle-orm/pg-core';
 import { bankAccounts } from './bank_accounts';
 import { expenses } from './expenses';

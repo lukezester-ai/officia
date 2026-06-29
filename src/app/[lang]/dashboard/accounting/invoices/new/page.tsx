@@ -1,6 +1,4 @@
 "use client";
-// @ts-nocheck
-
 import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Plus, Trash2, Save, Send } from "lucide-react";

@@ -1,32 +1,27 @@
-// @ts-nocheck
 import { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { ReportEngine } from '@/lib/accounting/report-engine';
+import { getAuthenticatedTenant } from '@/lib/auth/api-tenant';
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId, orgId } = await auth();
-    const tenantId = orgId || userId;
-
-    if (!tenantId) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await getAuthenticatedTenant();
+    if (!auth.ok) return auth.response;
 
     const { searchParams } = new URL(req.url);
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
-    
+
     if (!startParam || !endParam) {
-      return Response.json({ error: "Missing start or end parameter" }, { status: 400 });
+      return Response.json({ error: 'Missing start or end parameter' }, { status: 400 });
     }
 
     const start = new Date(startParam);
     const end = new Date(endParam);
-    const report = await ReportEngine.generatePnL(tenantId, start, end);
+    const report = await ReportEngine.generatePnL(auth.tenantId, start, end);
 
     return Response.json(report);
   } catch (error) {
     console.error(error);
-    return Response.json({ error: "Failed to generate PnL report" }, { status: 500 });
+    return Response.json({ error: 'Failed to generate PnL report' }, { status: 500 });
   }
 }

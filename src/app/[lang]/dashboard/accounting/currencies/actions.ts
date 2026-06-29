@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { CurrencyService } from "@/lib/accounting/currency-service";

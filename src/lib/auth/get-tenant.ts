@@ -3,6 +3,7 @@ import { db } from '@/lib/db/db';
 import { users } from '@/lib/db/schema/users';
 import { tenants } from '@/lib/db/schema/tenants';
 import { eq } from 'drizzle-orm';
+import { provisionUserFromClerk } from '@/lib/auth/provision-user';
 
 /**
  * Взима текущия tenant (работно пространство) за логнатия потребител.
@@ -15,9 +16,13 @@ export async function requireTenant() {
     throw new Error('Not authenticated');
   }
 
-  // Намираме потребителя по Clerk ID
-  const userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
+  let userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
   
+  if (userRecords.length === 0) {
+    await provisionUserFromClerk(userId);
+    userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
+  }
+
   if (userRecords.length === 0) {
     throw new Error('User not found in local database');
   }

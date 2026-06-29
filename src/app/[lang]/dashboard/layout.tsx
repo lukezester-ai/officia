@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { getDictionary, Locale } from '@/lib/get-dictionary';
 import { LanguageSwitcher } from '@/components/language-switcher';

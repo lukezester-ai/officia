@@ -5,18 +5,13 @@ import { invoices } from '@/lib/db/schema/invoices';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { aiInboxItems } from '@/lib/db/schema/ai_inbox';
 import { eq } from 'drizzle-orm';
-import { auth } from '@clerk/nextjs/server';
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function generateMorningBriefing() {
   try {
-    const { userId, orgId } = await auth();
-    const tenantId = orgId || userId;
-    
-    if (!tenantId) {
-      return "Няма достъп.";
-    }
+    const { tenantId } = await requireTenant();
 
     // Събиране на данни за AI
     const allInvoices = await db.select().from(invoices).where(eq(invoices.tenantId, tenantId));

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { User, Bot } from 'lucide-react';
 import { Message } from '@/hooks/useAIAssistant';

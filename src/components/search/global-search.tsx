@@ -1,5 +1,4 @@
 "use client";
-// @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Search, FileText, Users, Building2, Receipt, BarChart2, Landmark, Settings, ShoppingCart, X } from "lucide-react";

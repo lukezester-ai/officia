@@ -1,6 +1,4 @@
 "use client";
-// @ts-nocheck
-
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle, Shield, Zap, Users } from "lucide-react";
@@ -183,7 +181,7 @@ export default function RegisterPage() {
                 },
               }}
               signInUrl="/sign-in"
-              forceRedirectUrl="/dashboard"
+              forceRedirectUrl="/bg/dashboard"
             />
           </motion.div>
 

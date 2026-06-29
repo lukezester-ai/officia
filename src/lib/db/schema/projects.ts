@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { pgTable, text, uuid, timestamp, numeric, boolean } from 'drizzle-orm/pg-core';
 
 export const projects = pgTable('projects', {

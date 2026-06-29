@@ -1,6 +1,4 @@
 "use client";
-// @ts-nocheck
-
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, Mail, Briefcase, Building2, CreditCard, Save } from "lucide-react";
