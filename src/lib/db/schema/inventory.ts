@@ -1,8 +1,9 @@
-import { pgTable, text, uuid, timestamp, numeric, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, timestamp, numeric, pgEnum, boolean, uniqueIndex } from 'drizzle-orm/pg-core';
 import { companyDivisions } from './company_structure';
 import { accountPlan } from './account_plan';
 
 export const movementTypeEnum = pgEnum('movement_type', ['in', 'out', 'transfer', 'adjustment']);
+export const productCodeTypeEnum = pgEnum('product_code_type', ['ean', 'sku', 'supplier', 'internal', 'other']);
 
 export const inventoryItems = pgTable('inventory_items', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -26,3 +27,19 @@ export const inventoryMovements = pgTable('inventory_movements', {
   movementDate: timestamp('movement_date').notNull(),
   referenceId: uuid('reference_id'), // Фактура или друг първичен документ
 });
+
+export const productCodes = pgTable(
+  'product_codes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id').notNull(),
+    itemId: uuid('item_id')
+      .references(() => inventoryItems.id, { onDelete: 'cascade' })
+      .notNull(),
+    code: text('code').notNull(),
+    codeType: productCodeTypeEnum('code_type').notNull().default('other'),
+    isPrimary: boolean('is_primary').default(false),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => [uniqueIndex('product_codes_tenant_code_idx').on(table.tenantId, table.code)],
+);

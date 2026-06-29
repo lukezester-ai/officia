@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Package, Plus, LogIn, LogOut, Tags, Box, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { toast } from 'sonner';
+import { InventoryScanPanel } from '@/components/inventory/scan-panel';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -91,7 +92,7 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
             Склад (Наличности)
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">Управление на артикули, заприходяване и изписване.</p>
+          <p className="text-sm text-zinc-400 mt-1">Сканирай баркод/EAN/SKU, бързо заприходяване и изписване.</p>
         </div>
         
         <Dialog open={newItemOpen} onOpenChange={setNewItemOpen}>
@@ -127,6 +128,8 @@ export default function InventoryPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <InventoryScanPanel onChanged={load} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-white/20">
@@ -174,7 +177,7 @@ export default function InventoryPage() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="pl-6 text-zinc-400">SKU</TableHead>
+                  <TableHead className="pl-6 text-zinc-400">SKU / Кодове</TableHead>
                   <TableHead className="text-zinc-400">Наименование</TableHead>
                   <TableHead className="text-right text-zinc-400">Наличност</TableHead>
                   <TableHead className="text-right text-zinc-400">Средна Цена</TableHead>
@@ -185,7 +188,14 @@ export default function InventoryPage() {
               <TableBody>
                 {data.items.map((item: any) => (
                   <TableRow key={item.id} className="hover:bg-white/5 border-white/10 transition-colors">
-                    <TableCell className="pl-6 font-mono text-xs text-zinc-400">{item.sku}</TableCell>
+                    <TableCell className="pl-6 font-mono text-xs text-zinc-400">
+                      <div>{item.sku}</div>
+                      {item.codes?.length > 1 && (
+                        <div className="text-[10px] text-zinc-600 mt-0.5 truncate max-w-[180px]">
+                          {item.codes.map((c: { code: string }) => c.code).join(' · ')}
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium text-zinc-200">{item.name}</TableCell>
                     <TableCell className="text-right tabular-nums font-bold text-white">
                       {item.currentQuantity} <span className="text-zinc-500 text-xs font-normal">{item.unitOfMeasure}</span>
