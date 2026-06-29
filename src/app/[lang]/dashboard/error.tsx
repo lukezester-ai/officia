@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw, LayoutDashboard } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function DashboardError({
   error,
@@ -37,12 +38,16 @@ export default function DashboardError({
           <RefreshCw size={16} />
           Опитай отново
         </Button>
-        <Button asChild variant="outline" className="gap-2 border-white/10 bg-white/5 text-zinc-200">
-          <Link href={`/${lang}/dashboard`}>
-            <Home size={16} />
-            Към таблото
-          </Link>
-        </Button>
+        <Link
+          href={`/${lang}/dashboard`}
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            'gap-2 border-white/10 bg-white/5 text-zinc-200',
+          )}
+        >
+          <LayoutDashboard size={16} />
+          Към таблото
+        </Link>
       </div>
     </div>
   );
