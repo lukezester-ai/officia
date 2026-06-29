@@ -231,7 +231,7 @@ async function executeDepreciateAssets(
     })
     .returning();
 
-  let linesToInsert: Array<{
+  const linesToInsert: Array<{
     journalId: string;
     accountId: string | null;
     entryType: string;
