@@ -85,7 +85,7 @@ export default async function HrPage(props: { params: Promise<{ lang: string }> 
                     )}
                   </TableCell>
                   <TableCell className="text-right pr-6">
-                    <Link href={`/bg/dashboard/hr/${emp.id}`}>
+                    <Link href={`/${lang}/dashboard/hr/${emp.id}`}>
                       <Button variant="ghost" size="sm" className="h-8 gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-white hover:bg-white/10">
                         Профил <ChevronRight size={14} />
                       </Button>

@@ -17,9 +17,9 @@ export function DashboardHeader({ lang }: { lang: string }) {
         <div className="flex items-center gap-3">
           <LanguageSwitcher currentLang={lang} />
           <Link
-            href={`/${lang}/dashboard/ai-inbox`}
-            aria-label="AI Inbox известия"
-            title="AI Inbox"
+            href={`/${lang}/dashboard/tasks`}
+            aria-label="Задачи и известия"
+            title="Задачи и AI inbox"
             className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Bell size={18} />

@@ -5,7 +5,7 @@ import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { counterparties } from '@/lib/db/schema/counterparties';
 import { tenants } from '@/lib/db/schema/tenants';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { requireTenant } from '@/lib/auth/get-tenant';
@@ -35,9 +35,14 @@ async function parseInvoiceId(id: string): Promise<number | null> {
 
 export async function getInvoiceWithLines(id: string) {
   try {
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant', data: null };
     const invoiceId = await parseInvoiceId(id);
     if (invoiceId === null) return { success: false, error: 'Невалиден ID', data: null };
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
+    const [invoice] = await db
+      .select()
+      .from(invoices)
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenant.id)));
     if (!invoice) return { success: false, error: 'Не е намерена', data: null };
     const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId));
     return { success: true, data: { ...invoice, lines } };

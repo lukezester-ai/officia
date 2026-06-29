@@ -1,7 +1,7 @@
 import React from 'react';
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,17 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 import { StatusUpdater } from './_status-updater';
 
 export default async function HrProfilePage(props: { params: Promise<{ lang: string, id: string }> }) {
   const params = await props.params;
-  const result = await db.select().from(employees).where(eq(employees.id, params.id));
+  const { tenantId } = await requireTenant();
+  const result = await db
+    .select()
+    .from(employees)
+    .where(and(eq(employees.id, params.id), eq(employees.tenantId, tenantId)));
   const emp = result[0];
 
   if (!emp) {

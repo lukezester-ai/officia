@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, Bot, Mic, MicOff, Paperclip, Minimize2, Maximize2, Loader2, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -43,6 +44,9 @@ function filesToFileList(files: File[]): FileList {
 }
 
 export default function AiAssistant() {
+  const pathname = usePathname();
+  const hideOnFullPageChat = pathname?.includes('/dashboard/ai-assistant');
+
   const { messages, sendMessage: sendChatMessage, status, error } = useChat({
     transport: officiaChatTransport,
     messages: initialMessages,
@@ -150,6 +154,10 @@ export default function AiAssistant() {
       }
     }
   };
+
+  if (hideOnFullPageChat) {
+    return null;
+  }
 
   return (
     <>

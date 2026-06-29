@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart, CheckSquare } from 'lucide-react';
-import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { AppLogoLink } from '@/components/brand/app-logo-link';
 
@@ -57,10 +56,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
       </nav>
       <div className="mx-4 mb-3 h-px bg-white/10" />
       <div className="px-4 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <UserButton />
-          <span className="text-sm font-medium text-zinc-400 truncate">{dict.profile}</span>
-        </div>
+        <span className="text-sm font-medium text-zinc-400 truncate">{dict.profile}</span>
         <ThemeToggle />
       </div>
     </div>

@@ -2,29 +2,39 @@
 import { db } from '@/lib/db/db';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
-import { tenants } from '@/lib/db/schema/tenants';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
-async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
-  return tenant;
+async function getTenantContext() {
+  const { tenantId } = await requireTenant();
+  return { tenantId };
+}
+
+async function getTenantPurchaseInvoice(id: string, tenantId: string) {
+  const [inv] = await db
+    .select()
+    .from(purchaseInvoices)
+    .where(and(eq(purchaseInvoices.id, id), eq(purchaseInvoices.tenantId, tenantId)));
+  return inv ?? null;
 }
 
 export async function approvePurchaseInvoice(id: string) {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Lipсва Tenant' };
-    const [inv] = await db.select().from(purchaseInvoices).where(eq(purchaseInvoices.id, id));
+    const { tenantId } = await getTenantContext();
+    const inv = await getTenantPurchaseInvoice(id, tenantId);
     if (!inv) return { success: false, error: 'Not found' };
     if (inv.status !== 'draft') return { success: false, error: 'Not a draft' };
-    await db.update(purchaseInvoices)
+
+    await db
+      .update(purchaseInvoices)
       .set({ status: 'approved' })
-      .where(eq(purchaseInvoices.id, id));
+      .where(and(eq(purchaseInvoices.id, id), eq(purchaseInvoices.tenantId, tenantId)));
+
     if (!inv.vatPosted) {
       const d = new Date(inv.issueDate || new Date());
       await db.insert(vatJournals).values({
-        tenantId: tenant.id,
+        tenantId,
         type: 'purchases',
         periodYear: d.getFullYear(),
         periodMonth: d.getMonth() + 1,
@@ -36,29 +46,43 @@ export async function approvePurchaseInvoice(id: string) {
         vatRate: 20,
         vatAmount: inv.vatAmount || '0',
       });
-      await db.update(purchaseInvoices)
+      await db
+        .update(purchaseInvoices)
         .set({ vatPosted: true })
-        .where(eq(purchaseInvoices.id, id));
+        .where(and(eq(purchaseInvoices.id, id), eq(purchaseInvoices.tenantId, tenantId)));
     }
+
     revalidatePath('/', 'layout');
     return { success: true };
-  } catch (e: any) { return { success: false, error: e.message }; }
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
 }
 
 export async function markPurchaseInvoicePaid(id: string) {
   try {
-    await db.update(purchaseInvoices).set({ status: 'paid' }).where(eq(purchaseInvoices.id, id));
+    const { tenantId } = await getTenantContext();
+    await db
+      .update(purchaseInvoices)
+      .set({ status: 'paid' })
+      .where(and(eq(purchaseInvoices.id, id), eq(purchaseInvoices.tenantId, tenantId)));
     revalidatePath('/', 'layout');
     return { success: true };
-  } catch (e: any) { return { success: false, error: e.message }; }
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
 }
 
 export async function cancelPurchaseInvoice(id: string) {
   try {
-    await db.update(purchaseInvoices)
+    const { tenantId } = await getTenantContext();
+    await db
+      .update(purchaseInvoices)
       .set({ status: 'cancelled' })
-      .where(eq(purchaseInvoices.id, id));
+      .where(and(eq(purchaseInvoices.id, id), eq(purchaseInvoices.tenantId, tenantId)));
     revalidatePath('/', 'layout');
     return { success: true };
-  } catch (e: any) { return { success: false, error: e.message }; }
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
 }

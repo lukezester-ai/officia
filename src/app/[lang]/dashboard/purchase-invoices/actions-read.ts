@@ -3,21 +3,20 @@ import { randomUUID } from 'crypto';
 import { db } from '@/lib/db/db';
 import { purchaseInvoices, purchaseInvoiceLines } from '@/lib/db/schema/purchase-invoices';
 import { counterparties } from '@/lib/db/schema/counterparties';
-import { tenants } from '@/lib/db/schema/tenants';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
-async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
-  return tenant;
+async function getTenantContext() {
+  const { tenantId } = await requireTenant();
+  return { tenantId };
 }
 
 export async function getPurchaseInvoices() {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Lipсва Tenant', data: [] };
+    const { tenantId } = await getTenantContext();
     const data = await db.select().from(purchaseInvoices)
-      .where(eq(purchaseInvoices.tenantId, tenant.id))
+      .where(eq(purchaseInvoices.tenantId, tenantId))
       .orderBy(desc(purchaseInvoices.createdAt));
     return { success: true, data };
   } catch (e: any) { return { success: false, error: e.message, data: [] }; }
@@ -25,8 +24,7 @@ export async function getPurchaseInvoices() {
 
 export async function createPurchaseInvoice(input: any) {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Lipсва Tenant' };
+    const { tenantId } = await getTenantContext();
     const { lines, ...inv } = input;
     const computed = lines.map((l: any) => {
       const net = Math.round(l.quantity * l.unitPrice * 100) / 100;
@@ -37,7 +35,7 @@ export async function createPurchaseInvoice(input: any) {
     const vatTotal = computed.reduce((s: number, l: any) => s + l.vat, 0);
     const [created] = await db.insert(purchaseInvoices).values({
       id: randomUUID(),
-      tenantId: tenant.id,
+      tenantId,
       invoiceNumber: inv.invoiceNumber,
       issueDate: inv.issueDate || null,
       dueDate: inv.dueDate || null,
@@ -74,10 +72,9 @@ export async function createPurchaseInvoice(input: any) {
 
 export async function getSuppliersForSelect() {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, data: [] };
+    const { tenantId } = await getTenantContext();
     const data = await db.select().from(counterparties)
-      .where(eq(counterparties.tenantId, tenant.id));
+      .where(eq(counterparties.tenantId, tenantId));
     return { success: true, data: data.filter((c: any) => c.isActive) };
   } catch (e: any) { return { success: false, data: [] }; }
 }
