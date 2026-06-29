@@ -33,6 +33,14 @@ function getMessageText(message: any) {
   return '';
 }
 
+function filesToFileList(files: File[]): FileList {
+  const dataTransfer = new DataTransfer();
+  for (const file of files) {
+    dataTransfer.items.add(file);
+  }
+  return dataTransfer.files;
+}
+
 export default function AiAssistant() {
   const { messages, sendMessage: sendChatMessage, status, error } = useChat({
     transport: officiaChatTransport,
@@ -81,7 +89,8 @@ export default function AiAssistant() {
     setAttachments([]);
 
     if (currentAttachments.length > 0) {
-      await sendChatMessage(text ? { text, files: currentAttachments } : { files: currentAttachments });
+      const fileList = filesToFileList(currentAttachments);
+      await sendChatMessage(text ? { text, files: fileList } : { files: fileList });
       return;
     }
 
