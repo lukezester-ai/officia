@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ScanLine, ArrowDownToLine, ArrowUpFromLine, Plus, Search, X } from 'lucide-react';
+import { Scan, ArrowDownToLine, ArrowUpFromLine, Plus, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ProductCodeType } from '@/lib/inventory/codes';
 
@@ -140,7 +140,7 @@ export function InventoryScanPanel({ onChanged }: ScanPanelProps) {
       <Card className="border-indigo-500/30 bg-indigo-500/5 shadow-[0_0_24px_rgba(79,70,229,0.08)]">
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-indigo-200">
-            <ScanLine size={16} className="text-indigo-400" />
+            <Scan size={16} className="text-indigo-400" />
             Сканирай или въведи код (EAN, SKU, вътрешен)
           </div>
 

@@ -23,6 +23,11 @@ export type InventoryItemView = {
   codes: { code: string; codeType: ProductCodeType; isPrimary: boolean | null }[];
 };
 
+function isMissingProductCodesTable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /product_codes|product_code_type|does not exist/i.test(message);
+}
+
 async function getDefaultDivisionId(tenantId: string) {
   const divisions = await db
     .select()
@@ -92,19 +97,25 @@ async function loadCodesByItem(tenantId: string, itemIds: string[]) {
   const codesByItem = new Map<string, InventoryItemView['codes']>();
   if (itemIds.length === 0) return codesByItem;
 
-  const rows = await db
-    .select()
-    .from(productCodes)
-    .where(and(eq(productCodes.tenantId, tenantId), inArray(productCodes.itemId, itemIds)));
+  try {
+    const rows = await db
+      .select()
+      .from(productCodes)
+      .where(and(eq(productCodes.tenantId, tenantId), inArray(productCodes.itemId, itemIds)));
 
-  for (const row of rows) {
-    const list = codesByItem.get(row.itemId) ?? [];
-    list.push({
-      code: row.code,
-      codeType: row.codeType,
-      isPrimary: row.isPrimary,
-    });
-    codesByItem.set(row.itemId, list);
+    for (const row of rows) {
+      const list = codesByItem.get(row.itemId) ?? [];
+      list.push({
+        code: row.code,
+        codeType: row.codeType,
+        isPrimary: row.isPrimary,
+      });
+      codesByItem.set(row.itemId, list);
+    }
+  } catch (error) {
+    if (!isMissingProductCodesTable(error)) {
+      throw error;
+    }
   }
 
   return codesByItem;
@@ -148,13 +159,20 @@ export async function lookupItemByCode(rawCode: string) {
       return { success: false, error: 'Въведете валиден код', data: null };
     }
 
-    const codeRows = await db
-      .select()
-      .from(productCodes)
-      .where(and(eq(productCodes.tenantId, tenantId), inArray(productCodes.code, variants)))
-      .limit(1);
+    let itemId: string | undefined;
 
-    let itemId = codeRows[0]?.itemId;
+    try {
+      const codeRows = await db
+        .select()
+        .from(productCodes)
+        .where(and(eq(productCodes.tenantId, tenantId), inArray(productCodes.code, variants)))
+        .limit(1);
+      itemId = codeRows[0]?.itemId;
+    } catch (error) {
+      if (!isMissingProductCodesTable(error)) {
+        throw error;
+      }
+    }
 
     if (!itemId) {
       const skuRows = await db
@@ -206,26 +224,33 @@ async function registerProductCode(
   const code = normalizeProductCode(rawCode);
   if (!code) return;
 
-  const existing = await db
-    .select()
-    .from(productCodes)
-    .where(and(eq(productCodes.tenantId, tenantId), eq(productCodes.code, code)))
-    .limit(1);
+  try {
+    const existing = await db
+      .select()
+      .from(productCodes)
+      .where(and(eq(productCodes.tenantId, tenantId), eq(productCodes.code, code)))
+      .limit(1);
 
-  if (existing.length > 0) {
-    if (existing[0].itemId !== itemId) {
-      throw new Error(`Кодът ${code} вече е регистриран към друг артикул.`);
+    if (existing.length > 0) {
+      if (existing[0].itemId !== itemId) {
+        throw new Error(`Кодът ${code} вече е регистриран към друг артикул.`);
+      }
+      return;
     }
-    return;
-  }
 
-  await db.insert(productCodes).values({
-    tenantId,
-    itemId,
-    code,
-    codeType: codeType ?? detectCodeType(code),
-    isPrimary,
-  });
+    await db.insert(productCodes).values({
+      tenantId,
+      itemId,
+      code,
+      codeType: codeType ?? detectCodeType(code),
+      isPrimary,
+    });
+  } catch (error) {
+    if (isMissingProductCodesTable(error)) {
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function createInventoryItem(data: {
