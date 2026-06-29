@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
+import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 import dynamic from 'next/dynamic';
 
 const AIChatChart = dynamic(() => import('@/components/dashboard/AIChatChart'), { ssr: false });
@@ -26,9 +27,9 @@ const initialAiMessages = [
 
 export default function AIAssistantPage() {
   const { messages, sendMessage, status, error } = useChat({
-    api: '/api/ai/chat',
+    transport: officiaChatTransport,
     messages: initialAiMessages,
-  } as any) as any;
+  });
 
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<FileList | null>(null);

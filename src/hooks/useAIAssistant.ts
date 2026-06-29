@@ -1,4 +1,5 @@
 import { useChat } from '@ai-sdk/react';
+import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 
 export interface Message {
   id: string;
@@ -20,8 +21,8 @@ function getMessageText(message: any) {
 
 export function useAIAssistant() {
   const { messages, sendMessage, status, error, setMessages } = useChat({
-    api: '/api/ai/chat',
-  } as any);
+    transport: officiaChatTransport,
+  });
 
   const isLoading = status === 'submitted' || status === 'streaming';
 

@@ -6,6 +6,7 @@ import { Send, X, Bot, Mic, MicOff, Paperclip, Minimize2, Maximize2, Loader2, Co
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { useChat } from '@ai-sdk/react';
+import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 
 const initialMessages = [
   {
@@ -33,9 +34,9 @@ function getMessageText(message: any) {
 
 export default function AiAssistant() {
   const { messages, sendMessage: sendChatMessage, status, error } = useChat({
-    api: '/api/ai/chat',
+    transport: officiaChatTransport,
     messages: initialMessages,
-  } as any) as any;
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);

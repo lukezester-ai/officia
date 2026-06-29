@@ -74,6 +74,10 @@ export async function POST(req: NextRequest) {
       return new Response(`Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters.`, { status: 413 });
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return new Response('AI provider is not configured', { status: 503 });
+    }
+
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-latest'),
       system: buildSystemPrompt(tenantId),
@@ -97,7 +101,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse({ originalMessages: messages });
   } catch (error: any) {
     console.error('Chat API error:', error);
     if (error.message === 'Not authenticated' || error.message === 'User not found in local database' || error.message === 'User does not belong to any tenant') {
