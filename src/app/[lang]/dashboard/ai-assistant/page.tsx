@@ -7,18 +7,19 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
+import type { UIMessage } from 'ai';
 import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 import dynamic from 'next/dynamic';
 
 const AIChatChart = dynamic(() => import('@/components/dashboard/AIChatChart'), { ssr: false });
 
-const initialAiMessages = [
+const initialAiMessages: UIMessage[] = [
   {
     id: '1',
-    role: 'assistant' as const,
+    role: 'assistant',
     parts: [
       {
-        type: 'text' as const,
+        type: 'text',
         text: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
       },
     ],

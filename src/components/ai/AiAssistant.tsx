@@ -6,15 +6,16 @@ import { Send, X, Bot, Mic, MicOff, Paperclip, Minimize2, Maximize2, Loader2, Co
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { useChat } from '@ai-sdk/react';
+import type { UIMessage } from 'ai';
 import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 
-const initialMessages = [
+const initialMessages: UIMessage[] = [
   {
     id: '1',
-    role: 'assistant' as const,
+    role: 'assistant',
     parts: [
       {
-        type: 'text' as const,
+        type: 'text',
         text: 'Здравей! Аз съм **Officia AI**. С какво мога да ти помогна днес?',
       },
     ],
