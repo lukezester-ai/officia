@@ -216,7 +216,7 @@ export default function AIAssistantPage() {
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-gray-100 bg-white">
+          <div className="p-4 border-t border-border bg-card">
             {/* Файлови визуализации преди изпращане */}
             {files && files.length > 0 && (
               <div className="flex gap-3 mb-3 px-2 overflow-x-auto">
@@ -266,7 +266,7 @@ export default function AIAssistantPage() {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder={isListening ? "Слушам ви..." : "Попитай асистента или прикачи фактура за сканиране..."}
-                className="flex-1 rounded-xl bg-white/5 border-white/10 focus-visible:ring-violet-500 text-white placeholder:text-zinc-500 py-6 pl-12 pr-12 text-[15px]"
+                className="flex-1 rounded-xl bg-background border-border focus-visible:ring-violet-500 text-foreground placeholder:text-muted-foreground py-6 pl-12 pr-12 text-[15px]"
                 disabled={isLoading}
               />
 

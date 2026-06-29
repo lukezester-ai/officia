@@ -302,7 +302,7 @@ export default function AiAssistant() {
                     </button>
                   </div>
 
-                  <div className="flex-1 relative flex items-end bg-muted/50 rounded-2xl border focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all p-1">
+                  <div className="flex-1 relative flex items-end bg-muted/50 rounded-2xl border border-border focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all p-1">
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -313,7 +313,7 @@ export default function AiAssistant() {
                         }
                       }}
                       placeholder="Напишете съобщение..."
-                      className="flex-1 max-h-[120px] min-h-[40px] bg-transparent resize-none px-3 py-2.5 text-sm focus:outline-none"
+                      className="flex-1 max-h-[120px] min-h-[40px] bg-transparent resize-none px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                       rows={1}
                       style={{ fieldSizing: 'content' } as any}
                     />
