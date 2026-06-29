@@ -15,10 +15,10 @@ const AIChatChart = dynamic(() => import('@/components/dashboard/AIChatChart'), 
 const initialAiMessages = [
   {
     id: '1',
-    role: 'assistant',
+    role: 'assistant' as const,
     parts: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
       },
     ],
