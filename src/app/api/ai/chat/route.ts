@@ -1,22 +1,12 @@
 ﻿import { NextRequest } from 'next/server';
-import { convertToModelMessages, streamText } from 'ai';
+import { convertToModelMessages, stepCountIs, streamText } from 'ai';
+import {
+  buildOrchestratorSystemPrompt,
+  buildRoutedChatTools,
+  prepareOrchestratedChat,
+} from '@/lib/ai/agents';
 import { getAnthropicChatModel } from '@/lib/ai/model';
-import { buildBankMatchTool } from '@/lib/ai/tools/bank-match';
 import { requireTenant } from '@/lib/auth/get-tenant';
-import { buildCreateInvoiceTool } from '@/lib/ai/tools/create-invoice';
-import { buildGetFinancialSummaryTool } from '@/lib/ai/tools/get-financial-summary';
-import { buildSearchDocumentsTool } from '@/lib/ai/tools/search-documents';
-import { buildCreateExpenseTool } from '@/lib/ai/tools/create-expense';
-import { buildCreateJournalEntryTool } from '@/lib/ai/tools/create-journal-entry';
-import { buildManageHRTool } from '@/lib/ai/tools/manage-hr';
-import { buildManageInventoryTool } from '@/lib/ai/tools/manage-inventory';
-import { buildGenerateVatTool } from '@/lib/ai/tools/generate-vat';
-import { buildDepreciateAssetsTool } from '@/lib/ai/tools/depreciate-assets';
-import { buildAutoApproveTool } from '@/lib/ai/tools/auto-approve';
-import { buildProcessInboxTool } from '@/lib/ai/tools/process-inbox';
-import { buildGenerateChartTool } from '@/lib/ai/tools/generate-chart';
-import { buildCheckNraStatusTool } from '@/lib/ai/tools/check-nra-status';
-import { buildCheckNraLiabilitiesTool } from '@/lib/ai/tools/check-nra-liabilities';
 import { checkRateLimit } from '@/lib/api/rate-limit';
 
 const MAX_REQUESTS_PER_WINDOW = 10;
@@ -34,20 +24,13 @@ function getMessageText(message: any) {
   return '';
 }
 
-function buildSystemPrompt(tenantId: string) {
-  return `Ти си Officia AI - интелигентен офис асистент за български фирми.
-
-Контекст:
-- Tenant ID: ${tenantId}
-- Дата: ${new Date().toISOString()}
-
-Поведение:
-- Отговаряй на български език, ясно и професионално.
-- Когато действието може да промени счетоводни, банкови, HR, складови или данъчни данни, обясни какво ще бъде направено и държи отговора подходящ за човешки преглед.
-- Не твърди, че нещо е записано, ако tool-ът не е върнал success.
-- За справки използвай read-only tools, когато са налични.
-- За графики първо извлечи данни с подходящ tool, после използвай generateChart.
-- При несигурност поискай уточнение вместо да измисляш данни.`;
+function getLastUserMessageText(messages: any[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index]?.role === 'user') {
+      return getMessageText(messages[index]);
+    }
+  }
+  return '';
 }
 
 export async function POST(req: NextRequest) {
@@ -78,27 +61,22 @@ export async function POST(req: NextRequest) {
       return new Response('AI provider is not configured', { status: 503 });
     }
 
+    const lastUserText = getLastUserMessageText(messages);
+    const { routing, tenantSnapshot } = await prepareOrchestratedChat(
+      lastUserText,
+      tenantId,
+      userId,
+      messages,
+    );
+    const tools = buildRoutedChatTools(routing, { tenantId, userId });
+    const system = buildOrchestratorSystemPrompt(tenantId, routing, tenantSnapshot);
+
     const result = streamText({
       model: getAnthropicChatModel(),
-      system: buildSystemPrompt(tenantId),
+      system,
       messages: await convertToModelMessages(messages),
-      tools: {
-        createInvoice: buildCreateInvoiceTool(tenantId, userId),
-        getFinancialSummary: buildGetFinancialSummaryTool(tenantId),
-        searchDocuments: buildSearchDocumentsTool(tenantId),
-        bankMatch: buildBankMatchTool(tenantId),
-        createExpense: buildCreateExpenseTool(tenantId, userId),
-        createJournalEntry: buildCreateJournalEntryTool(tenantId, userId),
-        manageHR: buildManageHRTool(tenantId),
-        manageInventory: buildManageInventoryTool(tenantId),
-        generateVat: buildGenerateVatTool(tenantId, userId),
-        depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
-        autoApprove: buildAutoApproveTool(tenantId, userId),
-        processInbox: buildProcessInboxTool(tenantId),
-        generateChart: buildGenerateChartTool(),
-        checkNraStatus: buildCheckNraStatusTool(),
-        checkNraLiabilities: buildCheckNraLiabilitiesTool(),
-      },
+      tools,
+      stopWhen: stepCountIs(5),
     });
 
     return result.toUIMessageStreamResponse({ originalMessages: messages });
