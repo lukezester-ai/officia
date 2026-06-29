@@ -1,5 +1,5 @@
-﻿import { anthropic } from '@ai-sdk/anthropic';
-import { generateObject } from 'ai';
+﻿import { generateObject } from 'ai';
+import { getAnthropicChatModel } from '../model';
 import { z } from 'zod';
 
 export const documentSchema = z.object({
@@ -12,7 +12,7 @@ export const documentSchema = z.object({
 });
 
 export async function processDocumentImage(base64Image: string, mimeType: string) {
-  const model = anthropic('claude-3-5-sonnet-latest');
+  const model = getAnthropicChatModel();
   const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
   const { object } = await generateObject({

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useChat } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
+import { getChatErrorMessage } from '@/lib/ai/chat-error';
 
 const initialMessages: UIMessage[] = [
   {
@@ -253,8 +254,8 @@ export default function AiAssistant() {
               )})}
 
               {error && (
-                <div className="text-center text-red-500 text-sm py-2">
-                  Възникна грешка при връзката с асистента. Моля, опитайте отново.
+                <div className="text-center text-red-500 text-sm py-2 px-4">
+                  {getChatErrorMessage(error)}
                 </div>
               )}
 

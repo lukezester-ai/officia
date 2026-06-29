@@ -1,6 +1,6 @@
 ﻿import { NextRequest } from 'next/server';
 import { convertToModelMessages, streamText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { getAnthropicChatModel } from '@/lib/ai/model';
 import { buildBankMatchTool } from '@/lib/ai/tools/bank-match';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { buildCreateInvoiceTool } from '@/lib/ai/tools/create-invoice';
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = streamText({
-      model: anthropic('claude-3-5-sonnet-latest'),
+      model: getAnthropicChatModel(),
       system: buildSystemPrompt(tenantId),
       messages: await convertToModelMessages(messages),
       tools: {

@@ -6,7 +6,7 @@ import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { aiInboxItems } from '@/lib/db/schema/ai_inbox';
 import { eq } from 'drizzle-orm';
 import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
+import { getAnthropicChatModel } from '@/lib/ai/model';
 import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function generateMorningBriefing() {
@@ -38,7 +38,7 @@ export async function generateMorningBriefing() {
 Не бъди скучен. Не споменавай нули (ако нещо е 0, просто не го споменавай).`;
 
     const result = await generateText({
-      model: anthropic('claude-3-5-sonnet-latest'),
+      model: getAnthropicChatModel(),
       prompt: prompt,
     });
 

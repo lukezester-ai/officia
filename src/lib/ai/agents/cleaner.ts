@@ -1,5 +1,5 @@
-import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
+import { getAnthropicChatModel } from '../model';
 
 export interface CleanupStats {
   orphanedDocumentsDeleted: number;
@@ -16,7 +16,7 @@ export async function runSystemCleanup() {
     storageFreedMB: parseFloat((Math.random() * 15 + 2).toFixed(2)),
   };
 
-  const model = anthropic('claude-3-5-sonnet-latest');
+  const model = getAnthropicChatModel();
 
   const { text: auditReport } = await generateText({
     model,

@@ -9,6 +9,7 @@ import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic } from 'lucide-rea
 import { useChat } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
+import { getChatErrorMessage } from '@/lib/ai/chat-error';
 import dynamic from 'next/dynamic';
 
 const AIChatChart = dynamic(() => import('@/components/dashboard/AIChatChart'), { ssr: false });
@@ -209,7 +210,7 @@ export default function AIAssistantPage() {
 
               {error && (
                 <div className="text-center text-red-500 text-sm py-4">
-                  Възникна грешка при връзката с асистента. Моля, опитайте отново.
+                  {getChatErrorMessage(error)}
                 </div>
               )}
             </div>

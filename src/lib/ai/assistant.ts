@@ -1,5 +1,5 @@
-import { anthropic } from '@ai-sdk/anthropic';
 import { generateText, streamText, tool } from 'ai';
+import { getAnthropicChatModel } from './model';
 import { z } from 'zod';
 
 import { buildCreateInvoiceTool } from './tools/create-invoice';
@@ -23,7 +23,7 @@ export async function runAIAssistant(
 
   try {
     const result = await generateText({
-      model: anthropic('claude-3-5-sonnet-latest'),
+      model: getAnthropicChatModel(),
       system: context,
       messages: [
         ...conversationHistory,

@@ -1,5 +1,5 @@
-import { anthropic } from '@ai-sdk/anthropic';
 import { generateObject } from 'ai';
+import { getAnthropicChatModel } from '../model';
 import { z } from 'zod';
 
 export const matchSchema = z.object({
@@ -34,7 +34,7 @@ export interface Candidate {
 }
 
 export async function matchTransactionWithAI(transaction: Transaction, candidates: Candidate[]) {
-  const model = anthropic('claude-3-5-sonnet-latest');
+  const model = getAnthropicChatModel();
 
   const systemPrompt = `You are an expert financial reconciliation AI agent. Your job is to match a single bank transaction against a list of candidate documents (invoices or expenses). 
 Follow these strict rules:
