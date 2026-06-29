@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, Users, Plus, ChevronRight, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function HrPage() {
+export default async function HrPage(props: { params: Promise<{ lang: string }> }) {
+  const { lang } = await props.params;
   const res = await getHrData();
   const data = res.success && res.data ? res.data : { employees: [], alerts: [] };
 
@@ -18,7 +19,7 @@ export default async function HrPage() {
           <h1 className="text-3xl font-bold tracking-tight text-white">Кадри (HR)</h1>
           <p className="text-sm text-zinc-400 mt-1">Управление на служители, документи и договори.</p>
         </div>
-        <Link href={`/bg/dashboard/hr/new`}>
+        <Link href={`/${lang}/dashboard/hr/new`}>
           <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-indigo-500/50">
             <Plus size={16} /> Добави служител
           </Button>

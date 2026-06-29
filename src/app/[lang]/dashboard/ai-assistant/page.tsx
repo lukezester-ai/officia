@@ -1,6 +1,7 @@
 'use client';
 // Fix client side crash by avoiding next/image for blob URLs
 import { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { useChat } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 import { getChatErrorMessage } from '@/lib/ai/chat-error';
+import { AppLogoLink } from '@/components/brand/app-logo-link';
 import dynamic from 'next/dynamic';
 
 const AIChatChart = dynamic(() => import('@/components/dashboard/AIChatChart'), { ssr: false });
@@ -28,6 +30,8 @@ const initialAiMessages: UIMessage[] = [
 ];
 
 export default function AIAssistantPage() {
+  const params = useParams();
+  const lang = (params.lang as string) || 'bg';
   const { messages, sendMessage, status, error } = useChat({
     transport: officiaChatTransport,
     messages: initialAiMessages,
@@ -124,7 +128,7 @@ export default function AIAssistantPage() {
   return (
     <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
       <div className="flex items-center gap-3">
-        <Bot className="h-8 w-8 text-violet-500" />
+        <AppLogoLink lang={lang} variant="circle" showLabel={false} />
         <h1 className="text-3xl font-bold tracking-tight text-white">AI Асистент</h1>
       </div>
       

@@ -1,10 +1,10 @@
-'use client';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import OfficiaHero from '@/components/OfficiaHero';
 import OfficiaSocialProof from '@/components/OfficiaSocialProof';
 import PricingSection from './PricingSection';
 import OfficiaFeatures from '@/components/OfficiaFeatures';
+import { AppLogoLink } from '@/components/brand/app-logo-link';
 
 const benefits = [
   'Пълно счетоводство по ЗДДС',
@@ -78,10 +78,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
       <footer className="border-t border-white/10 py-10 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center font-bold text-sm">O</div>
-            <span className="font-semibold">Officia</span>
-          </div>
+          <AppLogoLink lang={lang} variant="circle" />
           <p className="text-zinc-500 text-sm">© 2026 Officia. Направено с ❤️ за българския бизнес.</p>
           <div className="flex gap-6 text-sm text-zinc-500">
             <a href="#" className="hover:text-white transition-colors">Условия</a>

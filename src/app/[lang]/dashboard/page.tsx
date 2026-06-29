@@ -160,7 +160,7 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
                     <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>
                   </div>
                 ))}
-                <Link href={`/${lang}/dashboard/tasks`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
+                <Link href={`/${lang}/dashboard/ai-inbox`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
                   Отваряне на Inbox
                 </Link>
               </div>
@@ -189,7 +189,7 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
             ) : (
               <div className="flex justify-between items-center text-sm py-2">
                 <span className="text-muted-foreground">Имате {data?.overviewStats?.approvalsPending ?? 0} заявки за преглед.</span>
-                <Link href={`/${lang}/dashboard/tasks`} className="text-emerald-600 hover:underline font-medium">
+                <Link href={`/${lang}/dashboard/approvals`} className="text-emerald-600 hover:underline font-medium">
                   Преглед
                 </Link>
               </div>

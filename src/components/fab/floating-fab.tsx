@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 const ACTIONS = [
-  { label: "Нова фактура", href: "/dashboard/invoices/new", Icon: Receipt, color: "from-indigo-500 to-violet-600" },
-  { label: "Нов документ", href: "/dashboard/documents/new", Icon: FileText, color: "from-blue-500 to-cyan-600" },
-  { label: "Нов контрагент", href: "/dashboard/counterparties/new", Icon: Building2, color: "from-emerald-500 to-teal-600" },
-  { label: "Нова покупка", href: "/dashboard/purchase-invoices/new", Icon: ShoppingCart, color: "from-amber-500 to-orange-600" },
+  { label: "Нова фактура", href: "/dashboard/accounting/invoices/new", Icon: Receipt, color: "from-indigo-500 to-violet-600" },
+  { label: "Документи", href: "/dashboard/documents", Icon: FileText, color: "from-blue-500 to-cyan-600" },
+  { label: "Контрагенти", href: "/dashboard/counterparties", Icon: Building2, color: "from-emerald-500 to-teal-600" },
+  { label: "Покупки", href: "/dashboard/purchase-invoices", Icon: ShoppingCart, color: "from-amber-500 to-orange-600" },
 ];
 
 export function FloatingFAB() {
@@ -19,7 +19,7 @@ export function FloatingFAB() {
     <div className="fixed bottom-24 right-6 z-50 flex-col items-end gap-3" style={{display:'flex'}}>
       {open && (
         <>
-          <div className="fixed inset-0 z--1" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
           {ACTIONS.map((a) => (
             <Link key={a.label} href={`/${lang}${a.href}`} onClick={() => setOpen(false)} className="flex items-center gap-3 group">
               <span className="bg-zinc-800 border border-white/10 text-xs text-white px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg">{a.label}</span>

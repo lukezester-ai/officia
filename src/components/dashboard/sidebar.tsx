@@ -1,9 +1,10 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart, CheckSquare } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart, CheckSquare } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { AppLogoLink } from '@/components/brand/app-logo-link';
 
 export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
   const pathname = usePathname();
@@ -28,11 +29,8 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
   ];
   return (
     <div className="w-64 h-screen flex flex-col fixed left-0 top-0 z-50 bg-[#0A0F1C] border-r border-white/5">
-      <div className="px-5 py-5 flex items-center gap-2.5">
-        <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-violet-600">
-          <Sparkles size={16} className="text-white" />
-        </div>
-        <span className="text-white font-bold text-lg tracking-tight">Officia</span>
+      <div className="px-5 py-5">
+        <AppLogoLink lang={lang} />
       </div>
       <div className="mx-4 mb-4 h-px bg-white/10" />
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
