@@ -7,27 +7,56 @@ import postgres from 'postgres';
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
-const url = process.env.DATABASE_URL;
+const rawUrl = process.env.DATABASE_URL;
 
-if (!url) {
+if (!rawUrl) {
   console.error('❌ DATABASE_URL is not set');
   process.exit(1);
 }
 
+function normalizeDatabaseUrl(url) {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete('channel_binding');
+    return parsed.toString();
+  } catch {
+    return url
+      .replace(/([?&])channel_binding=[^&]*(&)?/g, (_, sep, amp) => (amp ? sep : ''))
+      .replace(/[?&]$/, '');
+  }
+}
+
+function needsPostgresSsl(url) {
+  return (
+    url.includes('neon.tech') ||
+    url.includes('render.com') ||
+    url.includes('sslmode=require') ||
+    url.includes('supabase.co')
+  );
+}
+
+function formatError(error) {
+  if (error instanceof AggregateError && error.errors?.length) {
+    return error.errors.map(formatError).join(' | ');
+  }
+  if (error instanceof Error) {
+    return error.message || error.stack || error.name;
+  }
+  return String(error);
+}
+
+const url = normalizeDatabaseUrl(rawUrl);
+process.env.DATABASE_URL = url;
+
 const masked = url.replace(/:\/\/([^:]+):([^@]+)@/, '://***:***@');
 console.log(`Database: ${masked}`);
 
-const needsSsl =
-  url.includes('render.com') ||
-  url.includes('sslmode=require') ||
-  url.includes('neon.tech') ||
-  url.includes('supabase.co');
-
-function createSql(url) {
+function createSql() {
   return postgres(url, {
     max: 1,
-    connect_timeout: 15,
-    ssl: needsSsl ? 'require' : undefined,
+    connect_timeout: 30,
+    prepare: false,
+    ssl: needsPostgresSsl(url) ? 'require' : undefined,
     onnotice: () => {},
   });
 }
@@ -99,8 +128,7 @@ try {
 
   console.log('✅ Database ready');
 } catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error('❌ Migration failed:', message);
+  console.error('❌ Migration failed:', formatError(error));
 
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
     console.error('\nStart local Postgres with: docker compose up -d\n');
@@ -108,5 +136,5 @@ try {
 
   process.exit(1);
 } finally {
-  await sql.end({ timeout: 5 });
+  await sql.end({ timeout: 5 }).catch(() => undefined);
 }
