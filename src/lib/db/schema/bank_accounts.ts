@@ -9,5 +9,8 @@ export const bankAccounts = pgTable('bank_accounts', {
   iban: text('iban'),
   balance: text('balance'),
   currency: text('currency').default('EUR'),
+  provider: text('provider').default('manual'),
+  externalRequisitionId: text('external_requisition_id'),
+  externalAccountId: text('external_account_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });

@@ -6,6 +6,7 @@ import { counterparties } from '@/lib/db/schema/counterparties';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { assertCanCreateInvoice } from '@/lib/billing/enforcement';
 
 async function getTenantContext() {
   const { tenantId } = await requireTenant();
@@ -25,6 +26,9 @@ export async function getPurchaseInvoices() {
 export async function createPurchaseInvoice(input: any) {
   try {
     const { tenantId } = await getTenantContext();
+    const quota = await assertCanCreateInvoice(tenantId);
+    if (!quota.ok) return { success: false, error: quota.error };
+
     const { lines, ...inv } = input;
     const computed = lines.map((l: any) => {
       const net = Math.round(l.quantity * l.unitPrice * 100) / 100;

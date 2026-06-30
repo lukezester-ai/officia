@@ -100,6 +100,34 @@ async function ensureProductCodes(sql) {
   console.log('✓ product_codes migration applied');
 }
 
+async function ensureTenantBilling(sql) {
+  const rows = await sql`
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'tenants' AND column_name = 'trial_ends_at'
+    LIMIT 1
+  `;
+  if (rows.length > 0) {
+    console.log('✓ tenant billing columns already exist');
+    return;
+  }
+
+  console.log('Applying tenant billing migration...');
+  await applySqlFile(sql, 'drizzle/migrations/0002_tenant_billing.sql');
+  console.log('✓ tenant billing migration applied');
+}
+
+async function ensureRlsRbacNapBank(sql) {
+  if (await tableExists(sql, 'user_roles')) {
+    console.log('✓ RLS/RBAC/NAP migration already applied');
+    return;
+  }
+
+  console.log('Applying RLS/RBAC/NAP/bank migration...');
+  await applySqlFile(sql, 'drizzle/migrations/0003_rls_rbac_nap_bank.sql');
+  console.log('✓ RLS/RBAC/NAP/bank migration applied');
+}
+
 async function runDrizzleKitMigrate() {
   execSync('npx drizzle-kit migrate', {
     stdio: 'inherit',
@@ -118,6 +146,8 @@ try {
   if (hasCoreSchema) {
     console.log('✓ Existing schema detected — running incremental migrations only');
     await ensureProductCodes(sql);
+    await ensureTenantBilling(sql);
+    await ensureRlsRbacNapBank(sql);
   } else {
     console.log('Fresh database — running full drizzle-kit migrate');
     await sql.end({ timeout: 5 });

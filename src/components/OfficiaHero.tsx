@@ -17,10 +17,10 @@ type MetricItem = {
 };
 
 const metricsData: MetricItem[] = [
-  { id: "active", numericValue: 500, suffix: "+", label: "Активни фирми", highlightColor: "purple", hasTrend: true },
-  { id: "invoices", numericValue: 10000, suffix: "+", label: "Обработени фактури", highlightColor: "white", hasTrend: true },
-  { id: "vat", numericValue: 100, suffix: "%", label: "ЗДДС съответствие", highlightColor: "purple" },
-  { id: "trial", numericValue: 14, suffix: " дни", label: "Безплатен trial", highlightColor: "purple" },
+  { id: "trial", numericValue: 14, suffix: " дни", label: "Пълен достъп при регистрация", highlightColor: "purple" },
+  { id: "starter", numericValue: 50, suffix: "", label: "Фактури/месец (Стартер)", highlightColor: "white" },
+  { id: "modules", numericValue: 3, suffix: "", label: "Модула: счетоводство, фактури, HR", highlightColor: "purple" },
+  { id: "lang", numericValue: 2, suffix: "", label: "Езика: BG и EN", highlightColor: "purple" },
 ];
 
 const easeOutQuart: [number, number, number, number] = [0.25, 1, 0.5, 1];
@@ -82,7 +82,7 @@ function MetricsStrip({ skipAnimations }: { skipAnimations: boolean }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">Live data</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">MVP продукт</span>
           </div>
           <div className="grid w-full flex-1 grid-cols-2 divide-white/[0.06] md:grid-cols-4 lg:divide-x">
             {metricsData.map((item) => <MetricTicker key={item.id} item={item} skip={skipAnimations} />)}
@@ -126,7 +126,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
           <div className="hidden items-center gap-10 md:flex">
             <a href="#features" className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Функции</a>
             <a href="#pricing" className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Цени</a>
-            <a href="#social-proof" className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Клиенти</a>
+            <a href="#social-proof" className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Възможности</a>
           </div>
           <div className="hidden items-center gap-4 md:flex">
             <Link href={signInHref} className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Вход</Link>
@@ -167,7 +167,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
 
             <motion.div initial={skip ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: skip ? 0 : 0.8 }} className="mt-6 flex items-center gap-2 text-sm font-medium text-[#6b6b8a]">
               <CheckCircle2 className="h-4 w-4 text-[#7c3aed]/60" />
-              <span>Без кредитна карта · 14 дни пълен достъп</span>
+              <span>14 дни пълен достъп · без кредитна карта</span>
             </motion.div>
           </div>
         </section>

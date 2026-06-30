@@ -2,13 +2,18 @@
 
 import { db } from '@/lib/db/db';
 import { fixedAssets } from '@/lib/db/schema/fixed_assets';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function getAssetsData() {
   try {
-    const assets = await db.select().from(fixedAssets).orderBy(desc(fixedAssets.acquisitionDate));
-    
-    // AI Warnings Logic
+    const { tenantId } = await requireTenant();
+    const assets = await db
+      .select()
+      .from(fixedAssets)
+      .where(eq(fixedAssets.tenantId, tenantId))
+      .orderBy(desc(fixedAssets.acquisitionDate));
+
     const problems = [];
     for (const a of assets) {
       if (!a.documentId) {
@@ -16,12 +21,9 @@ export async function getAssetsData() {
       }
     }
 
-    return { 
-      success: true, 
-      data: {
-        assets,
-        problems
-      }
+    return {
+      success: true,
+      data: { assets, problems },
     };
   } catch (error: any) {
     return { success: false, error: error.message };

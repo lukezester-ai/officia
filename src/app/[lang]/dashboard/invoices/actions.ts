@@ -8,7 +8,8 @@ import { tenants } from '@/lib/db/schema/tenants';
 import { eq, desc, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
-import { requireTenant } from '@/lib/auth/get-tenant';
+import { requireTenant, withTenantDb } from '@/lib/auth/get-tenant';
+import { assertCanCreateInvoice } from '@/lib/billing/enforcement';
 
 async function getTenant() {
   const { tenant } = await requireTenant();
@@ -19,9 +20,13 @@ export async function getInvoices() {
   try {
     const tenant = await getTenant();
     if (!tenant) return { success: false, error: 'Липсва Tenant', data: [] };
-    const data = await db.select().from(invoices)
-      .where(eq(invoices.tenantId, tenant.id))
-      .orderBy(desc(invoices.createdAt));
+    const data = await withTenantDb((tx) =>
+      tx
+        .select()
+        .from(invoices)
+        .where(eq(invoices.tenantId, tenant.id))
+        .orderBy(desc(invoices.createdAt)),
+    );
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message, data: [] };
@@ -77,6 +82,9 @@ export async function createInvoice(input: {
   try {
     const tenant = await getTenant();
     if (!tenant) return { success: false, error: 'Липсва Tenant' };
+
+    const quota = await assertCanCreateInvoice(tenant.id);
+    if (!quota.ok) return { success: false, error: quota.error };
 
     const computedLines = input.lines.map(l => {
       const lineNet = Math.round(l.quantity * l.unitPrice * 100) / 100;
@@ -135,10 +143,13 @@ export async function issueInvoice(id: string) {
     const invoiceId = await parseInvoiceId(id);
     if (invoiceId === null) return { success: false, error: 'Невалиден ID' };
 
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
+    const [invoice] = await db
+      .select()
+      .from(invoices)
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenant.id)));
     if (!invoice) return { success: false, error: 'Не е намерена' };
 
-    await db.update(invoices).set({ status: 'issued' }).where(eq(invoices.id, invoiceId));
+    await db.update(invoices).set({ status: 'issued' }).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenant.id)));
 
     if (!invoice.vatPosted) {
       const issueDateStr = invoice.issueDate || new Date().toISOString().slice(0, 10);
@@ -168,9 +179,14 @@ export async function issueInvoice(id: string) {
 
 export async function markInvoicePaid(id: string) {
   try {
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant' };
     const invoiceId = await parseInvoiceId(id);
     if (invoiceId === null) return { success: false, error: 'Невалиден ID' };
-    await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, invoiceId));
+    await db
+      .update(invoices)
+      .set({ status: 'paid' })
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenant.id)));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -180,9 +196,14 @@ export async function markInvoicePaid(id: string) {
 
 export async function cancelInvoice(id: string) {
   try {
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant' };
     const invoiceId = await parseInvoiceId(id);
     if (invoiceId === null) return { success: false, error: 'Невалиден ID' };
-    await db.update(invoices).set({ status: 'cancelled' }).where(eq(invoices.id, invoiceId));
+    await db
+      .update(invoices)
+      .set({ status: 'cancelled' })
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenant.id)));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {

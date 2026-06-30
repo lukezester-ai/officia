@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { getBankAccounts, getBankTransactions, reconcileTransaction, seedMockBan
 import { BankConnectModal } from '@/components/dashboard/BankConnectModal';
 
 export default function BankingPage() {
+  const searchParams = useSearchParams();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,30 @@ export default function BankingPage() {
   }
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    if (searchParams.get('connected') === '1') {
+      toast.success('Банковата сметка е свързана. Синхронизирайте транзакциите.');
+    }
+    if (searchParams.get('error')) {
+      toast.error('Грешка при свързване с банката.');
+    }
+  }, [searchParams]);
+
+  const handlePsd2Sync = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/bank/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Sync failed');
+      toast.success(`Синхронизирани ${data.imported} транзакции от PSD2.`);
+      await loadData();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Sync failed');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleRefresh = async () => { await loadData(); toast.success('Данните са опреснени.'); };
 
@@ -104,6 +130,9 @@ export default function BankingPage() {
           <Button onClick={handleOpenConnect} variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
             <Plus size={16} /> Свържи Банка
           </Button>
+          <Button onClick={handlePsd2Sync} disabled={isSyncing} variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10">
+            <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} /> PSD2 Sync
+          </Button>
           <Button onClick={handleAIMatch} disabled={isSyncing} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-violet-500/50">
             <Sparkles size={16} className={isSyncing ? 'animate-pulse text-amber-300' : 'text-amber-300'} />
             {isSyncing ? 'AI Анализира...' : 'AI Съпоставяне'}
@@ -118,7 +147,7 @@ export default function BankingPage() {
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <CreditCard size={40} className="text-zinc-600" />
             <p className="text-zinc-400 text-sm text-center">
-              Няма свързани банкови сметки.<br />Използвай бутона „Свържи Банка" за да генерираш демо данни.
+              Няма свързани банкови сметки.<br />PSD2 (Nordigen) или демо режим чрез „Свържи Банка".
             </p>
           </CardContent>
         </Card>

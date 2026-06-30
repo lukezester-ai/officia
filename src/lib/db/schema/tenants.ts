@@ -6,5 +6,9 @@ export const tenants = pgTable('tenants', {
   bulstat: text('bulstat').unique(),
   vatNumber: text('vat_number'),
   address: text('address'),
+  plan: text('plan').default('starter'),
+  trialEndsAt: timestamp('trial_ends_at'),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });

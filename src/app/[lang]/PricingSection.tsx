@@ -50,8 +50,8 @@ const plans: PricingPlan[] = [
     features: [
       "Неограничени фактури",
       "AI анализ на документи",
-      "Банкова синхронизация",
-      "До 10 потребители",
+      "Банков demo + Pro PSD2 (roadmap)",
+      "До 10 потребители (roadmap)",
       "Приоритетна поддръжка",
     ],
     ctaText: "Започни пробния период",
@@ -60,7 +60,7 @@ const plans: PricingPlan[] = [
   },
 ];
 
-const footerLinks = ["99.9% uptime", "GDPR compliant", "Поддръжка на BG/EN"];
+const footerLinks = ['14 дни trial', 'Clerk автентикация', 'Поддръжка BG/EN'];
 
 export default function PricingSection({ lang }: { lang: string }) {
   const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
@@ -287,14 +287,14 @@ export default function PricingSection({ lang }: { lang: string }) {
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col items-center gap-4 opacity-40 transition-opacity hover:opacity-70 sm:flex-row sm:gap-8">
+          <div className="mt-10 flex flex-col items-center gap-4 opacity-60">
             <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-slate-400">
               <Building2 className="h-4 w-4" />
-              <span>TRUSTED BY 500+ BG BUSINESSES</span>
+              <span>ЧЕСТНИ ЦЕНИ · БЕЗ СКРИТИ ТАКСИ</span>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-slate-400">
               <Shield className="h-4 w-4" />
-              <span>BANK-LEVEL SECURITY</span>
+              <span>CLERK + POSTGRESQL</span>
             </div>
           </div>
         </div>

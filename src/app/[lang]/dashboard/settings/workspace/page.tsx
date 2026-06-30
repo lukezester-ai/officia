@@ -5,10 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getTenantProfile, updateTenantProfile } from './actions';
+import { getBillingSummary } from '@/lib/billing/actions';
+import { BillingPlanCard } from './BillingPlanCard';
 import { toast } from 'sonner';
+import { useParams } from 'next/navigation';
+
 import { Building2, Save } from 'lucide-react';
 
 export default function WorkspaceSettingsPage() {
+  const params = useParams();
+  const lang = String(params?.lang ?? 'bg');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,16 +24,27 @@ export default function WorkspaceSettingsPage() {
     address: '',
   });
 
+  const [billing, setBilling] = useState<{
+    plan: string;
+    trialEndsAt: string | null;
+    usedInvoices: number;
+    invoiceLimit: number | null;
+    bankSync: boolean;
+  } | null>(null);
+
   useEffect(() => {
     async function load() {
-      const res = await getTenantProfile();
-      if (res.success && res.data) {
+      const [profileRes, billingRes] = await Promise.all([getTenantProfile(), getBillingSummary()]);
+      if (profileRes.success && profileRes.data) {
         setFormData({
-          name: res.data.name || '',
-          bulstat: res.data.bulstat || '',
-          vatNumber: res.data.vatNumber || '',
-          address: res.data.address || '',
+          name: profileRes.data.name || '',
+          bulstat: profileRes.data.bulstat || '',
+          vatNumber: profileRes.data.vatNumber || '',
+          address: profileRes.data.address || '',
         });
+      }
+      if (billingRes.success && billingRes.data) {
+        setBilling(billingRes.data);
       }
       setLoading(false);
     }
@@ -58,6 +75,8 @@ export default function WorkspaceSettingsPage() {
           Тези данни се използват за издаване на фактури и генериране на данъчни декларации.
         </p>
       </div>
+
+      {billing && <BillingPlanCard lang={lang} initial={billing} />}
 
       <Card className="shadow-sm border-0 ring-1 ring-black/5">
         <CardHeader className="bg-gray-50/50 border-b pb-4">

@@ -8,6 +8,7 @@ import { FileText, CheckCircle, Clock, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { NewInvoiceDialog } from './_form';
 import { InvoiceTable } from './_table';
+import { ExportInvoicesButton } from './ExportInvoicesButton';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -59,7 +60,10 @@ export default function InvoicesPageContent() {
           <h1 className="text-2xl font-bold tracking-tight">Фактури</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Издаване и управление на фактури.</p>
         </div>
-        <NewInvoiceDialog onCreated={load} defaultOpen={autoNew} />
+        <div className="flex items-center gap-3">
+          <ExportInvoicesButton invoices={invoices} />
+          <NewInvoiceDialog onCreated={load} defaultOpen={autoNew} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

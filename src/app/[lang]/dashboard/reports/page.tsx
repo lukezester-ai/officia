@@ -1,8 +1,10 @@
+import Link from 'next/link';
 import React from 'react';
 import { getReportsData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { BrainCircuit, TrendingUp, TrendingDown, AlertTriangle, ArrowRight, CheckCircle2, Bookmark, Download } from 'lucide-react';
 
@@ -10,7 +12,8 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function ReportsPage() {
+export default async function ReportsPage(props: { params: Promise<{ lang: string }> }) {
+  const { lang } = await props.params;
   const res = await getReportsData();
   const data = res.success && res.data ? res.data : {
     revenue: 0, expenses: 0, profit: 0, totalUnpaidSales: 0, totalUnpaidPurchases: 0, overdueCount: 0,
@@ -24,9 +27,12 @@ export default async function ReportsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Отчети & CFO Copilot</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Управленски анализи и AI бизнес съвети.</p>
         </div>
-        <Button className="gap-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200">
-          <Download size={16} /> Експорт (PDF)
-        </Button>
+        <Link
+          href={`/${lang}/dashboard/accounting/reports/balance`}
+          className={cn(buttonVariants(), 'gap-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200')}
+        >
+          <Download size={16} /> Отчети (PDF/Excel)
+        </Link>
       </div>
 
       {/* CFO Copilot Panel */}

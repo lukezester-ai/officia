@@ -2,6 +2,8 @@ import { clerkClient } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/db';
 import { users, tenants } from '@/lib/db/schema';
+import { TRIAL_DAYS } from '@/lib/billing/plans';
+import { assignUserRole } from '@/lib/auth/rbac';
 
 export async function provisionUserFromClerk(clerkId: string) {
   const existing = await db.select().from(users).where(eq(users.clerkId, clerkId));
@@ -22,7 +24,17 @@ export async function provisionUserFromClerk(clerkId: string) {
   const name = `${firstName} ${lastName}`.trim() || email;
   const tenantName = name ? `${name} - фирма` : 'Нова Фирма';
 
-  const [newTenant] = await db.insert(tenants).values({ name: tenantName }).returning();
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DAYS);
+
+  const [newTenant] = await db
+    .insert(tenants)
+    .values({
+      name: tenantName,
+      plan: 'starter',
+      trialEndsAt,
+    })
+    .returning();
 
   const [newUser] = await db
     .insert(users)
@@ -37,6 +49,8 @@ export async function provisionUserFromClerk(clerkId: string) {
   await client.users.updateUser(clerkId, {
     publicMetadata: { tenantId: newTenant.id },
   });
+
+  await assignUserRole(newTenant.id, newUser.id, 'owner');
 
   return newUser;
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/lib/db/db';
-import { invoices } from '@/lib/db/schema';
+import { invoices, tenants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -40,14 +40,41 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const invoiceIdStr = session.metadata?.invoiceId;
+    const tenantId = session.metadata?.tenantId;
 
     if (invoiceIdStr) {
       const invoiceId = parseInt(invoiceIdStr, 10);
+      await db
+        .update(invoices)
+        .set({ status: 'paid', updatedAt: new Date() })
+        .where(eq(invoices.id, invoiceId));
+    }
 
-      await db.update(invoices).set({
-        status: 'paid',
-        updatedAt: new Date(),
-      }).where(eq(invoices.id, invoiceId));
+    if (tenantId && session.mode === 'subscription') {
+      await db
+        .update(tenants)
+        .set({
+          plan: 'pro',
+          stripeCustomerId: typeof session.customer === 'string' ? session.customer : null,
+          stripeSubscriptionId:
+            typeof session.subscription === 'string' ? session.subscription : null,
+        })
+        .where(eq(tenants.id, tenantId));
+    }
+  }
+
+  if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+    const subscription = event.data.object as Stripe.Subscription;
+    const tenantId = subscription.metadata?.tenantId;
+    if (tenantId) {
+      const active = subscription.status === 'active' || subscription.status === 'trialing';
+      await db
+        .update(tenants)
+        .set({
+          plan: active ? 'pro' : 'starter',
+          stripeSubscriptionId: active ? subscription.id : null,
+        })
+        .where(eq(tenants.id, tenantId));
     }
   }
 

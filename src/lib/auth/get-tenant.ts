@@ -4,6 +4,8 @@ import { users } from '@/lib/db/schema/users';
 import { tenants } from '@/lib/db/schema/tenants';
 import { eq } from 'drizzle-orm';
 import { provisionUserFromClerk } from '@/lib/auth/provision-user';
+import { getUserRole, type AppRole } from '@/lib/auth/rbac';
+import { withTenantContext, type DbClient } from '@/lib/db/tenant-db';
 
 /**
  * Взима текущия tenant (работно пространство) за логнатия потребител.
@@ -11,13 +13,13 @@ import { provisionUserFromClerk } from '@/lib/auth/provision-user';
  */
 export async function requireTenant() {
   const { userId } = await auth();
-  
+
   if (!userId) {
     throw new Error('Not authenticated');
   }
 
   let userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
-  
+
   if (userRecords.length === 0) {
     await provisionUserFromClerk(userId);
     userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
@@ -28,18 +30,27 @@ export async function requireTenant() {
   }
 
   const tenantId = userRecords[0].tenantId;
-  
+
   if (!tenantId) {
     throw new Error('User does not belong to any tenant');
   }
 
-  // Извличаме и данните за самия tenant (ако трябват)
   const tenantRecords = await db.select().from(tenants).where(eq(tenants.id, tenantId));
-  
+  const role = await getUserRole(tenantId, userRecords[0].id);
+
   return {
     tenantId,
     tenant: tenantRecords[0] || null,
     userId,
     user: userRecords[0],
+    role,
   };
+}
+
+export async function withTenantDb<T>(fn: (database: DbClient) => Promise<T>): Promise<T> {
+  const ctx = await requireTenant();
+  return withTenantContext(
+    { tenantId: ctx.tenantId, userId: ctx.user.id, role: ctx.role as AppRole },
+    fn,
+  );
 }

@@ -3,7 +3,8 @@ import { getPayrollData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Calculator, Download, CheckCircle, Wallet, Landmark, TrendingDown, Users } from 'lucide-react';
+import { Calculator, CheckCircle, Wallet, Landmark, TrendingDown, Users } from 'lucide-react';
+import { PayrollExportButton } from './PayrollExportButton';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -12,6 +13,17 @@ function fmt(n: number) {
 export default async function PayrollPage() {
   const res = await getPayrollData();
   const data = res.data || { list: [], totals: { gross: 0, doo: 0, dzpo: 0, zzo: 0, tax: 0, net: 0, totalDeductions: 0 } };
+
+  const exportRows = data.list.map((emp: any) => ({
+    name: `${emp.firstName} ${emp.lastName}`,
+    position: emp.position || '—',
+    gross: emp.gross,
+    doo: emp.doo,
+    dzpo: emp.dzpo,
+    zzo: emp.zzo,
+    tax: emp.tax,
+    net: emp.net,
+  }));
 
   return (
     <div className="space-y-8 pb-10">
@@ -24,9 +36,7 @@ export default async function PayrollPage() {
           <p className="text-sm text-zinc-400 mt-1">Калкулиране на възнаграждения, осигуровки и данъци (ДОД).</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white">
-            <Download size={16} /> Експорт CSV
-          </Button>
+          <PayrollExportButton rows={exportRows} />
           <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500/50">
             <CheckCircle size={16} /> Потвърди и Осчетоводи
           </Button>

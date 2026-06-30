@@ -7,14 +7,14 @@ import OfficiaFeatures from '@/components/OfficiaFeatures';
 import { AppLogoLink } from '@/components/brand/app-logo-link';
 
 const benefits = [
-  'Пълно счетоводство по ЗДДС',
-  'AI извличане на данни от документи',
-  'Автоматично ДДС осчетоводяване',
-  'Многопотребителски достъп',
-  'Тъмен и светъл режим',
-  'Мобилно-приятелски дизайн',
-  'Безопасен cloud достъп',
-  'Поддръжка на български и английски',
+  'Счетоводство и журнални записи',
+  'AI извличане от снимки и PDF',
+  'ДДС дневници и ZIP за НАП',
+  'Фактури продажби и покупки',
+  'HR и payroll калкулации',
+  'BG/EN интерфейс',
+  'Clerk вход и tenant изолация',
+  'Експорт CSV/Excel/PDF (отчети)',
 ];
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -49,15 +49,15 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center"><Shield size={18} /></div>
                 <div>
-                  <div className="font-semibold">Сигурен и надежден</div>
-                  <div className="text-sm text-zinc-400">Enterprise-grade сигурност</div>
+                  <div className="font-semibold">Сигурност по дизайн</div>
+                  <div className="text-sm text-zinc-400">Clerk + PostgreSQL + tenant изолация</div>
                 </div>
               </div>
               <div className="space-y-4 text-sm text-zinc-400">
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Clerk автентикация с MFA и SSO поддръжка</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Multi-tenant архитектура — данните ти са изолирани</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>PostgreSQL с Drizzle ORM за надеждно съхранение</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Автоматични бекъпи и cloud хостинг</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Clerk автентикация (MFA/SSO чрез Clerk настройки)</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Multi-tenant — всеки workspace вижда само своите данни</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>PostgreSQL + Drizzle ORM</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Rate limiting на OCR и AI endpoints</span></div>
               </div>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да автоматизираш офиса си?</h2>
-          <p className="text-zinc-400 mb-8">Присъедини се към фирмите, които вече работят по-умно с Officia.</p>
+          <p className="text-zinc-400 mb-8">Регистрирай се безплатно — 14 дни пълен достъп, после честни лимити по план.</p>
           <Link href={signUpHref} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
             Стартирай безплатно <ArrowRight size={18} />
           </Link>
@@ -81,8 +81,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           <AppLogoLink lang={lang} variant="circle" />
           <p className="text-zinc-500 text-sm">© 2026 Officia. Направено с ❤️ за българския бизнес.</p>
           <div className="flex gap-6 text-sm text-zinc-500">
-            <a href="#" className="hover:text-white transition-colors">Условия</a>
-            <a href="#" className="hover:text-white transition-colors">Поверителност</a>
+            <Link href={`/${lang}/terms`} className="hover:text-white transition-colors">Условия</Link>
+            <Link href={`/${lang}/privacy`} className="hover:text-white transition-colors">Поверителност</Link>
           </div>
         </div>
       </footer>

@@ -147,10 +147,23 @@ export default async function PublicInvoicePage({
             </div>
           </CardContent>
           
-          <CardFooter className="bg-slate-50 flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-200">
-            <Button variant="outline" className="w-full sm:w-auto mb-4 sm:mb-0">
-              <span className="mr-2" aria-hidden="true">PDF</span> Download PDF
-            </Button>
+          <CardFooter className="bg-slate-50 flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-200 gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <a
+                href={`/api/invoices/${invoiceId}/pdf`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 w-full sm:w-auto"
+              >
+                <Download className="h-4 w-4" />
+                PDF
+              </a>
+              <a
+                href={`/api/invoices/${invoiceId}/docx`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 w-full sm:w-auto"
+              >
+                <Download className="h-4 w-4" />
+                Word
+              </a>
+            </div>
             
             {!isPaid && (
               <StripeCheckoutButton invoiceId={invoiceId} amount={invoice.totalAmount || invoice.total || invoice.amount || "0.00"} />

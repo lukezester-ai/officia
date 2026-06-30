@@ -13,7 +13,7 @@ export const documentSchema = z.object({
 
 export async function processDocumentImage(base64Image: string, mimeType: string) {
   const model = getAnthropicChatModel();
-  const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
+  const cleanBase64 = base64Image.replace(/^data:[^;]+;base64,/, '');
 
   const { object } = await generateObject({
     model,
@@ -38,4 +38,36 @@ export async function processDocumentImage(base64Image: string, mimeType: string
   });
 
   return object;
+}
+
+export async function processDocumentText(rawText: string) {
+  const model = getAnthropicChatModel();
+
+  const { object } = await generateObject({
+    model,
+    schema: documentSchema,
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You extract structured invoice/receipt fields from plain text (often from a PDF). Return accurate fields; use defaults when missing.',
+      },
+      {
+        role: 'user',
+        content: `Extract invoice fields from this document text:\n\n${rawText.slice(0, 12000)}`,
+      },
+    ],
+  });
+
+  return object;
+}
+
+export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
+  try {
+    const pdfParse = (await import('pdf-parse')).default;
+    const parsed = await pdfParse(buffer);
+    return parsed.text?.trim() ?? '';
+  } catch {
+    throw new Error('PDF parsing is unavailable. Upload JPG/PNG or install pdf-parse.');
+  }
 }
