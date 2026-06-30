@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Building2, Check, Shield, Zap } from "lucide-react";
+import { Building2, Check, Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type BillingCycle = "monthly" | "annual";
@@ -18,9 +18,8 @@ interface PricingPlan {
   annualNote?: string;
   features: string[];
   ctaText: string;
-  ctaVariant: "outline" | "solid" | "amber";
+  ctaVariant: "outline" | "solid";
   isPopular?: boolean;
-  isEnterprise?: boolean;
 }
 
 const plans: PricingPlan[] = [
@@ -59,25 +58,6 @@ const plans: PricingPlan[] = [
     ctaVariant: "solid",
     isPopular: true,
   },
-  {
-    id: "enterprise",
-    name: "ENTERPRISE",
-    labelColor: "text-amber-400",
-    priceMonthly: "По заявка",
-    priceAnnual: "По заявка",
-    subtitle: "За счетоводни кантори и холдинги",
-    features: [
-      "Неограничени фирми/workspace-ове",
-      "Бял етикет (white-label)",
-      "Dedicated account manager",
-      "НАП директна интеграция",
-      "SLA гаранция",
-      "Персонализирано обучение",
-    ],
-    ctaText: "Свържи се с нас",
-    ctaVariant: "amber",
-    isEnterprise: true,
-  },
 ];
 
 const footerLinks = ["99.9% uptime", "GDPR compliant", "Поддръжка на BG/EN"];
@@ -85,7 +65,6 @@ const footerLinks = ["99.9% uptime", "GDPR compliant", "Поддръжка на 
 export default function PricingSection({ lang }: { lang: string }) {
   const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
   const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
-  const registerHref = `/register?redirect_url=${authRedirect}`;
   const [billingCycle, setBillingCycle] = React.useState<BillingCycle>("annual");
   const reducedMotion = useReducedMotion();
   const transition = reducedMotion
@@ -168,7 +147,7 @@ export default function PricingSection({ lang }: { lang: string }) {
           </div>
         </div>
 
-        <div className="grid w-full max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid w-full max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.id}
@@ -183,9 +162,7 @@ export default function PricingSection({ lang }: { lang: string }) {
                   "flex w-full flex-col rounded-2xl p-8 transition-all",
                   plan.isPopular
                     ? "border border-transparent bg-[#130d2a] shadow-[0_0_40px_rgba(124,58,237,0.25),inset_0_0_0_1px_rgba(124,58,237,0.45)]"
-                    : plan.isEnterprise
-                      ? "border border-amber-500/20 bg-[#111120]"
-                      : "border border-white/10 bg-[#111120]",
+                    : "border border-white/10 bg-[#111120]",
                 )}
               >
                 {plan.isPopular && (
@@ -259,7 +236,7 @@ export default function PricingSection({ lang }: { lang: string }) {
                 <div
                   className={cn(
                     "mb-7 h-px",
-                    plan.isPopular ? "bg-violet-500/25" : plan.isEnterprise ? "bg-amber-500/15" : "bg-white/10",
+                    plan.isPopular ? "bg-violet-500/25" : "bg-white/10",
                   )}
                 />
 
@@ -269,7 +246,7 @@ export default function PricingSection({ lang }: { lang: string }) {
                       <Check
                         className={cn(
                           "mt-0.5 h-4 w-4 shrink-0",
-                          plan.isEnterprise ? "text-amber-400" : plan.isPopular ? "text-[#a78bfa]" : "text-slate-500",
+                          plan.isPopular ? "text-[#a78bfa]" : "text-slate-500",
                         )}
                         strokeWidth={2.5}
                       />
@@ -281,18 +258,15 @@ export default function PricingSection({ lang }: { lang: string }) {
                 </ul>
 
                 <Link
-                  href={plan.isEnterprise ? registerHref : signUpHref}
+                  href={signUpHref}
                   className={cn(
                     "flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors",
                     plan.ctaVariant === "solid"
                       ? "bg-[#7c3aed] text-white shadow-[0_4px_24px_rgba(124,58,237,0.3)] hover:bg-[#6d28d9]"
-                      : plan.ctaVariant === "amber"
-                        ? "border border-amber-500/40 bg-transparent text-amber-400 hover:border-amber-400 hover:bg-amber-500/10"
-                        : "border border-white/15 bg-transparent text-slate-200 hover:border-white/25 hover:bg-white/5",
+                      : "border border-white/15 bg-transparent text-slate-200 hover:border-white/25 hover:bg-white/5",
                   )}
                 >
                   <span>{plan.ctaText}</span>
-                  {plan.isEnterprise && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />}
                 </Link>
               </div>
             </motion.div>

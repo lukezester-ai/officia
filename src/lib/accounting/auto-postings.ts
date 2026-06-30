@@ -18,6 +18,17 @@ export interface AutoPostingInput {
   reference?: string;
   description?: string;
   date?: Date;
+  documentType?: string;
+  postedBy?: string;
+  aiStatus?: string;
+  aiConfidence?: string;
+  aiReasoning?: string;
+}
+
+export interface AutoPostingResult {
+  journalHeaderId: string;
+  journalNumber: string;
+  linesCreated: number;
 }
 
 function buildLines(input: AutoPostingInput): PostingLine[] {
@@ -72,9 +83,9 @@ async function getAccountIdByNumber(tenantId: string, accountNumber: string) {
   return account?.id ?? null;
 }
 
-export async function createAutoPostings(input: AutoPostingInput): Promise<void> {
+export async function createAutoPostings(input: AutoPostingInput): Promise<AutoPostingResult | null> {
   const lines = buildLines(input);
-  if (lines.length === 0) return;
+  if (lines.length === 0) return null;
 
   const entryDate = input.date ?? new Date();
   const refNum = input.reference ?? `AUTO-${Date.now()}`;
@@ -86,7 +97,13 @@ export async function createAutoPostings(input: AutoPostingInput): Promise<void>
       journalNumber: refNum,
       entryDate,
       description: input.description ?? 'Automatic posting',
+      documentType: input.documentType,
       status: 'posted',
+      postedBy: input.postedBy,
+      postedAt: new Date(),
+      aiStatus: input.aiStatus ?? 'verified',
+      aiConfidence: input.aiConfidence,
+      aiReasoning: input.aiReasoning,
     })
     .returning();
 
@@ -94,14 +111,16 @@ export async function createAutoPostings(input: AutoPostingInput): Promise<void>
 
   for (const line of lines) {
     const accountId = await getAccountIdByNumber(input.tenantId, line.account);
-    if (!accountId) continue;
+    if (!accountId) {
+      throw new Error(`Липсва сметка ${line.account} в сметкоплана`);
+    }
 
     if (line.debit > 0) {
       journalLineValues.push({
         journalId: header.id,
         accountId,
         entryType: 'debit',
-        amount: String(line.debit),
+        amount: line.debit.toFixed(2),
         description: line.description,
       });
     }
@@ -111,13 +130,22 @@ export async function createAutoPostings(input: AutoPostingInput): Promise<void>
         journalId: header.id,
         accountId,
         entryType: 'credit',
-        amount: String(line.credit),
+        amount: line.credit.toFixed(2),
         description: line.description,
       });
     }
   }
 
-  if (journalLineValues.length > 0) {
-    await db.insert(journalLines).values(journalLineValues);
+  if (journalLineValues.length === 0) {
+    await db.delete(journalHeaders).where(eq(journalHeaders.id, header.id));
+    throw new Error('Не са създадени счетоводни редове');
   }
+
+  await db.insert(journalLines).values(journalLineValues);
+
+  return {
+    journalHeaderId: header.id,
+    journalNumber: refNum,
+    linesCreated: journalLineValues.length,
+  };
 }
