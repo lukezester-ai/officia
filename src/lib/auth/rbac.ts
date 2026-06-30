@@ -1,13 +1,11 @@
+import 'server-only';
+
 import { db } from '@/lib/db/db';
 import { userRoles } from '@/lib/db/schema/access';
 import { and, eq } from 'drizzle-orm';
+import { type AppRole, INVITABLE_ROLES } from './rbac-shared';
 
-export type AppRole =
-  | 'owner'
-  | 'senior_accountant'
-  | 'junior_accountant'
-  | 'auditor'
-  | 'tax_consultant';
+export { type AppRole, INVITABLE_ROLES } from './rbac-shared';
 
 const PERMISSIONS: Record<AppRole, string[]> = {
   owner: ['*'],
@@ -78,10 +76,3 @@ export async function requirePermission(
   }
   return { ok: true, role };
 }
-
-export const INVITABLE_ROLES: AppRole[] = [
-  'senior_accountant',
-  'junior_accountant',
-  'auditor',
-  'tax_consultant',
-];

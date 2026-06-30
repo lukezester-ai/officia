@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createTeamInvite, getTeamMembers } from './actions';
-import { INVITABLE_ROLES, type AppRole } from '@/lib/auth/rbac';
+import { INVITABLE_ROLES, type AppRole } from '@/lib/auth/rbac-shared';
 import { toast } from 'sonner';
 import { Copy, UserPlus, Users } from 'lucide-react';
 
