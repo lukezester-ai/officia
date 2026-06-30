@@ -15,17 +15,63 @@ export interface AccountingAnalysisResult {
   notes: string;
 }
 
+import { anthropicClient } from './anthropic-client';
+import { z } from 'zod';
+
+// Zod schema matching the TypeScript interface
+const AccountingSchema = z.object({
+  invoiceNumber: z.string(),
+  issueDate: z.string(),
+  supplierName: z.string(),
+  supplierEik: z.string(),
+  supplierVat: z.string(),
+  lines: z.array(
+    z.object({
+      description: z.string(),
+      quantity: z.number(),
+      unitPrice: z.number(),
+      vatRate: z.number(),
+    })
+  ),
+  suggestedAccount: z.string(),
+  notes: z.string(),
+});
+
 export class AccountingAnalyzer {
   static async analyzeText(text: string): Promise<AccountingAnalysisResult> {
-    // In production, this would call OpenAI/Anthropic structured outputs
-    // e.g. using `generateObject` from 'ai'
-    
-    // Simulating AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const prompt = `
+Extract the following fields from the Bulgarian invoice text and return them as JSON matching the provided schema:
+- invoiceNumber
+- issueDate (YYYY-MM-DD)
+- supplierName
+- supplierEik
+- supplierVat
+- lines[] { description, quantity, unitPrice, vatRate }
+- suggestedAccount (suggested chart-of-accounts code)
+- notes (optional free-text)
 
+Invoice text:
+"""${text}"""
+    `;
+    try {
+      const result = await anthropicClient.generateObject({
+        model: process.env.ANTHROPIC_MODEL,
+        schema: AccountingSchema,
+        prompt,
+      });
+      return result as AccountingAnalysisResult;
+    } catch (err) {
+      console.error('Anthropic call failed, falling back to mock analyzer', err);
+      return AccountingAnalyzer.mockAnalyze(text);
+    }
+  }
+
+  // Mock fallback logic (unchanged)
+  private static async mockAnalyze(text: string): Promise<AccountingAnalysisResult> {
+    // Simulating AI processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const lowerText = text.toLowerCase();
-    
-    // Mock logic based on keywords
+
     if (lowerText.includes('хостинг') || lowerText.includes('сървър') || lowerText.includes('aws') || lowerText.includes('hosting')) {
       return {
         invoiceNumber: `INV-${Math.floor(Math.random() * 10000)}`,
@@ -37,15 +83,15 @@ export class AccountingAnalyzer {
           {
             description: 'Месечен абонамент за облачен хостинг (VPS)',
             quantity: 1,
-            unitPrice: 120.00,
-            vatRate: 20
-          }
+            unitPrice: 120.0,
+            vatRate: 20,
+          },
         ],
         suggestedAccount: '602 Разходи за външни услуги (Хостинг)',
-        notes: 'Автоматично разпознато от AI: Разход за IT инфраструктура.'
+        notes: 'Автоматично разпознато от AI: Разход за IT инфраструктура.',
       };
     }
-    
+
     if (lowerText.includes('еконт') || lowerText.includes('спиди') || lowerText.includes('куриер')) {
       return {
         invoiceNumber: `ECNT-${Math.floor(Math.random() * 10000)}`,
@@ -57,12 +103,12 @@ export class AccountingAnalyzer {
           {
             description: 'Куриерски услуги',
             quantity: 1,
-            unitPrice: 45.50,
-            vatRate: 20
-          }
+            unitPrice: 45.5,
+            vatRate: 20,
+          },
         ],
         suggestedAccount: '602 Разходи за външни услуги (Куриерски)',
-        notes: 'Автоматично разпознато от AI: Разход за транспорт/куриери.'
+        notes: 'Автоматично разпознато от AI: Разход за транспорт/куриери.',
       };
     }
 
@@ -77,12 +123,12 @@ export class AccountingAnalyzer {
           {
             description: 'Наем на офис помещение',
             quantity: 1,
-            unitPrice: 1500.00,
-            vatRate: 20
-          }
+            unitPrice: 1500.0,
+            vatRate: 20,
+          },
         ],
         suggestedAccount: '602 Разходи за външни услуги (Наем)',
-        notes: 'Автоматично разпознато от AI: Разход за наем.'
+        notes: 'Автоматично разпознато от AI: Разход за наем.',
       };
     }
 
@@ -97,12 +143,12 @@ export class AccountingAnalyzer {
         {
           description: text.substring(0, 50) + '...',
           quantity: 1,
-          unitPrice: 0.00,
-          vatRate: 20
-        }
+          unitPrice: 0.0,
+          vatRate: 20,
+        },
       ],
       suggestedAccount: '609 Други разходи',
-      notes: 'Моля, прегледайте ръчно. AI не успя да категоризира прецизно.'
+      notes: 'Моля, прегледайте ръчно. AI не успя да категоризира прецизно.',
     };
   }
 }
