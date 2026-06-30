@@ -51,7 +51,7 @@ export const buildBankMatchTool = (tenantId: string) => tool({
 
       // 4. Алгоритъм за съпоставяне (Match)
       let matchCount = 0;
-      let matchedDetails = [];
+      const matchedDetails = [];
 
       for (const tx of incomingTxs) {
         const txAmount = parseFloat(tx.amount || '0');

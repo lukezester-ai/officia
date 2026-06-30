@@ -105,7 +105,7 @@ export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => t
        const defaultExpenseAccount = await db.query.accountPlan.findFirst({ where: and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, '603')) });
        const defaultAmortAccount = await db.query.accountPlan.findFirst({ where: and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, '241')) });
 
-       for (let line of linesToInsert) {
+       for (const line of linesToInsert) {
            if (!line.accountId) {
                if (line.entryType === 'debit' && defaultExpenseAccount) line.accountId = defaultExpenseAccount.id;
                else if (line.entryType === 'credit' && defaultAmortAccount) line.accountId = defaultAmortAccount.id;

@@ -22,7 +22,7 @@ export const buildManageInventoryTool = (tenantId: string) => tool({
       // 2. Вземаме всички движения
       const movements = await db.select().from(inventoryMovements).where(eq(inventoryMovements.tenantId, tenantId));
 
-      let lowStockItems = [];
+      const lowStockItems = [];
 
       for (const item of items) {
         // Калкулираме текущата наличност: (in) минус (out)
