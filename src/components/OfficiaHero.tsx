@@ -82,7 +82,7 @@ function MetricsStrip({ skipAnimations }: { skipAnimations: boolean }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">MVP продукт</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">Работеща начална версия</span>
           </div>
           <div className="grid w-full flex-1 grid-cols-2 divide-white/[0.06] md:grid-cols-4 lg:divide-x">
             {metricsData.map((item) => <MetricTicker key={item.id} item={item} skip={skipAnimations} />)}

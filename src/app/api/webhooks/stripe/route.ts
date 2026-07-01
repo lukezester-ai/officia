@@ -8,7 +8,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, { apiVersion: '2026-05-27.dahlia' })
+  ? new Stripe(stripeSecretKey, { apiVersion: '2026-04-22.dahlia' })
   : null;
 
 export async function POST(req: Request) {
@@ -63,7 +63,11 @@ export async function POST(req: Request) {
     }
   }
 
-  if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+  if (
+    event.type === 'customer.subscription.created' ||
+    event.type === 'customer.subscription.deleted' ||
+    event.type === 'customer.subscription.updated'
+  ) {
     const subscription = event.data.object as Stripe.Subscription;
     const tenantId = subscription.metadata?.tenantId;
     if (tenantId) {

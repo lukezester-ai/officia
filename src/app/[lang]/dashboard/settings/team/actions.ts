@@ -42,7 +42,7 @@ export async function createTeamInvite(input: { email: string; role: AppRole; la
   if (!perm.ok) return { success: false as const, error: perm.error };
 
   if (!INVITABLE_ROLES.includes(input.role) && input.role !== 'owner') {
-    return { success: false as const, error: 'Invalid role' };
+    return { success: false as const, error: 'Невалидна роля' };
   }
 
   const token = randomBytes(24).toString('hex');
@@ -81,7 +81,7 @@ export async function acceptTeamInvite(token: string) {
       ),
     );
 
-  if (!invite) return { success: false as const, error: 'Invalid or expired invite' };
+  if (!invite) return { success: false as const, error: 'Невалидна или изтекла покана' };
   if (invite.email !== user.email.toLowerCase()) {
     return { success: false as const, error: 'Invite email does not match your account' };
   }

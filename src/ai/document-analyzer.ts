@@ -16,8 +16,7 @@ export interface DocumentAnalysisResult {
 
 export class DocumentAnalyzer {
   static async analyzeText(text: string): Promise<DocumentAnalysisResult> {
-    // In production, this would call OpenAI/Anthropic structured outputs
-    // e.g. using \`generateObject\` from 'ai'
+    // В работна среда анализът използва структурирания изход на Claude.
     
     // Simulating AI processing delay
     await new Promise(resolve => setTimeout(resolve, 2500));

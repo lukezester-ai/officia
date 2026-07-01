@@ -217,7 +217,7 @@ function BankSyncMockup() {
             <h5 className="text-[11px] font-semibold text-white">УниКредит Булбанк</h5>
             <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              PSD2 Connected
+              Свързано чрез PSD2
             </span>
           </div>
         </div>
@@ -352,16 +352,16 @@ const featureCards: FeatureCardData[] = [
     title: "Качи документ — AI извлича всичко",
     description: "PDF или снимка на фактура → Claude AI разпознава доставчик, сума, ДДС, дата и предлага осчетоводяване.",
     mockup: <AIDocumentsMockup />,
-    tags: ["Claude AI", "OCR", "Auto-осчетоводяване"],
+    tags: ["Claude", "Разпознаване", "Предложено осчетоводяване"],
     delay: 0.2,
   },
   {
     id: "bank-sync",
     tag: "Банкиране",
-    title: "Банков demo + AI съпоставяне",
+    title: "Банкова демонстрация и интелигентно съпоставяне",
     description: "Демо транзакции за тестване на reconciliation. Реален PSD2 конектор — в разработка.",
     mockup: <BankSyncMockup />,
-    tags: ["Demo", "Auto-match", "Roadmap: PSD2"],
+    tags: ["Демонстрация", "Автоматично съпоставяне", "PSD2 в разработка"],
     delay: 0.3,
   },
 ];

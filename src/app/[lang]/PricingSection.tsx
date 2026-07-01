@@ -34,7 +34,7 @@ const plans: PricingPlan[] = [
       "До 50 фактури/месец",
       "Базово счетоводство",
       "1 потребител",
-      "Email поддръжка",
+      "Поддръжка по електронна поща",
     ],
     ctaText: "Започни безплатно",
     ctaVariant: "outline",
@@ -46,12 +46,12 @@ const plans: PricingPlan[] = [
     priceMonthly: 39.2,
     priceAnnual: 31.36,
     subtitle: "За разрастващи се бизнеси",
-    annualNote: "Таксува се 470.40 € веднъж годишно",
+    annualNote: "Таксува се 376.32 € веднъж годишно",
     features: [
       "Неограничени фактури",
-      "AI анализ на документи",
-      "Банков demo + Pro PSD2 (roadmap)",
-      "До 10 потребители (roadmap)",
+      "Анализ на документи с изкуствен интелект",
+      "Банкова демонстрация и бъдеща връзка чрез PSD2",
+      "До 10 потребители — в разработка",
       "Приоритетна поддръжка",
     ],
     ctaText: "Започни пробния период",
@@ -60,7 +60,7 @@ const plans: PricingPlan[] = [
   },
 ];
 
-const footerLinks = ['14 дни trial', 'Clerk автентикация', 'Поддръжка BG/EN'];
+const footerLinks = ['14 дни пробен период', 'Защитено удостоверяване', 'Поддръжка на български'];
 
 export default function PricingSection({ lang }: { lang: string }) {
   const authRedirect = encodeURIComponent(`/${lang}/dashboard`);

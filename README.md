@@ -89,7 +89,6 @@ Credentials (съвпадат с `.env.example`):
 ### 🔧 Настройки за AI и Банки
 
 - `ANTHROPIC_API_KEY` – за Anthropic Claude (OCR + чат)
-- `OPENAI_API_KEY` – за Whisper транскрипция
 - `DEEPGRAM_API_KEY` – за live speech (optional)
 - `NORDIGEN_SECRET_ID` / `NORDIGEN_SECRET_KEY` – за банкови връзки (optional)
 - `UPSTASH_REDIS_URL` / `UPSTASH_REDIS_TOKEN` – кеш и rate limiting (optional; fallback in-memory locally)

@@ -8,13 +8,13 @@ export default function TermsPage() {
         <section className="space-y-4 mb-8">
           <h2 className="text-xl font-semibold text-white">1. Услуга</h2>
           <p>
-            Officia предоставя облачен софтуер за фактури, счетоводство и HR. Продуктът е в активна разработка (MVP).
+            Officia предоставя облачен софтуер за фактури, счетоводство и човешки ресурси. Продуктът е в активна разработка.
             Някои функции (PSD2 банка, директно подаване към НАП) са демо или частични — вижте статуса в приложението.
           </p>
         </section>
 
         <section className="space-y-4 mb-8">
-          <h2 className="text-xl font-semibold text-white">2. Планове и trial</h2>
+          <h2 className="text-xl font-semibold text-white">2. Планове и пробен период</h2>
           <p>
             Новите акаунти получават 14 дни пълен достъъп. След това важи план Стартер (до 50 фактури/месец) или
             платен Pro план. Лимитите се прилагат автоматично в системата.
@@ -33,7 +33,7 @@ export default function TermsPage() {
         <section className="space-y-4 mb-8">
           <h2 className="text-xl font-semibold text-white">4. Плащания</h2>
           <p>
-            Абонаментите се таксуват чрез Stripe. Плащания на ваши клиенти по фактури са отделен Stripe checkout поток.
+            Абонаментите се таксуват чрез Stripe. Плащанията на ваши клиенти по фактури използват отделен процес за плащане чрез Stripe.
           </p>
         </section>
 

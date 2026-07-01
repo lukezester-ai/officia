@@ -7,7 +7,10 @@ import { getPlanLimits, resolveEffectivePlan, type PlanId } from '@/lib/billing/
 
 export type TenantBilling = {
   plan: PlanId;
+  storedPlan: PlanId;
   trialEndsAt: Date | null;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
   limits: ReturnType<typeof getPlanLimits>;
 };
 
@@ -16,11 +19,15 @@ export async function getTenantBilling(tenantId: string): Promise<TenantBilling 
   if (!tenant) return null;
 
   const trialEndsAt = tenant.trialEndsAt ? new Date(tenant.trialEndsAt) : null;
+  const storedPlan: PlanId = tenant.plan === 'pro' ? 'pro' : 'starter';
   const plan = resolveEffectivePlan(tenant.plan, trialEndsAt);
 
   return {
     plan,
+    storedPlan,
     trialEndsAt,
+    stripeCustomerId: tenant.stripeCustomerId ?? null,
+    stripeSubscriptionId: tenant.stripeSubscriptionId ?? null,
     limits: getPlanLimits(plan),
   };
 }
@@ -45,7 +52,7 @@ export async function countInvoicesThisMonth(tenantId: string): Promise<number> 
 
 export async function assertCanCreateInvoice(tenantId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const billing = await getTenantBilling(tenantId);
-  if (!billing) return { ok: false, error: 'Липсва workspace' };
+  if (!billing) return { ok: false, error: 'Липсва фирмено пространство' };
 
   const limit = billing.limits.invoicesPerMonth;
   if (!Number.isFinite(limit)) return { ok: true };

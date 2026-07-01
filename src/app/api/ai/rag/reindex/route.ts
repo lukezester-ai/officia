@@ -10,10 +10,6 @@ export const runtime = 'nodejs';
 export async function POST() {
   const auth = await getAuthenticatedTenant();
   if (!auth.ok) return auth.response;
-  if (!process.env.OPENAI_API_KEY) {
-    return Response.json({ error: 'OPENAI_API_KEY is not configured' }, { status: 503 });
-  }
-
   return withRateLimit(
     `rag-reindex:${auth.tenantId}`,
     async () => {
@@ -34,7 +30,7 @@ export async function POST() {
         } catch (error) {
           failures.push({
             documentId: document.id,
-            error: error instanceof Error ? error.message : 'Unknown indexing error',
+            error: error instanceof Error ? error.message : 'Неизвестна грешка при индексиране',
           });
         }
       }

@@ -13,6 +13,6 @@ export async function GET() {
     return NextResponse.json(aiAutomationRegistry);
   } catch (error) {
     console.error('Error fetching AI automation registry:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Вътрешна грешка на сървъра' }, { status: 500 });
   }
 }

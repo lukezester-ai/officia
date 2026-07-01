@@ -40,8 +40,8 @@ export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => t
          userId,
          actionKey: 'depreciateAssets',
          risk: 'high',
-         title: `Review depreciation for ${month}/${year}`,
-         description: `AI calculated depreciation for ${processedAssets} active asset(s). No journal entry will be posted before human approval.`,
+         title: `Преглед на амортизациите за ${month}/${year}`,
+         description: `Изчислена е амортизация за ${processedAssets} активни дълготрайни актива. Няма да бъде записана счетоводна статия преди човешко одобрение.`,
          sourceType: 'fixed_asset',
          payload: { year, month, assetIds: assets.map((asset) => asset.id) },
          summary: {

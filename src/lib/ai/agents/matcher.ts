@@ -6,13 +6,13 @@ export const matchSchema = z.object({
   matchedId: z
     .string()
     .nullable()
-    .describe('The ID of the matched candidate document. Return null if no confident match is found.'),
+    .describe('Идентификаторът на съвпадащия документ. Върни null, ако няма сигурно съвпадение.'),
   confidenceScore: z
     .number()
     .min(0)
     .max(100)
-    .describe('Confidence score from 0 to 100 representing how sure the AI is about the match.'),
-  reason: z.string().describe('Short explanation of why this match was chosen or why no match was found.'),
+    .describe('Оценка от 0 до 100 за сигурността на съвпадението.'),
+  reason: z.string().describe('Кратко обяснение защо е избрано съвпадението или защо липсва такова.'),
 });
 
 export interface Transaction {
@@ -36,12 +36,12 @@ export interface Candidate {
 export async function matchTransactionWithAI(transaction: Transaction, candidates: Candidate[]) {
   const model = getAnthropicChatModel();
 
-  const systemPrompt = `You are an expert financial reconciliation AI agent. Your job is to match a single bank transaction against a list of candidate documents (invoices or expenses). 
-Follow these strict rules:
-1. Compare amounts closely. Minor discrepancies (e.g. currency conversion or bank fees) are acceptable if the description strongly matches the counterparty or document number.
-2. If the confidence is below 85%, return null for matchedId.
-3. Be careful with directions: negative transaction amounts usually match expenses (supplier invoices), positive transaction amounts match sales invoices.
-Provide a clear reason for your decision in Bulgarian language.`;
+  const systemPrompt = `Ти си експертен агент за финансово съгласуване. Съпостави една банкова транзакция със списък от фактури или разходи.
+Правила:
+1. Сравнявай внимателно сумите. Малки разлики от валутно превалутиране или банкови такси са допустими само при ясно съвпадение на контрагент или номер на документ.
+2. При увереност под 85% върни null за matchedId.
+3. Отрицателните транзакции обикновено съответстват на разходи, а положителните — на фактури за продажба.
+Обясни решението на български.`;
 
   const { object } = await generateObject({
     model,
@@ -50,7 +50,7 @@ Provide a clear reason for your decision in Bulgarian language.`;
       { role: 'system', content: systemPrompt },
       {
         role: 'user',
-        content: `Transaction to match:\n${JSON.stringify(transaction, null, 2)}\n\nCandidates:\n${JSON.stringify(candidates, null, 2)}\n\nPlease find the best match.`,
+        content: `Транзакция за съпоставяне:\n${JSON.stringify(transaction, null, 2)}\n\nВъзможни документи:\n${JSON.stringify(candidates, null, 2)}\n\nНамери най-доброто съвпадение.`,
       },
     ],
   });

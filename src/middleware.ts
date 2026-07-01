@@ -1,28 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { match } from '@formatjs/intl-localematcher';
-import Negotiator from 'negotiator';
-
-const locales = ['bg', 'en'];
-const defaultLocale = 'bg';
-
-function getLocale(request: NextRequest): string {
-  const headers = new Headers(request.headers);
-  const acceptLanguage = headers.get('accept-language');
-  if (acceptLanguage) {
-    headers.set('accept-language', acceptLanguage.replaceAll('_', '-'));
-  }
-
-  const headersObject = Object.fromEntries(headers.entries());
-  const languages = new Negotiator({ headers: headersObject }).languages();
-  
-  try {
-    return match(languages, locales, defaultLocale);
-  } catch (e) {
-    return defaultLocale;
-  }
-}
+const locales = ['bg'];
 
 const isProtectedRoute = createRouteMatcher([
   '/:locale/dashboard(.*)',
@@ -40,6 +19,11 @@ export default clerkMiddleware(async (auth, req) => {
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/api')) {
     return;
   }
+
+  if (pathname === '/en' || pathname.startsWith('/en/')) {
+    req.nextUrl.pathname = `/bg${pathname.slice(3)}` || '/bg';
+    return NextResponse.redirect(req.nextUrl);
+  }
   
   // Check if there is any supported locale in the pathname
   const pathnameHasLocale = locales.some(
@@ -47,9 +31,7 @@ export default clerkMiddleware(async (auth, req) => {
   );
   
   if (!pathnameHasLocale) {
-    // Redirect if there is no locale
-    const locale = getLocale(req);
-    req.nextUrl.pathname = `/${locale}${pathname}`;
+    req.nextUrl.pathname = `/bg${pathname}`;
     return NextResponse.redirect(req.nextUrl);
   }
 });

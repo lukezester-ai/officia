@@ -7,7 +7,7 @@ export async function getBillingSummary() {
   try {
     const { tenantId } = await requireTenant();
     const billing = await getTenantBilling(tenantId);
-    if (!billing) return { success: false as const, error: 'No tenant' };
+    if (!billing) return { success: false as const, error: 'Липсва фирмено пространство' };
 
     const usedInvoices = await countInvoicesThisMonth(tenantId);
     const limit = billing.limits.invoicesPerMonth;
@@ -16,6 +16,8 @@ export async function getBillingSummary() {
       success: true as const,
       data: {
         plan: billing.plan,
+        storedPlan: billing.storedPlan,
+        canManageSubscription: Boolean(billing.stripeCustomerId),
         trialEndsAt: billing.trialEndsAt?.toISOString() ?? null,
         usedInvoices,
         invoiceLimit: Number.isFinite(limit) ? limit : null,
@@ -23,7 +25,7 @@ export async function getBillingSummary() {
       },
     };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Error';
+    const message = error instanceof Error ? error.message : 'Грешка';
     return { success: false as const, error: message };
   }
 }

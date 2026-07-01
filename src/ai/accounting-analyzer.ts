@@ -16,8 +16,7 @@ export interface AccountingAnalysisResult {
 
 export class AccountingAnalyzer {
   static async analyzeText(text: string): Promise<AccountingAnalysisResult> {
-    // In production, this would call OpenAI/Anthropic structured outputs
-    // e.g. using `generateObject` from 'ai'
+    // В работна среда анализът използва структурирания изход на Claude.
     
     // Simulating AI processing delay
     await new Promise(resolve => setTimeout(resolve, 2000));

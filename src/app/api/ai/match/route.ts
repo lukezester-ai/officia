@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const { transaction, candidates } = body as { transaction: Transaction; candidates: Candidate[] };
 
     if (!transaction || !candidates) {
-      return NextResponse.json({ error: 'Missing transaction or candidates' }, { status: 400 });
+      return NextResponse.json({ error: 'Липсват транзакция или възможни съвпадения' }, { status: 400 });
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -23,6 +23,6 @@ export async function POST(req: Request) {
     return NextResponse.json(matchResult);
   } catch (error: any) {
     console.error('Match Error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to match' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Съпоставянето не бе успешно' }, { status: 500 });
   }
 }

@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         <section className="space-y-4 mb-8">
           <h2 className="text-xl font-semibold text-white">4. Съхранение и сигурност</h2>
           <p>
-            Данните се съхраняват в PostgreSQL (Neon/Render). Достъпът е ограничен по workspace (tenant).
+            Данните се съхраняват в PostgreSQL (Neon/Render). Достъпът е ограничен до фирменото пространство на потребителя.
             Препоръчваме MFA в Clerk. Не продаваме лични данни на трети страни.
           </p>
         </section>

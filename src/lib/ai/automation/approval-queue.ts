@@ -51,7 +51,7 @@ export async function queueAiApprovalRequest(input: QueueAiApprovalRequestInput)
       approvalId: existing.id,
       status: existing.status,
       priority: existing.priority,
-      message: `Approval request already queued: ${input.title}`,
+      message: `Заявката за одобрение вече чака преглед: ${input.title}`,
     };
   }
 
@@ -85,6 +85,6 @@ export async function queueAiApprovalRequest(input: QueueAiApprovalRequestInput)
     approvalId: item.id,
     status: item.status,
     priority: item.priority,
-    message: `Approval request queued for human review: ${input.title}`,
+    message: `Заявката е изпратена за човешко одобрение: ${input.title}`,
   };
 }

@@ -22,7 +22,7 @@ export class TaskGenerator {
       })
       .where(eq(documents.id, documentId));
 
-    if (rawText.trim() && process.env.OPENAI_API_KEY) {
+    if (rawText.trim()) {
       try {
         await indexDocumentForRag(documentId, tenantId, rawText);
       } catch (error) {

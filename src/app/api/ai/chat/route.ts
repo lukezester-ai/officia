@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
-      return new Response('Invalid messages payload', { status: 400 });
+      return new Response('Невалидни данни за съобщенията', { status: 400 });
     }
 
     const totalLength = messages.reduce((sum: number, message: any) => sum + getMessageText(message).length, 0);
@@ -120,6 +120,6 @@ export async function POST(req: NextRequest) {
     if (error.message === 'Not authenticated' || error.message === 'User not found in local database' || error.message === 'User does not belong to any tenant') {
       return new Response('Forbidden or Unauthorized', { status: 403 });
     }
-    return new Response('Internal Server Error', { status: 500 });
+    return new Response('Вътрешна грешка на сървъра', { status: 500 });
   }
 }

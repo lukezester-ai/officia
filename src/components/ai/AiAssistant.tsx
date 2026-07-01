@@ -59,14 +59,12 @@ export default function AiAssistant() {
   const isLoading = status === 'submitted' || status === 'streaming';
 
   const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [reactions, setReactions] = useState<Record<string, number>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const speechRecognitionRef = useRef<any>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,57 +100,32 @@ export default function AiAssistant() {
     await sendChatMessage({ text });
   };
 
-  const transcribeAudio = async (audioBlob: Blob) => {
-    setIsTranscribing(true);
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'recording.webm');
-    
-    try {
-      const response = await fetch('/api/ai/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      if (data.text) {
-        setInput(prev => prev + (prev ? ' ' : '') + data.text);
-      } else {
-        toast.error('Неуспешна транскрипция');
-      }
-    } catch (error) {
-      console.error("Whisper error:", error);
-      toast.error("Грешка при транскрипцията на аудиото");
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
-
-  const toggleVoice = async () => {
+  const toggleVoice = () => {
     if (isRecording) {
-      mediaRecorderRef.current?.stop();
+      speechRecognitionRef.current?.stop();
       setIsRecording(false);
-    } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-        mediaRecorderRef.current = mediaRecorder;
-        audioChunksRef.current = [];
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunksRef.current.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          transcribeAudio(audioBlob);
-          stream.getTracks().forEach(track => track.stop());
-        };
-
-        mediaRecorder.start();
-        setIsRecording(true);
-      } catch (err) {
-        toast.error("Не може да се достъпи микрофона. Проверете разрешенията.");
-      }
+      return;
     }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Гласовото въвеждане не се поддържа от този браузър.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'bg-BG';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event: any) => {
+      const text = event.results?.[0]?.[0]?.transcript?.trim();
+      if (text) setInput((current) => current + (current ? ' ' : '') + text);
+    };
+    recognition.onerror = () => toast.error('Гласовото разпознаване не бе успешно.');
+    recognition.onend = () => setIsRecording(false);
+    speechRecognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
   };
 
   if (hideOnFullPageChat) {
@@ -327,7 +300,7 @@ export default function AiAssistant() {
                     />
                     <button 
                       onClick={sendMessage} 
-                      disabled={(!input.trim() && attachments.length === 0) || isLoading || isTranscribing} 
+                      disabled={(!input.trim() && attachments.length === 0) || isLoading}
                       className="m-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shadow-sm shrink-0"
                     >
                       <Send size={16} />

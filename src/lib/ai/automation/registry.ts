@@ -79,21 +79,21 @@ export const aiAgents: AiCapability[] = [
 ];
 
 export const aiTools: AiCapability[] = [
-  { key: 'createInvoice', label: 'Create invoice', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['counterparties', 'invoices', 'invoice_lines'], status: 'needs-hardening' },
-  { key: 'getFinancialSummary', label: 'Financial summary', owner: 'analytics', mode: 'read', level: 3, risk: 'low', requiresHumanReview: false, writesData: false, connectedSystems: ['invoices', 'purchase_invoices', 'expenses'], status: 'live' },
-  { key: 'searchDocuments', label: 'Search documents', owner: 'documents', mode: 'read', level: 3, risk: 'low', requiresHumanReview: false, writesData: false, connectedSystems: ['documents'], status: 'live' },
-  { key: 'bankMatch', label: 'Bank matching', owner: 'banking', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['bank_transactions', 'bank_accounts', 'invoices'], status: 'needs-hardening' },
-  { key: 'createExpense', label: 'Create expense', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['expenses'], status: 'needs-hardening' },
-  { key: 'createJournalEntry', label: 'Create journal entry', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['journal_entries', 'account_plan'], status: 'needs-hardening' },
-  { key: 'manageHR', label: 'Manage HR', owner: 'hr', mode: 'workflow', level: 3, risk: 'medium', requiresHumanReview: true, writesData: true, connectedSystems: ['employees', 'leave_requests', 'tasks'], status: 'needs-hardening' },
-  { key: 'manageInventory', label: 'Manage inventory', owner: 'inventory', mode: 'write', level: 3, risk: 'medium', requiresHumanReview: true, writesData: true, connectedSystems: ['inventory_items', 'inventory_movements', 'tasks'], status: 'needs-hardening' },
-  { key: 'generateVat', label: 'Generate VAT', owner: 'tax', mode: 'workflow', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['vat_journals', 'invoices', 'purchase_invoices'], status: 'needs-hardening' },
-  { key: 'depreciateAssets', label: 'Depreciate assets', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['fixed_assets', 'journal_entries'], status: 'needs-hardening' },
-  { key: 'autoApprove', label: 'Auto approve', owner: 'core', mode: 'workflow', level: 2, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['approvals', 'leave_requests'], status: 'needs-hardening' },
-  { key: 'processInbox', label: 'Process AI inbox', owner: 'core', mode: 'workflow', level: 3, risk: 'medium', requiresHumanReview: true, writesData: true, connectedSystems: ['ai_inbox_items'], status: 'needs-hardening' },
-  { key: 'generateChart', label: 'Generate chart', owner: 'analytics', mode: 'advisory', level: 3, risk: 'low', requiresHumanReview: false, writesData: false, connectedSystems: ['dashboard'], status: 'live' },
-  { key: 'checkNraStatus', label: 'Check NRA status', owner: 'compliance', mode: 'read', level: 2, risk: 'medium', requiresHumanReview: true, writesData: false, connectedSystems: ['nra'], status: 'prototype' },
-  { key: 'checkNraLiabilities', label: 'Check NRA liabilities', owner: 'compliance', mode: 'read', level: 2, risk: 'high', requiresHumanReview: true, writesData: false, connectedSystems: ['nra'], status: 'prototype' },
+  { key: 'createInvoice', label: 'Създаване на фактура', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['counterparties', 'invoices', 'invoice_lines'], status: 'needs-hardening' },
+  { key: 'getFinancialSummary', label: 'Финансово обобщение', owner: 'analytics', mode: 'read', level: 3, risk: 'low', requiresHumanReview: false, writesData: false, connectedSystems: ['invoices', 'purchase_invoices', 'expenses'], status: 'live' },
+  { key: 'searchDocuments', label: 'Търсене в документи', owner: 'documents', mode: 'read', level: 3, risk: 'low', requiresHumanReview: false, writesData: false, connectedSystems: ['documents'], status: 'live' },
+  { key: 'bankMatch', label: 'Банково съпоставяне', owner: 'banking', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['bank_transactions', 'bank_accounts', 'invoices'], status: 'needs-hardening' },
+  { key: 'createExpense', label: 'Създаване на разход', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['expenses'], status: 'needs-hardening' },
+  { key: 'createJournalEntry', label: 'Създаване на счетоводна статия', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['journal_entries', 'account_plan'], status: 'needs-hardening' },
+  { key: 'manageHR', label: 'Управление на човешки ресурси', owner: 'hr', mode: 'workflow', level: 3, risk: 'medium', requiresHumanReview: true, writesData: true, connectedSystems: ['employees', 'leave_requests', 'tasks'], status: 'needs-hardening' },
+  { key: 'manageInventory', label: 'Управление на склада', owner: 'inventory', mode: 'write', level: 3, risk: 'medium', requiresHumanReview: true, writesData: true, connectedSystems: ['inventory_items', 'inventory_movements', 'tasks'], status: 'needs-hardening' },
+  { key: 'generateVat', label: 'Създаване на ДДС дневници', owner: 'tax', mode: 'workflow', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['vat_journals', 'invoices', 'purchase_invoices'], status: 'needs-hardening' },
+  { key: 'depreciateAssets', label: 'Начисляване на амортизации', owner: 'accounting', mode: 'write', level: 3, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['fixed_assets', 'journal_entries'], status: 'needs-hardening' },
+  { key: 'autoApprove', label: 'Предложение за одобрение', owner: 'core', mode: 'workflow', level: 2, risk: 'high', requiresHumanReview: true, writesData: true, connectedSystems: ['approvals', 'leave_requests'], status: 'needs-hardening' },
+  { key: 'processInbox', label: 'Обработване на входящата кутия', owner: 'core', mode: 'workflow', level: 3, risk: 'medium', requiresHumanReview: true, writesData: true, connectedSystems: ['ai_inbox_items'], status: 'needs-hardening' },
+  { key: 'generateChart', label: 'Създаване на графика', owner: 'analytics', mode: 'advisory', level: 3, risk: 'low', requiresHumanReview: false, writesData: false, connectedSystems: ['dashboard'], status: 'live' },
+  { key: 'checkNraStatus', label: 'Проверка на състояние в НАП', owner: 'compliance', mode: 'read', level: 2, risk: 'medium', requiresHumanReview: true, writesData: false, connectedSystems: ['nra'], status: 'prototype' },
+  { key: 'checkNraLiabilities', label: 'Проверка на задължения към НАП', owner: 'compliance', mode: 'read', level: 2, risk: 'high', requiresHumanReview: true, writesData: false, connectedSystems: ['nra'], status: 'prototype' },
 ];
 
 export const aiAutomationRegistry = {

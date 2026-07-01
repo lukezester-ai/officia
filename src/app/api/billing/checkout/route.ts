@@ -8,18 +8,20 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const billingCycle = body.billingCycle === 'monthly' ? 'monthly' : 'annual';
     const origin = new URL(req.url).origin;
-    const lang = body.lang || 'bg';
+    const lang = 'bg';
 
     const session = await createProSubscriptionCheckout({
       tenantId,
       userEmail: user.email,
+      customerId: tenant?.stripeCustomerId,
+      includeTrial: !tenant?.stripeCustomerId,
       billingCycle,
-      successUrl: `${origin}/${lang}/dashboard/settings?billing=success`,
-      cancelUrl: `${origin}/${lang}/dashboard/settings?billing=canceled`,
+      successUrl: `${origin}/${lang}/dashboard/settings/workspace?billing=success`,
+      cancelUrl: `${origin}/${lang}/dashboard/settings/workspace?billing=canceled`,
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Billing error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Грешка при плащането' }, { status: 500 });
   }
 }

@@ -27,7 +27,7 @@ export async function executeCreateInvoice(
   const notes = payload?.notes ? String(payload.notes) : undefined;
 
   if (!clientName || items.length === 0) {
-    return { success: false, message: 'Missing client or invoice line items' };
+    return { success: false, message: 'Липсват клиент или редове на фактурата.' };
   }
 
   let counterparty = await db.query.counterparties.findFirst({
@@ -102,7 +102,7 @@ export async function executeCreateExpense(
   const category = String(payload?.category ?? 'Други');
   const expenseDate = payload?.expenseDate ? new Date(String(payload.expenseDate)) : new Date();
   if (!description || !Number.isFinite(amount) || amount <= 0 || Number.isNaN(expenseDate.getTime())) {
-    return { success: false, message: 'Invalid expense payload' };
+    return { success: false, message: 'Невалидни данни за разхода.' };
   }
 
   await db.insert(expenses).values({
@@ -175,7 +175,7 @@ export async function executeCreateHrTask(
 ): Promise<WriteActionResult> {
   const taskTitle = String(payload?.taskTitle ?? '').trim();
   const assigneeName = payload?.assigneeName ? String(payload.assigneeName).trim() : '';
-  if (!taskTitle) return { success: false, message: 'Missing task title' };
+  if (!taskTitle) return { success: false, message: 'Липсва заглавие на задачата.' };
 
   let assignee = 'Неразпределена';
   if (assigneeName) {

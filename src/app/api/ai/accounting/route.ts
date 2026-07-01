@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const { text } = body;
 
     if (!text || typeof text !== 'string') {
-      return new NextResponse('Missing or invalid text', { status: 400 });
+      return new NextResponse('Липсващ или невалиден текст', { status: 400 });
     }
 
     const analysis = await AccountingAnalyzer.analyzeText(text);
@@ -21,6 +21,6 @@ export async function POST(req: Request) {
     return NextResponse.json(analysis);
   } catch (error) {
     console.error('Error in Accounting AI endpoint:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse('Вътрешна грешка на сървъра', { status: 500 });
   }
 }

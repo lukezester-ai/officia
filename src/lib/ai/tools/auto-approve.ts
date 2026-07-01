@@ -40,8 +40,8 @@ export const buildAutoApproveTool = (tenantId: string, userId: string) => tool({
         userId,
         actionKey: 'autoApprove',
         risk: 'high',
-        title: 'Review AI leave approvals',
-        description: `AI found ${pendingRequests.length} pending leave request(s). Approval must be confirmed by a human before HR records change.`,
+        title: 'Преглед на предложенията за отпуск',
+        description: `Намерени са ${pendingRequests.length} чакащи молби за отпуск. Необходимо е човешко одобрение преди промяна на кадровите данни.`,
         sourceType: 'leave_request',
         payload: {
           requestIds: pendingRequests.map((request) => request.id),

@@ -47,7 +47,7 @@ export async function executeApprovedAction(
     case 'generateVat':
       return executeGenerateVat(tenantId, payload);
     default:
-      return { success: false, message: `Unknown action: ${actionKey}` };
+      return { success: false, message: `Непознато действие: ${actionKey}` };
   }
 }
 
@@ -63,7 +63,7 @@ async function executeCreateJournalEntry(
   const date = payload?.date ? String(payload.date) : undefined;
 
   if (!description || !amount || !debitAccountCode || !creditAccountCode) {
-    return { success: false, message: 'Missing journal entry payload fields' };
+    return { success: false, message: 'Липсват данни за счетоводната статия.' };
   }
 
   const entryDate = date ? new Date(date) : new Date();
@@ -224,7 +224,7 @@ async function executeDepreciateAssets(
   const month = Number(payload?.month);
 
   if (!year || !month) {
-    return { success: false, message: 'Missing year or month in payload' };
+    return { success: false, message: 'Липсва година или месец.' };
   }
 
   const assets = await db
@@ -335,7 +335,7 @@ async function executeGenerateVat(
   const endDate = String(payload?.endDate ?? '');
 
   if (!year || !month || !startDate || !endDate) {
-    return { success: false, message: 'Missing VAT period payload' };
+    return { success: false, message: 'Липсват данни за периода на ДДС дневника.' };
   }
 
   const sales = await db

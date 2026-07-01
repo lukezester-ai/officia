@@ -18,8 +18,8 @@ export const buildCreateJournalEntryTool = (tenantId: string, userId: string) =>
         userId,
         actionKey: 'createJournalEntry',
         risk: 'high',
-        title: 'Review AI journal entry',
-        description: `Proposed journal entry for ${amount}: ${description}`,
+        title: 'Преглед на предложена счетоводна статия',
+        description: `Предложена счетоводна статия за ${amount}: ${description}`,
         sourceType: 'journal_entry',
         payload: { description, amount, debitAccountCode, creditAccountCode, date },
         summary: {

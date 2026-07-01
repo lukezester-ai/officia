@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
   if (!DEEPGRAM_API_KEY) {
-    return new Response('Missing Deepgram API Key', { status: 500 });
+    return new Response('Липсва ключ за гласово разпознаване', { status: 500 });
   }
 
   return new Response(null, {

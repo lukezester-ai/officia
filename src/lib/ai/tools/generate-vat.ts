@@ -44,8 +44,8 @@ export const buildGenerateVatTool = (tenantId: string, userId?: string) => tool(
           userId,
           actionKey: 'generateVat',
           risk: 'critical',
-          title: `Review VAT journals for ${month}/${year}`,
-          description: `AI prepared VAT journal generation for ${sales.length} sale invoice(s) and ${purchases.length} purchase invoice(s). Existing VAT journals for the period will not be changed until approved.`,
+          title: `Преглед на ДДС дневниците за ${month}/${year}`,
+          description: `Подготвени са ДДС дневници за ${sales.length} фактури за продажба и ${purchases.length} фактури за покупка. Съществуващите дневници няма да бъдат променени преди одобрение.`,
           sourceType: 'vat_journal',
           payload: { year, month, startDate, endDate },
           summary: {

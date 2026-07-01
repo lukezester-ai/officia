@@ -26,6 +26,8 @@ export default function WorkspaceSettingsPage() {
 
   const [billing, setBilling] = useState<{
     plan: string;
+    storedPlan: string;
+    canManageSubscription: boolean;
     trialEndsAt: string | null;
     usedInvoices: number;
     invoiceLimit: number | null;
