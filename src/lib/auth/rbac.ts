@@ -17,6 +17,7 @@ const PERMISSIONS: Record<AppRole, string[]> = {
     'bank:*',
     'report:*',
     'team:invite',
+    'ai:approve',
   ],
   junior_accountant: [
     'invoice:read',

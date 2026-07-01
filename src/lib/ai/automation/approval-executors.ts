@@ -8,6 +8,14 @@ import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { invoices } from '@/lib/db/schema/invoices';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { eq, and, or, ilike, sql } from 'drizzle-orm';
+import {
+  executeBankMatch,
+  executeCreateExpense,
+  executeCreateHrTask,
+  executeCreateInvoice,
+  executeManageInventory,
+  executeProcessInbox,
+} from './write-actions';
 
 type ExecutionResult = { success: boolean; message: string };
 
@@ -18,6 +26,18 @@ export async function executeApprovedAction(
   payload: Record<string, unknown> | null,
 ): Promise<ExecutionResult> {
   switch (actionKey) {
+    case 'createInvoice':
+      return executeCreateInvoice(tenantId, userId, payload);
+    case 'createExpense':
+      return executeCreateExpense(tenantId, userId, payload);
+    case 'bankMatch':
+      return executeBankMatch(tenantId, payload);
+    case 'manageHR.createTask':
+      return executeCreateHrTask(tenantId, payload);
+    case 'manageInventory':
+      return executeManageInventory(tenantId, payload);
+    case 'processInbox':
+      return executeProcessInbox(tenantId);
     case 'createJournalEntry':
       return executeCreateJournalEntry(tenantId, userId, payload);
     case 'autoApprove':

@@ -1,6 +1,7 @@
-import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { db } from '@/lib/db/db';
 import { aiInboxItems } from '@/lib/db/schema/ai_inbox';
+import { and, eq } from 'drizzle-orm';
 
 type AiApprovalRisk = 'low' | 'medium' | 'high' | 'critical';
 
@@ -26,13 +27,41 @@ function riskToPriority(risk: AiApprovalRisk) {
 }
 
 export async function queueAiApprovalRequest(input: QueueAiApprovalRequestInput) {
+  const sourceId = input.sourceId ?? createHash('sha256')
+    .update(JSON.stringify({ tenantId: input.tenantId, userId: input.userId, actionKey: input.actionKey, payload: input.payload }))
+    .digest('hex');
+
+  const [existing] = await db
+    .select()
+    .from(aiInboxItems)
+    .where(
+      and(
+        eq(aiInboxItems.tenantId, input.tenantId),
+        eq(aiInboxItems.type, 'ai_approval_required'),
+        eq(aiInboxItems.sourceId, sourceId),
+        eq(aiInboxItems.status, 'open'),
+      ),
+    )
+    .limit(1);
+
+  if (existing) {
+    return {
+      success: true,
+      approvalRequired: true,
+      approvalId: existing.id,
+      status: existing.status,
+      priority: existing.priority,
+      message: `Approval request already queued: ${input.title}`,
+    };
+  }
+
   const [item] = await db
     .insert(aiInboxItems)
     .values({
       tenantId: input.tenantId,
       type: 'ai_approval_required',
       sourceType: input.sourceType ?? 'ai_action',
-      sourceId: input.sourceId ?? randomUUID(),
+      sourceId,
       title: input.title,
       description: input.description,
       confidence: '0.95',

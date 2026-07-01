@@ -8,6 +8,12 @@ import {
 import { getAnthropicChatModel } from '@/lib/ai/model';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { checkRateLimit } from '@/lib/api/rate-limit';
+import {
+  formatConversationMemory,
+  getConversationHistory,
+  saveConversationMessage,
+} from '@/lib/ai/memory/conversation-store';
+import { retrieveRelevantContext } from '@/lib/ai/rag/retriever';
 
 const MAX_REQUESTS_PER_WINDOW = 10;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -62,6 +68,16 @@ export async function POST(req: NextRequest) {
     }
 
     const lastUserText = getLastUserMessageText(messages);
+    const persistedHistory = await getConversationHistory(tenantId, userId, 20);
+    const memoryContext = formatConversationMemory(persistedHistory);
+
+    let documentContext = '';
+    try {
+      documentContext = await retrieveRelevantContext(lastUserText, tenantId);
+    } catch (error) {
+      console.error('RAG retrieval failed; continuing without document context:', error);
+    }
+
     const { routing, tenantSnapshot } = await prepareOrchestratedChat(
       lastUserText,
       tenantId,
@@ -69,7 +85,19 @@ export async function POST(req: NextRequest) {
       messages,
     );
     const tools = buildRoutedChatTools(routing, { tenantId, userId });
-    const system = buildOrchestratorSystemPrompt(tenantId, routing, tenantSnapshot);
+    const system = [
+      buildOrchestratorSystemPrompt(tenantId, routing, tenantSnapshot),
+      memoryContext
+        ? `\nДългосрочна памет от предишни разговори:\n${memoryContext}`
+        : '',
+      documentContext
+        ? `\nРелевантен контекст от фирмени документи:\n${documentContext}\nЦитирай заглавието на документа, когато използваш този контекст.`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    await saveConversationMessage(tenantId, userId, 'user', lastUserText);
 
     const result = streamText({
       model: getAnthropicChatModel(),
@@ -77,6 +105,13 @@ export async function POST(req: NextRequest) {
       messages: await convertToModelMessages(messages),
       tools,
       stopWhen: stepCountIs(5),
+      onFinish: async ({ text, totalUsage, finishReason }) => {
+        await saveConversationMessage(tenantId, userId, 'assistant', text, {
+          finishReason,
+          inputTokens: totalUsage.inputTokens,
+          outputTokens: totalUsage.outputTokens,
+        });
+      },
     });
 
     return result.toUIMessageStreamResponse({ originalMessages: messages });

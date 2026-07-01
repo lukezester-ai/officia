@@ -3,6 +3,7 @@ import { tasks } from '@/lib/db/schema/tasks';
 import { documents } from '@/lib/db/schema/documents';
 import { DocumentAnalyzer } from '@/ai/document-analyzer';
 import { eq } from 'drizzle-orm';
+import { indexDocumentForRag } from '@/lib/ai/rag/retriever';
 
 export class TaskGenerator {
   /**
@@ -20,6 +21,14 @@ export class TaskGenerator {
         contentExtracted: rawText 
       })
       .where(eq(documents.id, documentId));
+
+    if (rawText.trim() && process.env.OPENAI_API_KEY) {
+      try {
+        await indexDocumentForRag(documentId, tenantId, rawText);
+      } catch (error) {
+        console.error('Document RAG indexing failed:', error);
+      }
+    }
 
     // 3. Създаваме задачи (tasks), които очакват одобрение (suggested)
     if (analysis.suggestedTasks.length > 0) {

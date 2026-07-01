@@ -22,11 +22,12 @@ export async function askAssistant(query: string) {
   try {
     const user = await getCurrentUser();
     if (!user) return "Моля, влезте в профила си, за да използвате Асистента.";
+    if (!user.tenantId) return 'Потребителят не е свързан с фирма.';
 
     const res = await runAIAssistant(
       query,
-      user.tenantId || 'default',
-      user.clerkId || 'default',
+      user.tenantId,
+      user.id,
       []
     );
 

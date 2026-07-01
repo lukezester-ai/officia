@@ -1,108 +1,83 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { and, eq, gte, ilike, lte, or } from 'drizzle-orm';
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
-import { tasks } from '@/lib/db/schema/tasks';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
-import { eq, and, or, ilike, gte, lte } from 'drizzle-orm';
+import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
-export const buildManageHRTool = (tenantId: string) => tool({
-  description: "Асистент за Човешки ресурси и Задачи. Използвай го, когато потребителят пита кой е в отпуска, търси служител или иска да създаде/възложи задача на някого.",
-  inputSchema: z.object({
-    action: z.enum(['check_leaves', 'create_task', 'find_employee']).describe("Действие: проверка на отпуски, създаване на задача или търсене на служител"),
-    taskTitle: z.string().optional().describe("Заглавие/описание на задачата (само за create_task)"),
-    assigneeName: z.string().optional().describe("Име на служител (за търсене или възлагане на задача)"),
-    dateToCheck: z.string().optional().describe("Дата за проверка на отпуски (YYYY-MM-DD). Ако липсва, ползвай днес.")
-  }),
-  execute: async ({ action, taskTitle, assigneeName, dateToCheck }) => {
-    try {
-      // Търсене на служител по име
-      const findEmployee = async (name: string) => {
-        const emps = await db.select().from(employees).where(
-          and(
-            eq(employees.tenantId, tenantId),
-            or(
-              ilike(employees.firstName, `%${name}%`),
-              ilike(employees.lastName, `%${name}%`)
-            )
-          )
-        );
-        return emps;
-      };
+export const buildManageHRTool = (tenantId: string, userId: string) =>
+  tool({
+    description: 'HR справки и предложения за задачи. Създаването на задача винаги изисква човешко одобрение.',
+    inputSchema: z.object({
+      action: z.enum(['check_leaves', 'create_task', 'find_employee']),
+      taskTitle: z.string().optional(),
+      assigneeName: z.string().optional(),
+      dateToCheck: z.string().optional(),
+    }),
+    execute: async ({ action, taskTitle, assigneeName, dateToCheck }) => {
+      const findEmployees = (name: string) =>
+        db
+          .select()
+          .from(employees)
+          .where(
+            and(
+              eq(employees.tenantId, tenantId),
+              or(ilike(employees.firstName, `%${name}%`), ilike(employees.lastName, `%${name}%`)),
+            ),
+          );
 
       if (action === 'find_employee') {
-        if (!assigneeName) return { success: false, message: "Трябва да подадеш име на служител." };
-        const emps = await findEmployee(assigneeName);
-        if (emps.length === 0) return { success: true, message: `Не намерих служител с име ${assigneeName}.` };
-        
-        const details = emps.map(e => `${e.firstName} ${e.lastName} - ${e.position} (${e.email})`).join('\n');
-        return { success: true, message: `Намерих следните служители:\n${details}` };
-      }
-
-      if (action === 'check_leaves') {
-        const targetDate = dateToCheck ? new Date(dateToCheck) : new Date();
-        const formattedDate = targetDate.toISOString().split('T')[0];
-
-        // Търсим отпуски, които покриват тази дата
-        const leaves = await db.select({
-           firstName: employees.firstName,
-           lastName: employees.lastName,
-           type: leaveRequests.type,
-           startDate: leaveRequests.startDate,
-           endDate: leaveRequests.endDate,
-        })
-        .from(leaveRequests)
-        .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
-        .where(
-           and(
-             eq(leaveRequests.tenantId, tenantId),
-             eq(leaveRequests.status, 'approved'),
-             lte(leaveRequests.startDate, formattedDate),
-             gte(leaveRequests.endDate, formattedDate)
-           )
-        );
-
-        if (leaves.length === 0) {
-          return { success: true, message: `Няма служители в отпуска на дата ${formattedDate}.` };
-        }
-
-        const details = leaves.map(l => `- ${l.firstName} ${l.lastName} е в ${l.type} отпуска до ${l.endDate}`).join('\n');
-        return { success: true, message: `Служители в отпуска на ${formattedDate}:\n${details}` };
-      }
-
-      if (action === 'create_task') {
-        if (!taskTitle) return { success: false, message: "Трябва да зададеш заглавие на задачата." };
-        
-        let assignedTo = "Неразпределена";
-        
-        if (assigneeName) {
-           const emps = await findEmployee(assigneeName);
-           if (emps.length > 0) {
-              assignedTo = `${emps[0].firstName} ${emps[0].lastName}`;
-           } else {
-              return { success: false, message: `Не намерих служител с име ${assigneeName}, за да му възложа задачата.` };
-           }
-        }
-
-        await db.insert(tasks).values({
-          tenantId,
-          title: taskTitle,
-          status: 'suggested',
-          priority: 'medium',
-          assignee: assignedTo,
-        });
-
-        return { 
-          success: true, 
-          message: `Успешно създадох задача "${taskTitle}". Възложена на: ${assignedTo}.` 
+        if (!assigneeName) return { success: false, message: 'Посочи име на служител.' };
+        const matches = await findEmployees(assigneeName);
+        return {
+          success: true,
+          message:
+            matches.length === 0
+              ? `Не е намерен служител: ${assigneeName}.`
+              : matches.map((item) => `${item.firstName} ${item.lastName} — ${item.position ?? ''} (${item.email})`).join('\n'),
         };
       }
 
-      return { success: false, message: `Непознато HR действие: ${action}` };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error("AI Manage HR Error:", err);
-      return { success: false, message: `Грешка в HR модула: ${message}` };
-    }
-  }
-});
+      if (action === 'check_leaves') {
+        const target = dateToCheck || new Date().toISOString().slice(0, 10);
+        const leaves = await db
+          .select({
+            firstName: employees.firstName,
+            lastName: employees.lastName,
+            type: leaveRequests.type,
+            endDate: leaveRequests.endDate,
+          })
+          .from(leaveRequests)
+          .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
+          .where(
+            and(
+              eq(leaveRequests.tenantId, tenantId),
+              eq(leaveRequests.status, 'approved'),
+              lte(leaveRequests.startDate, target),
+              gte(leaveRequests.endDate, target),
+            ),
+          );
+        return {
+          success: true,
+          message:
+            leaves.length === 0
+              ? `Няма служители в отпуск на ${target}.`
+              : leaves.map((item) => `${item.firstName} ${item.lastName}: ${item.type} до ${item.endDate}`).join('\n'),
+        };
+      }
+
+      if (!taskTitle) return { success: false, message: 'Посочи заглавие на задачата.' };
+      return queueAiApprovalRequest({
+        tenantId,
+        userId,
+        actionKey: 'manageHR.createTask',
+        risk: 'medium',
+        title: `Одобрение на HR задача: ${taskTitle}`,
+        description: assigneeName ? `Предложена задача за ${assigneeName}.` : 'Предложена неразпределена задача.',
+        sourceType: 'task',
+        payload: { taskTitle, assigneeName },
+        summary: { taskTitle, assigneeName: assigneeName ?? null },
+      });
+    },
+  });

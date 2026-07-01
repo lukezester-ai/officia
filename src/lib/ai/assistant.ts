@@ -1,6 +1,5 @@
-import { generateText, streamText, tool } from 'ai';
+import { generateText } from 'ai';
 import { getAnthropicChatModel } from './model';
-import { z } from 'zod';
 
 import { buildCreateInvoiceTool } from './tools/create-invoice';
 import { buildBankMatchTool } from './tools/bank-match';
@@ -13,7 +12,7 @@ export async function runAIAssistant(
 ) {
   const tools = {
     createInvoice: buildCreateInvoiceTool(tenantId, userId),
-    bankMatch: buildBankMatchTool(tenantId),
+    bankMatch: buildBankMatchTool(tenantId, userId),
   };
 
   const context = `Ти си Officia AI – интелигентен офис асистент за български фирми.
