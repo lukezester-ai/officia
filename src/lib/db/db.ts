@@ -6,12 +6,23 @@ import * as schema from './schema';
 import { getPostgresClientOptions } from './postgres-client';
 
 const connectionString = process.env.DATABASE_URL;
+type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not configured');
+function createMissingDatabaseProxy() {
+  return new Proxy({}, {
+    get() {
+      throw new Error('DATABASE_URL is not configured');
+    },
+  }) as Database;
 }
 
-const { url, options } = getPostgresClientOptions(connectionString);
-const client = postgres(url, options);
+function createDatabase(): Database {
+  if (!connectionString) {
+    return createMissingDatabaseProxy();
+  }
 
-export const db = drizzle(client, { schema });
+  const { url, options } = getPostgresClientOptions(connectionString);
+  return drizzle(postgres(url, options), { schema });
+}
+
+export const db = createDatabase();
