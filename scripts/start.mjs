@@ -23,11 +23,11 @@ function run(command, args) {
   });
 }
 
-if (process.env.RUN_STARTUP_MIGRATIONS === 'true') {
+if (process.env.SKIP_STARTUP_MIGRATIONS === 'true') {
+  console.log('Skipping startup migrations because SKIP_STARTUP_MIGRATIONS=true.');
+} else {
   console.log('Running database migrations before starting the web server...');
   await run('node', ['scripts/run-migrate.mjs']);
-} else {
-  console.log('Skipping startup migrations. Run `npm run db:migrate` as a pre-deploy/manual step.');
 }
 
 console.log('Checking critical auth user columns...');
