@@ -30,5 +30,8 @@ if (process.env.RUN_STARTUP_MIGRATIONS === 'true') {
   console.log('Skipping startup migrations. Run `npm run db:migrate` as a pre-deploy/manual step.');
 }
 
+console.log('Checking critical auth user columns...');
+await run('node', ['scripts/ensure-auth-users.mjs']);
+
 console.log(`Starting Next.js on ${host}:${port}`);
 await run(npx, ['next', 'start', '-H', host, '-p', port]);
