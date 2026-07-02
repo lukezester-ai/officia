@@ -170,6 +170,26 @@ async function ensurePayrollRateComponents(sql) {
   console.log('✓ payroll rate components applied');
 }
 
+async function columnExists(sql, tableName, columnName) {
+  const rows = await sql`
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = ${tableName} AND column_name = ${columnName}
+    LIMIT 1
+  `;
+  return rows.length > 0;
+}
+
+async function ensureAuthUserColumns(sql) {
+  if (await columnExists(sql, 'users', 'two_factor_secret')) {
+    console.log('✓ auth user columns already applied');
+    return;
+  }
+  console.log('Applying auth user columns safety migration...');
+  await applySqlFile(sql, 'drizzle/migrations/0008_auth_users_safety.sql');
+  console.log('✓ auth user columns safety migration applied');
+}
+
 async function runDrizzleKitMigrate() {
   execSync('npx drizzle-kit migrate', {
     stdio: 'inherit',
@@ -194,6 +214,7 @@ try {
     await ensurePayroll(sql);
     await ensureHrCoreUpgrade(sql);
     await ensurePayrollRateComponents(sql);
+    await ensureAuthUserColumns(sql);
   } else {
     console.log('Fresh database — running full drizzle-kit migrate');
     await sql.end({ timeout: 5 });
