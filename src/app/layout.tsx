@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Toaster } from 'sonner';
 import AiAssistant from '@/components/ai/AiAssistant';
+import { ServiceWorkerReset } from '@/components/pwa/ServiceWorkerReset';
 
 const firaSans = Fira_Sans({
   weight: ["300", "400", "500", "600", "700"],
@@ -54,6 +55,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <ServiceWorkerReset />
             {children}
             <AiAssistant />
             <Toaster theme="system" />
