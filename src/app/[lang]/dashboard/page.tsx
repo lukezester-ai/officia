@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from 'lucide-react';
 import { getDashboardData } from './actions';
 import Link from 'next/link';
-import { getInvoices } from './invoices/actions';
+import { getInvoicesForDashboard } from './safe-actions';
 import { getDictionary, Locale } from '@/lib/get-dictionary';
 
 const UNPAID_LIKE = ['issued', 'sent', 'pending', 'издадена', 'изпратена'];
@@ -15,10 +15,18 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
   const { lang } = await props.params;
   const dict = await getDictionary(lang as Locale);
   const t = dict.dashboard;
-  const data = await getDashboardData();
+  let dashboardError: string | null = null;
+  let invoiceError: string | null = null;
+  let data: Awaited<ReturnType<typeof getDashboardData>> | null = null;
+
+  try {
+    data = await getDashboardData();
+  } catch (error) {
+    dashboardError = error instanceof Error ? error.message : String(error);
+  }
   
   // We keep pulling raw invoice data just in case we need the lists for now
-  const invRes = await getInvoices();
+  const invRes = await getInvoicesForDashboard();
   if (!invRes.success) throw new Error(invRes.error || 'Грешка при зареждане на фактурите.');
   const invoices: any[] = invRes.data || [];
 
@@ -35,6 +43,22 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
 
   return (
     <div className="space-y-6">
+      {(dashboardError || invoiceError || invRes.error) && (
+        <Card className="border-amber-500/30 bg-amber-500/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-200">
+              <AlertCircle size={18} />
+              Диагностика на таблото
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-amber-100">
+            <p>Страницата е заредена в безопасен режим, защото част от данните не могат да се прочетат.</p>
+            {dashboardError && <p><span className="font-semibold">Dashboard:</span> {dashboardError}</p>}
+            {(invoiceError || invRes.error) && <p><span className="font-semibold">Фактури:</span> {invoiceError || invRes.error}</p>}
+            <p>Отвори <code className="rounded bg-black/20 px-1">/api/health/app</code>, за да видим точната проверка на базата.</p>
+          </CardContent>
+        </Card>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t.operationalCenter}</h1>
