@@ -27,7 +27,9 @@ if (process.env.SKIP_STARTUP_MIGRATIONS === 'true') {
   console.log('Skipping startup migrations because SKIP_STARTUP_MIGRATIONS=true.');
 } else {
   console.log('Running database migrations before starting the web server...');
-  await run('node', ['scripts/run-migrate.mjs']);
+  await run('node', ['scripts/run-migrate.mjs']).catch((error) => {
+    console.warn('Startup migrations failed; continuing so health repair endpoints can run:', error.message);
+  });
 }
 
 console.log('Checking critical auth user columns...');
