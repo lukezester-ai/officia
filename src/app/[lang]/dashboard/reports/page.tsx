@@ -3,10 +3,9 @@ import React from 'react';
 import { getReportsData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, TrendingUp, TrendingDown, AlertTriangle, ArrowRight, CheckCircle2, Bookmark, Download } from 'lucide-react';
+import { BrainCircuit, TrendingUp, TrendingDown, AlertTriangle, ArrowRight, CheckCircle2, Download } from 'lucide-react';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -15,10 +14,8 @@ function fmt(n: number) {
 export default async function ReportsPage(props: { params: Promise<{ lang: string }> }) {
   const { lang } = await props.params;
   const res = await getReportsData();
-  const data = res.success && res.data ? res.data : {
-    revenue: 0, expenses: 0, profit: 0, totalUnpaidSales: 0, totalUnpaidPurchases: 0, overdueCount: 0,
-    cfoSummary: "Липсват данни.", cfoInsights: []
-  };
+  if (!res.success || !res.data) throw new Error(res.error || 'Грешка при зареждане на отчетите.');
+  const data = res.data;
 
   return (
     <div className="space-y-6">
@@ -73,14 +70,14 @@ export default async function ReportsPage(props: { params: Promise<{ lang: strin
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Приходи</p>
                 <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.revenue)} €</h3>
-                <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1"><TrendingUp size={12}/> +12% спрямо м.м.</p>
+                <p className="text-xs text-muted-foreground mt-2">Текущ отчетен месец</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm border-0">
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Разходи</p>
                 <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.expenses)} €</h3>
-                <p className="text-xs text-rose-600 mt-2 flex items-center gap-1"><TrendingUp size={12}/> +5% спрямо м.м.</p>
+                <p className="text-xs text-muted-foreground mt-2">Текущ отчетен месец</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm border-0 bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900">
@@ -111,7 +108,7 @@ export default async function ReportsPage(props: { params: Promise<{ lang: strin
                       <p className="text-sm text-muted-foreground">Просрочени фактури</p>
                       <h4 className="text-xl font-bold text-rose-600 mt-1">{data.overdueCount} бр.</h4>
                     </div>
-                    <Button size="sm" variant="outline" className="gap-2">Изпрати напомняне <ArrowRight size={14}/></Button>
+                    <Link href={`/${lang}/dashboard/invoices`} className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'gap-2')}>Преглед на фактурите <ArrowRight size={14}/></Link>
                   </div>
                 </div>
               </CardContent>
@@ -134,7 +131,7 @@ export default async function ReportsPage(props: { params: Promise<{ lang: strin
                       <p className="text-sm text-muted-foreground">За плащане тази седмица</p>
                       <h4 className="text-xl font-bold mt-1">0.00 €</h4>
                     </div>
-                    <Button size="sm" variant="outline" className="gap-2">Подготви преводи <ArrowRight size={14}/></Button>
+                    <Link href={`/${lang}/dashboard/banking`} className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'gap-2')}>Към банкиране <ArrowRight size={14}/></Link>
                   </div>
                 </div>
               </CardContent>
@@ -151,22 +148,8 @@ export default async function ReportsPage(props: { params: Promise<{ lang: strin
             <CardContent className="p-8 text-center">
               <BrainCircuit size={48} className="mx-auto text-indigo-500 mb-4 opacity-50"/>
               <h3 className="text-xl font-bold mb-2">AI Ефективност този месец</h3>
-              <p className="text-muted-foreground mb-6">Officia AI ви е спестил приблизително 14 часа ръчен труд.</p>
-              
-              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
-                  <h4 className="text-2xl font-bold text-indigo-600">89%</h4>
-                  <p className="text-xs text-muted-foreground mt-1">Автоматично разпознати документи</p>
-                </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
-                  <h4 className="text-2xl font-bold text-indigo-600">92%</h4>
-                  <p className="text-xs text-muted-foreground mt-1">Точност на банково съпоставяне</p>
-                </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
-                  <h4 className="text-2xl font-bold text-indigo-600">12</h4>
-                  <p className="text-xs text-muted-foreground mt-1">Открити счетоводни аномалии</p>
-                </div>
-              </div>
+              <p className="text-muted-foreground mb-4">Метриките ще се покажат след натрупване на реални audit събития за OCR, съпоставяне и одобрения.</p>
+              <Link href={`/${lang}/dashboard/ai-inbox`} className={cn(buttonVariants({ variant: 'outline' }), 'gap-2')}>Преглед на AI операциите <ArrowRight size={14} /></Link>
             </CardContent>
           </Card>
         </TabsContent>

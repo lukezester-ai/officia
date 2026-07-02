@@ -1,19 +1,25 @@
-import { pgTable, text, uuid, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
+import { tenants } from './tenants';
 
 export const auditLog = pgTable('audit_log', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
   userId: uuid('user_id').references(() => users.id),
-  action: text('action'), // 'CREATE', 'UPDATE', 'DELETE', 'POST', 'CANCEL'
+  action: text('action').notNull(), // 'CREATE', 'UPDATE', 'DELETE', 'POST', 'CANCEL'
   tableName: text('table_name'),
   recordId: uuid('record_id'),
   oldData: jsonb('old_data'),
   newData: jsonb('new_data'),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
+  requestId: text('request_id'),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  tenantCreatedIdx: index('audit_log_tenant_created_idx').on(table.tenantId, table.createdAt),
+  entityIdx: index('audit_log_entity_idx').on(table.tableName, table.recordId),
+}));
 
 // SQL функция за извличане на Одитен Дневник (Audit Trail Report)
 export const auditTrailReportSQL = `

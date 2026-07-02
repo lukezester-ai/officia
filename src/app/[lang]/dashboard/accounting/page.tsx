@@ -10,7 +10,10 @@ import { PendingInvoicesQueue } from './PendingInvoicesQueue';
 export default async function AccountingPage(props: { params: Promise<{ lang: string }> }) {
   const params = await props.params;
   const res = await getAccountingData(params.lang);
-  const data = res.success && res.data ? res.data : { headers: [], lines: [], pendingItems: [] };
+  if (!res.success || !res.data) {
+    return <Card className="border-red-500/30 bg-red-500/10"><CardContent className="p-6 text-red-700 dark:text-red-300"><h1 className="text-xl font-semibold">Счетоводство</h1><p className="mt-2">{res.error || 'Грешка при зареждане на счетовните данни.'}</p></CardContent></Card>;
+  }
+  const data = res.data;
 
   const drafts = data.headers.filter(h => h.status === 'draft');
   const problems = data.headers.filter(h => h.aiStatus === 'problem');
@@ -92,13 +95,20 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
         </TabsContent>
 
         <TabsContent value="drafts" className="space-y-4 m-0">
-          <Card className="shadow-sm border-0"><CardContent className="p-8 text-center text-muted-foreground">Няма чернови.</CardContent></Card>
+          <JournalEntriesTable entries={drafts} emptyText="Няма чернови." />
         </TabsContent>
 
         <TabsContent value="problems" className="space-y-4 m-0">
-          <Card className="shadow-sm border-0"><CardContent className="p-8 text-center text-muted-foreground">Няма открити проблеми от AI.</CardContent></Card>
+          <JournalEntriesTable entries={problems} emptyText="Няма открити проблеми от AI." />
         </TabsContent>
       </Tabs>
     </div>
   );
+}
+
+function JournalEntriesTable({ entries, emptyText }: { entries: Array<{ id: string; entryDate: Date; journalNumber: string; description: string | null; status: string | null; aiReasoning?: string | null }>; emptyText: string }) {
+  return <Card className="shadow-sm border-0"><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead className="pl-6">Дата</TableHead><TableHead>Номер</TableHead><TableHead>Описание</TableHead><TableHead>Статус</TableHead></TableRow></TableHeader><TableBody>
+    {entries.map((entry) => <TableRow key={entry.id}><TableCell className="pl-6">{new Date(entry.entryDate).toLocaleDateString('bg-BG')}</TableCell><TableCell className="font-mono">{entry.journalNumber}</TableCell><TableCell><p>{entry.description || '—'}</p>{entry.aiReasoning && <p className="text-xs text-muted-foreground">{entry.aiReasoning}</p>}</TableCell><TableCell><Badge variant="outline">{entry.status === 'posted' ? 'Публикувана' : entry.status === 'canceled' ? 'Анулирана' : 'Чернова'}</Badge></TableCell></TableRow>)}
+    {!entries.length && <TableRow><TableCell colSpan={4} className="py-12 text-center text-muted-foreground">{emptyText}</TableCell></TableRow>}
+  </TableBody></Table></CardContent></Card>;
 }

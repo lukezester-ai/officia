@@ -13,11 +13,12 @@ import { postPayroll, savePayrollDraft } from './actions';
 import { PayrollExportButton } from './PayrollExportButton';
 
 type Row = ReturnType<typeof calculatePayrollRow>;
-type HistoryItem = { id: string; month: string; status: 'draft' | 'posted' | 'canceled' };
+type PayrollStatus = 'new' | 'draft' | 'calculated' | 'approved' | 'posted' | 'paid' | 'submitted' | 'canceled';
+type HistoryItem = { id: string; month: string; status: Exclude<PayrollStatus, 'new'> };
 type PayrollData = {
   batchId: string | null;
   month: string;
-  status: 'new' | 'draft' | 'posted' | 'canceled';
+  status: PayrollStatus;
   journalHeaderId: string | null;
   rates: PayrollRates;
   list: Row[];
@@ -44,7 +45,7 @@ export function PayrollClient({ initial }: { initial: PayrollData }) {
     otherDeductions: row.otherDeductions,
   })));
   const [pending, setPending] = useState<'save' | 'post' | null>(null);
-  const locked = initial.status === 'posted';
+  const locked = ['approved', 'posted', 'paid', 'submitted', 'canceled'].includes(initial.status);
   const rows = useMemo(() => inputs.map((row) => calculatePayrollRow(row, rates)), [inputs, rates]);
   const totals = useMemo(() => payrollTotals(rows), [rows]);
 

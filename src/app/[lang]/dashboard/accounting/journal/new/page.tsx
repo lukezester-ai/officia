@@ -47,6 +47,7 @@ export default function NewJournalEntry(props: { params: Promise<{ lang: string 
   const totalDebit = lines.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
   const totalCredit = lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0);
   const balanced = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
+  const validLines = lines.length >= 2 && lines.every((line) => line.account && ((Number(line.debit) > 0) !== (Number(line.credit) > 0)));
 
   const addLine = () =>
     setLines((prev) => [...prev, { id: Date.now(), account: "", description: "", debit: "", credit: "" }]);
@@ -62,6 +63,7 @@ export default function NewJournalEntry(props: { params: Promise<{ lang: string 
     if (!date) return setError("Изберете дата");
     if (!description) return setError("Въведете описание");
     if (!balanced) return setError("Дебит и Кредит трябва да са равни");
+    if (!validLines) return setError("Всеки ред трябва да има сметка и сума само в дебит или само в кредит");
 
     setSaving(true);
     try {
@@ -70,7 +72,8 @@ export default function NewJournalEntry(props: { params: Promise<{ lang: string 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date, reference, description, lines }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "Грешка при записване");
       setSuccess(true);
       setTimeout(() => router.push(`/${params.lang}/dashboard/accounting/journal`), 1500);
     } catch (e: any) {
@@ -266,7 +269,7 @@ export default function NewJournalEntry(props: { params: Promise<{ lang: string 
           </button>
           <button
             onClick={handleSave}
-            disabled={saving || !balanced}
+            disabled={saving || !balanced || !validLines}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all px-6 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-violet-500/25"
           >
             <Save size={15} />

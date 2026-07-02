@@ -15,14 +15,12 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
   const { lang } = await props.params;
   const dict = await getDictionary(lang as Locale);
   const t = dict.dashboard;
-  const data = await getDashboardData().catch(() => null);
+  const data = await getDashboardData();
   
   // We keep pulling raw invoice data just in case we need the lists for now
-  const [invRes] = await Promise.all([
-    getInvoices().catch(() => ({ success: false, data: [] })),
-  ]);
-
-  const invoices: any[] = invRes.success ? (invRes as any).data : [];
+  const invRes = await getInvoices();
+  if (!invRes.success) throw new Error(invRes.error || 'Грешка при зареждане на фактурите.');
+  const invoices: any[] = invRes.data || [];
 
   const revenue = data?.overviewStats?.revenue ?? 0;
   const expenses = data?.overviewStats?.expenses ?? 0;

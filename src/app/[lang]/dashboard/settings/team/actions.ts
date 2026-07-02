@@ -8,9 +8,11 @@ import { eq, and, gt, isNull } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { requirePermission, INVITABLE_ROLES, type AppRole, assignUserRole } from '@/lib/auth/rbac';
 import { revalidatePath } from 'next/cache';
+import { auditLog } from '@/lib/db/schema/audit_log';
 
 export async function getTeamMembers() {
-  const { tenantId } = await requireTenant();
+  try {
+    const { tenantId } = await requireTenant();
   const members = await db
     .select({
       userId: userRoles.userId,
@@ -33,7 +35,10 @@ export async function getTeamMembers() {
       ),
     );
 
-  return { success: true as const, data: { members, pending } };
+    return { success: true as const, data: { members, pending } };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при зареждане на екипа' };
+  }
 }
 
 export async function createTeamInvite(input: { email: string; role: AppRole; lang?: string }) {
@@ -41,7 +46,7 @@ export async function createTeamInvite(input: { email: string; role: AppRole; la
   const perm = await requirePermission(tenantId, user.id, 'team:invite');
   if (!perm.ok) return { success: false as const, error: perm.error };
 
-  if (!INVITABLE_ROLES.includes(input.role) && input.role !== 'owner') {
+  if (!INVITABLE_ROLES.includes(input.role)) {
     return { success: false as const, error: 'Невалидна роля' };
   }
 
@@ -56,6 +61,11 @@ export async function createTeamInvite(input: { email: string; role: AppRole; la
     token,
     invitedBy: user.id,
     expiresAt,
+  });
+  await db.insert(auditLog).values({
+    tenantId, userId: user.id, action: 'CREATE', tableName: 'tenant_invites',
+    newData: { email: input.email.toLowerCase().trim(), role: input.role, expiresAt },
+    metadata: { source: 'team_settings' },
   });
 
   const lang = input.lang || 'bg';
@@ -82,6 +92,7 @@ export async function acceptTeamInvite(token: string) {
     );
 
   if (!invite) return { success: false as const, error: 'Невалидна или изтекла покана' };
+  if (!INVITABLE_ROLES.includes(invite.role as AppRole)) return { success: false as const, error: 'Поканата съдържа недопустима роля' };
   if (invite.email !== user.email.toLowerCase()) {
     return { success: false as const, error: 'Invite email does not match your account' };
   }
@@ -95,6 +106,10 @@ export async function acceptTeamInvite(token: string) {
     .update(tenantInvites)
     .set({ acceptedAt: new Date() })
     .where(eq(tenantInvites.id, invite.id));
+  await db.insert(auditLog).values({
+    tenantId: invite.tenantId, userId: user.id, action: 'ACCEPT', tableName: 'tenant_invites', recordId: invite.id,
+    newData: { email: invite.email, role: invite.role }, metadata: { source: 'accept_invite' },
+  });
 
   revalidatePath('/', 'layout');
   return { success: true as const };

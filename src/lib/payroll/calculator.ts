@@ -1,16 +1,29 @@
 export const PAYROLL_2026_DEFAULTS = {
   maxInsuranceBase: 2111.64,
   minimumMonthlyWage: 620.2,
+  minimumInsuranceIncome: 620.2,
   employeeInsuranceRate: 13.78,
   employerInsuranceRate: 19.12,
+  employeeDooRate: 10.58,
+  employeeHealthRate: 3.2,
+  employerDooRate: 13.82,
+  employerHealthRate: 4.8,
+  employerOtherRate: 0.5,
   incomeTaxRate: 10,
 } as const;
 
 export type PayrollRates = {
   maxInsuranceBase: number;
+  minimumMonthlyWage?: number;
+  minimumInsuranceIncome?: number;
   employeeInsuranceRate: number;
   employerInsuranceRate: number;
   incomeTaxRate: number;
+  employeeDooRate?: number;
+  employeeHealthRate?: number;
+  employerDooRate?: number;
+  employerHealthRate?: number;
+  employerOtherRate?: number;
 };
 
 export type PayrollInput = {
@@ -23,6 +36,10 @@ export type PayrollInput = {
   bonus: number;
   otherTaxable: number;
   otherDeductions: number;
+  birthYear?: number | null;
+  minimumInsuranceIncome?: number | null;
+  economicActivityCode?: string | null;
+  insuranceCategory?: string | null;
 };
 
 export type PayrollCalculation = PayrollInput & {
@@ -58,15 +75,24 @@ export function calculatePayrollRow(input: PayrollInput, rates: PayrollRates): P
   const otherTaxable = Math.max(0, input.otherTaxable || 0);
   const otherDeductions = Math.max(0, input.otherDeductions || 0);
   const gross = money((baseSalary * workedDays) / workingDays + bonus + otherTaxable);
-  const insuranceBase = money(Math.min(gross, Math.max(0, rates.maxInsuranceBase)));
+  const minimumWage = Math.max(0, rates.minimumMonthlyWage ?? PAYROLL_2026_DEFAULTS.minimumMonthlyWage);
+  const minimumInsuranceIncome = Math.max(
+    0,
+    input.minimumInsuranceIncome ?? rates.minimumInsuranceIncome ?? PAYROLL_2026_DEFAULTS.minimumInsuranceIncome,
+    minimumWage,
+  );
+  const maxInsuranceBase = Math.max(0, rates.maxInsuranceBase);
+  const insuranceBase = gross > 0
+    ? money(Math.min(Math.max(gross, minimumInsuranceIncome), maxInsuranceBase))
+    : 0;
   const employeeInsurance = money(insuranceBase * rates.employeeInsuranceRate / 100);
   const employerInsurance = money(insuranceBase * rates.employerInsuranceRate / 100);
   const taxableBase = Math.max(0, gross - employeeInsurance);
   const incomeTax = money(taxableBase * rates.incomeTaxRate / 100);
   const net = money(Math.max(0, gross - employeeInsurance - incomeTax - otherDeductions));
   const employerCost = money(gross + employerInsurance);
-  const warning = baseSalary > 0 && baseSalary < PAYROLL_2026_DEFAULTS.minimumMonthlyWage
-    ? `Основната заплата е под минималната за 2026 г. (${PAYROLL_2026_DEFAULTS.minimumMonthlyWage.toFixed(2)} €).`
+  const warning = baseSalary > 0 && baseSalary < minimumWage
+    ? `Основната заплата е под минималната за 2026 г. (${minimumWage.toFixed(2)} €).`
     : null;
 
   return {

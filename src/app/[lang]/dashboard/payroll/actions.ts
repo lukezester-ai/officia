@@ -5,7 +5,9 @@ import { accountPlan } from '@/lib/db/schema/account_plan';
 import { employees } from '@/lib/db/schema/employees';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
 import { payrollBatches, payrollItems } from '@/lib/db/schema/payroll';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { contributionRates } from '@/lib/db/schema/contribution_rates';
+import { auditLog } from '@/lib/db/schema/audit_log';
+import { and, asc, desc, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { requirePermission } from '@/lib/auth/rbac';
@@ -21,6 +23,27 @@ import {
 const validMonth = (value: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
 const monthDate = (month: string) => `${month}-01`;
 const number = (value: unknown) => Number(value) || 0;
+const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+async function getContributionRate(tenantId: string, month: string) {
+  const date = monthDate(month);
+  const rows = await db.select().from(contributionRates).where(and(
+    or(eq(contributionRates.tenantId, tenantId), isNull(contributionRates.tenantId)),
+    lte(contributionRates.validFrom, date),
+    or(isNull(contributionRates.validTo), gte(contributionRates.validTo, date)),
+  ));
+  return rows.find((row) => row.tenantId === tenantId) ?? rows.find((row) => row.tenantId === null) ?? null;
+}
+
+function splitRates(rates: PayrollRates) {
+  return {
+    employeeDooRate: number(rates.employeeDooRate ?? PAYROLL_2026_DEFAULTS.employeeDooRate),
+    employeeHealthRate: number(rates.employeeHealthRate ?? PAYROLL_2026_DEFAULTS.employeeHealthRate),
+    employerDooRate: number(rates.employerDooRate ?? PAYROLL_2026_DEFAULTS.employerDooRate),
+    employerHealthRate: number(rates.employerHealthRate ?? PAYROLL_2026_DEFAULTS.employerHealthRate),
+    employerOtherRate: number(rates.employerOtherRate ?? PAYROLL_2026_DEFAULTS.employerOtherRate),
+  };
+}
 
 export type PayrollDraftPayload = {
   month: string;
@@ -29,6 +52,7 @@ export type PayrollDraftPayload = {
 };
 
 function serializeBatch(batch: typeof payrollBatches.$inferSelect, rows: Array<typeof payrollItems.$inferSelect>) {
+  const metadata = (batch.calculationMetadata ?? {}) as Record<string, unknown>;
   return {
     batchId: batch.id,
     month: batch.month.slice(0, 7),
@@ -36,9 +60,16 @@ function serializeBatch(batch: typeof payrollBatches.$inferSelect, rows: Array<t
     journalHeaderId: batch.journalHeaderId,
     rates: {
       maxInsuranceBase: number(batch.maxInsuranceBase),
+      minimumMonthlyWage: number(metadata.minimumMonthlyWage ?? PAYROLL_2026_DEFAULTS.minimumMonthlyWage),
+      minimumInsuranceIncome: number(metadata.minimumInsuranceIncome ?? PAYROLL_2026_DEFAULTS.minimumInsuranceIncome),
       employeeInsuranceRate: number(batch.employeeInsuranceRate),
       employerInsuranceRate: number(batch.employerInsuranceRate),
       incomeTaxRate: number(batch.incomeTaxRate),
+      employeeDooRate: number(metadata.employeeDooRate ?? PAYROLL_2026_DEFAULTS.employeeDooRate),
+      employeeHealthRate: number(metadata.employeeHealthRate ?? PAYROLL_2026_DEFAULTS.employeeHealthRate),
+      employerDooRate: number(metadata.employerDooRate ?? PAYROLL_2026_DEFAULTS.employerDooRate),
+      employerHealthRate: number(metadata.employerHealthRate ?? PAYROLL_2026_DEFAULTS.employerHealthRate),
+      employerOtherRate: number(metadata.employerOtherRate ?? PAYROLL_2026_DEFAULTS.employerOtherRate),
     },
     list: rows.map((row) => ({
       employeeId: row.employeeId,
@@ -96,12 +127,29 @@ export async function getPayrollData(requestedMonth?: string) {
       .where(and(eq(employees.tenantId, tenantId), eq(employees.isActive, true)))
       .orderBy(asc(employees.firstName), asc(employees.lastName));
     const days = workingDaysInMonth(month);
-    const rates = { ...PAYROLL_2026_DEFAULTS };
+    const statutoryRate = await getContributionRate(tenantId, month);
+    const rates: PayrollRates = statutoryRate ? {
+      maxInsuranceBase: number(statutoryRate.maxInsuranceBase),
+      minimumMonthlyWage: number(statutoryRate.minimumWage ?? PAYROLL_2026_DEFAULTS.minimumMonthlyWage),
+      minimumInsuranceIncome: number(statutoryRate.minimumInsuranceIncome ?? statutoryRate.minimumWage ?? PAYROLL_2026_DEFAULTS.minimumInsuranceIncome),
+      employeeInsuranceRate: number(statutoryRate.employeeDooRate) + number(statutoryRate.employeeHealthRate) + number(statutoryRate.employeeOtherRate),
+      employerInsuranceRate: number(statutoryRate.employerDooRate) + number(statutoryRate.employerHealthRate) + number(statutoryRate.employerOtherRate),
+      incomeTaxRate: number(statutoryRate.incomeTaxRate),
+      employeeDooRate: number(statutoryRate.employeeDooRate),
+      employeeHealthRate: number(statutoryRate.employeeHealthRate),
+      employerDooRate: number(statutoryRate.employerDooRate),
+      employerHealthRate: number(statutoryRate.employerHealthRate),
+      employerOtherRate: number(statutoryRate.employerOtherRate),
+    } : { ...PAYROLL_2026_DEFAULTS };
     const list = activeEmployees.map((employee) => calculatePayrollRow({
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
       position: employee.position,
       baseSalary: number(employee.salary),
+      birthYear: employee.birthYear,
+      minimumInsuranceIncome: number(employee.minimumInsuranceIncome ?? rates.minimumInsuranceIncome ?? PAYROLL_2026_DEFAULTS.minimumInsuranceIncome),
+      economicActivityCode: employee.economicActivityCode,
+      insuranceCategory: employee.insuranceCategory,
       workingDays: days,
       workedDays: days,
       bonus: 0,
@@ -130,21 +178,36 @@ export async function savePayrollDraft(payload: PayrollDraftPayload) {
     const employeeMap = new Map(employeeRows.map((employee) => [employee.id, employee]));
     const rates: PayrollRates = {
       maxInsuranceBase: Math.max(0, number(payload.rates.maxInsuranceBase)),
+      minimumMonthlyWage: Math.max(0, number(payload.rates.minimumMonthlyWage ?? PAYROLL_2026_DEFAULTS.minimumMonthlyWage)),
+      minimumInsuranceIncome: Math.max(0, number(payload.rates.minimumInsuranceIncome ?? PAYROLL_2026_DEFAULTS.minimumInsuranceIncome)),
       employeeInsuranceRate: Math.max(0, number(payload.rates.employeeInsuranceRate)),
       employerInsuranceRate: Math.max(0, number(payload.rates.employerInsuranceRate)),
       incomeTaxRate: Math.max(0, number(payload.rates.incomeTaxRate)),
+      ...splitRates(payload.rates),
     };
     const calculated = payload.rows.map((row) => {
       const employee = employeeMap.get(row.employeeId);
       if (!employee) throw new Error(`Служителят ${row.employeeName} не принадлежи към фирмата.`);
-      return calculatePayrollRow({ ...row, employeeName: `${employee.firstName} ${employee.lastName}`.trim(), position: employee.position }, rates);
+      return calculatePayrollRow({
+        ...row,
+        employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
+        position: employee.position,
+        birthYear: employee.birthYear,
+        minimumInsuranceIncome: number(employee.minimumInsuranceIncome ?? row.minimumInsuranceIncome ?? rates.minimumInsuranceIncome ?? PAYROLL_2026_DEFAULTS.minimumInsuranceIncome),
+        economicActivityCode: employee.economicActivityCode,
+        insuranceCategory: employee.insuranceCategory,
+      }, rates);
     });
     const totals = payrollTotals(calculated);
+    const statutoryRate = await getContributionRate(tenantId, payload.month);
+    const detailedRates = splitRates(rates);
 
     const saved = await db.transaction(async (tx) => {
       const [existing] = await tx.select().from(payrollBatches)
         .where(and(eq(payrollBatches.tenantId, tenantId), eq(payrollBatches.month, monthDate(payload.month))));
-      if (existing?.status === 'posted') throw new Error('Осчетоводена ведомост не може да бъде променяна.');
+      if (existing && ['approved', 'posted', 'paid', 'submitted', 'canceled'].includes(existing.status)) {
+        throw new Error('Заключена ведомост не може да бъде променяна.');
+      }
 
       const batchValues = {
         tenantId,
@@ -161,6 +224,14 @@ export async function savePayrollDraft(payload: PayrollDraftPayload) {
         totalNet: totals.net.toFixed(2),
         totalEmployerCost: totals.employerCost.toFixed(2),
         createdBy: user.id,
+        contributionRateId: statutoryRate?.id ?? null,
+        calculationMetadata: {
+          ...detailedRates,
+          minimumMonthlyWage: rates.minimumMonthlyWage,
+          minimumInsuranceIncome: rates.minimumInsuranceIncome,
+          source: statutoryRate?.sourceUrl ?? 'fallback',
+          contributionRateName: statutoryRate?.name ?? 'Вградени стойности',
+        },
         updatedAt: new Date(),
       };
       const [batch] = existing
@@ -168,7 +239,11 @@ export async function savePayrollDraft(payload: PayrollDraftPayload) {
         : await tx.insert(payrollBatches).values(batchValues).returning();
 
       await tx.delete(payrollItems).where(eq(payrollItems.batchId, batch.id));
-      await tx.insert(payrollItems).values(calculated.map((row) => ({
+      await tx.insert(payrollItems).values(calculated.map((row) => {
+        const employeeHealth = money(row.insuranceBase * detailedRates.employeeHealthRate / 100);
+        const employerHealth = money(row.insuranceBase * detailedRates.employerHealthRate / 100);
+        const employerOther = money(row.insuranceBase * detailedRates.employerOtherRate / 100);
+        return {
         batchId: batch.id,
         tenantId,
         employeeId: row.employeeId,
@@ -184,17 +259,33 @@ export async function savePayrollDraft(payload: PayrollDraftPayload) {
         insuranceBase: row.insuranceBase.toFixed(2),
         employeeInsurance: row.employeeInsurance.toFixed(2),
         employerInsurance: row.employerInsurance.toFixed(2),
+        employeeDoo: money(row.employeeInsurance - employeeHealth).toFixed(2),
+        employeeHealth: employeeHealth.toFixed(2),
+        employerDoo: money(row.employerInsurance - employerHealth - employerOther).toFixed(2),
+        employerHealth: employerHealth.toFixed(2),
+        employerOther: employerOther.toFixed(2),
         incomeTax: row.incomeTax.toFixed(2),
         net: row.net.toFixed(2),
         employerCost: row.employerCost.toFixed(2),
         hasWarning: row.hasWarning,
         warning: row.warning,
-      })));
+        metadata: { rates: detailedRates },
+      } }));
 
       for (const row of calculated) {
-        await tx.update(employees).set({ salary: row.baseSalary.toFixed(2) })
+        await tx.update(employees).set({ salary: row.baseSalary.toFixed(2), updatedAt: new Date() })
           .where(and(eq(employees.id, row.employeeId), eq(employees.tenantId, tenantId)));
       }
+      await tx.insert(auditLog).values({
+        tenantId,
+        userId: user.id,
+        action: existing ? 'UPDATE' : 'CREATE',
+        tableName: 'payroll_batches',
+        recordId: batch.id,
+        oldData: existing ? { status: existing.status, totalGross: existing.totalGross, totalNet: existing.totalNet } : null,
+        newData: { status: batch.status, month: batch.month, totalGross: totals.gross, totalNet: totals.net, employees: calculated.length },
+        metadata: { source: 'payroll_ui' },
+      });
       return batch.id;
     });
 
@@ -215,7 +306,9 @@ export async function postPayroll(batchId: string) {
       const [batch] = await tx.select().from(payrollBatches)
         .where(and(eq(payrollBatches.id, batchId), eq(payrollBatches.tenantId, tenantId)));
       if (!batch) throw new Error('Ведомостта не е намерена.');
-      if (batch.status === 'posted') throw new Error('Ведомостта вече е осчетоводена.');
+      if (!['draft', 'calculated', 'approved'].includes(batch.status)) {
+        throw new Error('Ведомостта не е в статус, който позволява осчетоводяване.');
+      }
       const rows = await tx.select().from(payrollItems).where(eq(payrollItems.batchId, batch.id));
       if (!rows.length) throw new Error('Ведомостта няма редове.');
 
@@ -275,6 +368,16 @@ export async function postPayroll(batchId: string) {
       await tx.update(payrollBatches).set({
         status: 'posted', journalHeaderId: header.id, postedBy: user.id, postedAt: new Date(), updatedAt: new Date(),
       }).where(eq(payrollBatches.id, batch.id));
+      await tx.insert(auditLog).values({
+        tenantId,
+        userId: user.id,
+        action: 'POST',
+        tableName: 'payroll_batches',
+        recordId: batch.id,
+        oldData: { status: batch.status },
+        newData: { status: 'posted', journalHeaderId: header.id, journalNumber },
+        metadata: { source: 'payroll_ui' },
+      });
       return { journalNumber };
     });
 

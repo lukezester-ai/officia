@@ -1,115 +1,59 @@
-import React from 'react';
-import { db } from '@/lib/db/db';
-import { employees } from '@/lib/db/schema/employees';
-import { eq, and } from 'drizzle-orm';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, History, ShieldCheck, User } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { requireTenant } from '@/lib/auth/get-tenant';
-
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getEmployeeProfile } from '../actions';
 import { StatusUpdater } from './_status-updater';
+import { EmployeeProfileActions } from './EmployeeProfileActions';
 
-export default async function HrProfilePage(props: { params: Promise<{ lang: string, id: string }> }) {
+const contractKind = { permanent: 'Безсрочен', fixed_term: 'Срочен', civil_contract: 'Граждански' } as const;
+const leaveType = { annual: 'Платен отпуск', sick: 'Болничен', unpaid: 'Неплатен', maternity: 'Майчинство', parental: 'Родителски', other: 'Друг' } as const;
+
+export default async function HrProfilePage(props: { params: Promise<{ lang: string; id: string }> }) {
   const params = await props.params;
-  const { tenantId } = await requireTenant();
-  const result = await db
-    .select()
-    .from(employees)
-    .where(and(eq(employees.id, params.id), eq(employees.tenantId, tenantId)));
-  const emp = result[0];
+  const result = await getEmployeeProfile(params.id);
+  if (!result.success) notFound();
+  const { employee, contracts, leaves, history } = result.data;
 
-  if (!emp) {
-    notFound();
-  }
-
-  return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center gap-4">
-        <Link href={`/${params.lang}/dashboard/hr`}>
-          <Button variant="outline" size="icon" className="h-9 w-9"><ArrowLeft size={16} /></Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{emp.firstName} {emp.lastName}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{emp.position || 'Липсва длъжност'} • {emp.department || 'Липсва отдел'}</p>
-        </div>
-        <div className="ml-auto">
-          <Button className="gap-2"><Edit size={16} /> Редактирай</Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 h-12 items-center bg-slate-100 dark:bg-slate-900 rounded-xl p-1 mb-6">
-          <TabsTrigger value="overview" className="rounded-lg h-9">Основни</TabsTrigger>
-          <TabsTrigger value="contract" className="rounded-lg h-9">Договор</TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg h-9">Документи</TabsTrigger>
-          <TabsTrigger value="leaves" className="rounded-lg h-9">Отпуски</TabsTrigger>
-          <TabsTrigger value="history" className="rounded-lg h-9">История</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="m-0 space-y-4">
-          <Card className="shadow-sm border-0">
-            <CardHeader className="pb-2"><CardTitle className="text-lg flex items-center gap-2"><User size={18}/> Лични данни</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                <div><span className="text-sm text-muted-foreground block mb-1">Име</span><p className="font-medium">{emp.firstName} {emp.lastName}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Имейл</span><p className="font-medium">{emp.email}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Телефон</span><p className="font-medium">{emp.phone || '—'}</p></div>
-                <div>
-                  <span className="text-sm text-muted-foreground block mb-1">Работен статус</span>
-                  <StatusUpdater employeeId={emp.id} currentStatus={emp.workStatus || 'at_work'} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="contract" className="m-0 space-y-4">
-          <Card className="shadow-sm border-0">
-            <CardHeader className="pb-2"><CardTitle className="text-lg flex items-center gap-2"><FileText size={18}/> Договорни отношения</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                <div><span className="text-sm text-muted-foreground block mb-1">Дата на започване</span><p className="font-medium">{new Date(emp.startDate).toLocaleDateString('bg-BG')}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Крайна дата</span><p className="font-medium">{emp.endDate ? new Date(emp.endDate).toLocaleDateString('bg-BG') : 'Безсрочен'}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Тип заетост</span><p className="font-medium uppercase text-xs tracking-wider mt-1.5">{emp.contractType}</p></div>
-                <div><span className="text-sm text-muted-foreground block mb-1">Възнаграждение (Бруто)</span><p className="font-mono">{emp.salary ? `${parseFloat(emp.salary).toLocaleString('bg-BG')} €` : '—'}</p></div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="documents" className="m-0 space-y-4">
-          <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <Upload size={32} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground mb-4">Няма качени документи (напр. подписан договор, анекси).</p>
-              <Button variant="outline">Качи документ</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="leaves" className="m-0 space-y-4">
-          <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <Calendar size={32} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground mb-4">Няма регистрирани отсъствия през тази година.</p>
-              <Button variant="outline">Регистрирай отсъствие</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="history" className="m-0 space-y-4">
-          <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <History size={32} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground mb-4">История на промените по този профил ще се покаже тук.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+  return <div className="max-w-5xl space-y-6">
+    <div className="flex items-center gap-4">
+      <Link href={`/${params.lang}/dashboard/hr`}><Button variant="outline" size="icon" className="h-9 w-9"><ArrowLeft size={16} /></Button></Link>
+      <div><h1 className="text-2xl font-bold tracking-tight">{employee.firstName} {employee.lastName}</h1><p className="mt-0.5 text-sm text-muted-foreground">{employee.position || 'Липсва длъжност'} · {employee.department || 'Липсва отдел'}</p></div>
+      <EmployeeProfileActions employee={employee} />
     </div>
-  );
+
+    <Tabs defaultValue="overview" className="w-full">
+      <TabsList className="grid h-12 w-full grid-cols-5 rounded-xl bg-slate-100 p-1 dark:bg-slate-900">
+        <TabsTrigger value="overview">Основни</TabsTrigger><TabsTrigger value="contracts">Договори</TabsTrigger><TabsTrigger value="security">Защитени данни</TabsTrigger><TabsTrigger value="leaves">Отпуски</TabsTrigger><TabsTrigger value="history">История</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview" className="mt-6 space-y-4">
+        <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><User size={18} />Лични и служебни данни</CardTitle></CardHeader><CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Value label="Имена" value={`${employee.firstName} ${employee.lastName}`} /><Value label="Имейл" value={employee.email} /><Value label="Телефон" value={employee.phone} /><Value label="Адрес" value={employee.address} />
+          <Value label="Основна заплата" value={employee.salary ? `${Number(employee.salary).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €` : null} />
+          <div><span className="mb-1 block text-sm text-muted-foreground">Работен статус</span><StatusUpdater employeeId={employee.id} currentStatus={employee.workStatus || 'at_work'} /></div>
+        </CardContent></Card>
+      </TabsContent>
+      <TabsContent value="contracts" className="mt-6 space-y-3">
+        {contracts.map((contract) => <Card key={contract.id}><CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between"><div><div className="flex items-center gap-2 font-semibold"><FileText size={16} />{contract.contractNumber}<Badge variant="outline">{contract.status === 'active' ? 'Активен' : contract.status}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{contractKind[contract.kind]} · от {new Date(contract.startDate).toLocaleDateString('bg-BG')}{contract.endDate ? ` до ${new Date(contract.endDate).toLocaleDateString('bg-BG')}` : ''}</p></div><span className="text-sm text-muted-foreground">Подписан: {contract.signedAt ? new Date(contract.signedAt).toLocaleDateString('bg-BG') : 'не'}</span></CardContent></Card>)}
+        {!contracts.length && <Empty icon={<FileText />} text="Няма въведени договори. Използвайте бутона „Нов договор“ горе." />}
+      </TabsContent>
+      <TabsContent value="security" className="mt-6">
+        <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck size={18} />Защитени данни</CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><p>ЕГН/ЛНЧ: {employee.personalIdentifierEncrypted ? 'въведено и криптирано' : 'не е въведено'}</p><p>IBAN: {employee.bankIbanEncrypted ? 'въведен и криптиран' : 'не е въведен'}</p><p>Банка: {employee.bankName || '—'}</p><p className="text-xs text-muted-foreground">Стойностите не се визуализират обратно. При промяна се въвеждат наново и се записват в audit trail без самите чувствителни стойности.</p></CardContent></Card>
+      </TabsContent>
+      <TabsContent value="leaves" className="mt-6 space-y-3">
+        {leaves.map((leave) => <Card key={leave.id}><CardContent className="flex items-center justify-between p-5"><div className="flex items-center gap-3"><Calendar size={18} /><div><p className="font-medium">{leaveType[leave.type]}</p><p className="text-sm text-muted-foreground">{new Date(leave.startDate).toLocaleDateString('bg-BG')} – {new Date(leave.endDate).toLocaleDateString('bg-BG')}</p></div></div><Badge variant="outline">{leave.status}</Badge></CardContent></Card>)}
+        {!leaves.length && <Empty icon={<Calendar />} text="Няма регистрирани отсъствия." />}
+      </TabsContent>
+      <TabsContent value="history" className="mt-6 space-y-3">
+        {history.map((entry) => <Card key={entry.id}><CardContent className="flex items-center justify-between p-4"><div className="flex items-center gap-3"><History size={16} /><div><p className="text-sm font-medium">{entry.action} · {entry.tableName}</p><p className="text-xs text-muted-foreground">{entry.createdAt ? new Date(entry.createdAt).toLocaleString('bg-BG') : ''}</p></div></div></CardContent></Card>)}
+        {!history.length && <Empty icon={<History />} text="Все още няма промени в audit trail." />}
+      </TabsContent>
+    </Tabs>
+  </div>;
 }
+
+function Value({ label, value }: { label: string; value: string | null | undefined }) { return <div><span className="mb-1 block text-sm text-muted-foreground">{label}</span><p className="font-medium">{value || '—'}</p></div>; }
+function Empty({ icon, text }: { icon: React.ReactNode; text: string }) { return <Card><CardContent className="flex flex-col items-center gap-3 p-10 text-center text-muted-foreground">{icon}<p>{text}</p></CardContent></Card>; }

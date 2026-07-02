@@ -1,10 +1,11 @@
 'use server';
 
 import { db } from '@/lib/db/db';
-import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
-import { eq, desc, inArray, and } from 'drizzle-orm';
+import { journalHeaders } from '@/lib/db/schema/journal_entries';
+import { eq, desc, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { requirePermission } from '@/lib/auth/rbac';
 import {
   getPendingAccountingItems,
   postPurchaseInvoiceToJournal,
@@ -22,21 +23,12 @@ export async function getAccountingData(lang: string) {
       .where(eq(journalHeaders.tenantId, tenantId))
       .orderBy(desc(journalHeaders.entryDate));
 
-    const lines =
-      headers.length > 0
-        ? await db
-            .select()
-            .from(journalLines)
-            .where(inArray(journalLines.journalId, headers.map((h) => h.id)))
-        : [];
-
     const pendingItems = await getPendingAccountingItems(tenantId, lang);
 
     return {
       success: true,
       data: {
         headers,
-        lines,
         pendingItems,
       },
     };
@@ -52,6 +44,8 @@ export async function postPendingInvoice(input: {
 }) {
   try {
     const { tenantId, user } = await requireTenant();
+    const gate = await requirePermission(tenantId, user.id, 'journal:create');
+    if (!gate.ok) return { success: false as const, error: gate.error };
 
     const result =
       input.source === 'sales_invoice'
@@ -76,7 +70,9 @@ export async function postPendingInvoice(input: {
 
 export async function confirmJournalEntry(id: string) {
   try {
-    const { tenantId } = await requireTenant();
+    const { tenantId, user } = await requireTenant();
+    const gate = await requirePermission(tenantId, user.id, 'journal:create');
+    if (!gate.ok) return { success: false, error: gate.error };
     await db
       .update(journalHeaders)
       .set({ status: 'posted', aiStatus: 'verified' })

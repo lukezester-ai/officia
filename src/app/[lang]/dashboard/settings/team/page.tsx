@@ -33,6 +33,8 @@ export default function TeamSettingsPage() {
     if (res.success) {
       setMembers(res.data.members);
       setPending(res.data.pending);
+    } else {
+      toast.error(res.error);
     }
     setLoading(false);
   };

@@ -150,6 +150,26 @@ async function ensurePayroll(sql) {
   console.log('✓ payroll migration applied');
 }
 
+async function ensureHrCoreUpgrade(sql) {
+  if (await tableExists(sql, 'employment_contracts')) {
+    console.log('✓ HR core upgrade already applied');
+    return;
+  }
+  console.log('Applying HR core upgrade...');
+  await applySqlFile(sql, 'drizzle/migrations/0006_hr_core_upgrade.sql');
+  console.log('✓ HR core upgrade applied');
+}
+
+async function ensurePayrollRateComponents(sql) {
+  if (await tableExists(sql, 'contribution_rate_components')) {
+    console.log('✓ payroll rate components already applied');
+    return;
+  }
+  console.log('Applying payroll rate components...');
+  await applySqlFile(sql, 'drizzle/migrations/0007_payroll_rate_components.sql');
+  console.log('✓ payroll rate components applied');
+}
+
 async function runDrizzleKitMigrate() {
   execSync('npx drizzle-kit migrate', {
     stdio: 'inherit',
@@ -172,6 +192,8 @@ try {
     await ensureRlsRbacNapBank(sql);
     await ensureAiMemoryRag(sql);
     await ensurePayroll(sql);
+    await ensureHrCoreUpgrade(sql);
+    await ensurePayrollRateComponents(sql);
   } else {
     console.log('Fresh database — running full drizzle-kit migrate');
     await sql.end({ timeout: 5 });

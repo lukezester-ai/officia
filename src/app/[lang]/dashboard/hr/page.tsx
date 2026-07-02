@@ -10,7 +10,8 @@ import Link from 'next/link';
 export default async function HrPage(props: { params: Promise<{ lang: string }> }) {
   const { lang } = await props.params;
   const res = await getHrData();
-  const data = res.success && res.data ? res.data : { employees: [], alerts: [] };
+  if (!res.success || !res.data) throw new Error(res.error || 'Грешка при зареждане на служителите.');
+  const data = res.data;
 
   return (
     <div className="space-y-8 pb-10">

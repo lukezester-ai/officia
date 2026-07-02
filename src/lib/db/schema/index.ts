@@ -35,4 +35,7 @@ export * from './tasks';
 export * from './counterparties';
 export * from './employees';
 export * from './payroll';
+export * from './employment_contracts';
+export * from './attendance_records';
+export * from './contribution_rates';
 export * from './access';

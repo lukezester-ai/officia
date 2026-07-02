@@ -1,10 +1,11 @@
-import { boolean, date, integer, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, date, integer, jsonb, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants';
 import { users } from './users';
 import { employees } from './employees';
 import { journalHeaders } from './journal_entries';
+import { contributionRates } from './contribution_rates';
 
-export const payrollStatusEnum = pgEnum('payroll_status', ['draft', 'posted', 'canceled']);
+export const payrollStatusEnum = pgEnum('payroll_status', ['draft', 'calculated', 'approved', 'posted', 'paid', 'submitted', 'canceled']);
 
 export const payrollBatches = pgTable('payroll_batches', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -22,9 +23,15 @@ export const payrollBatches = pgTable('payroll_batches', {
   totalNet: numeric('total_net', { precision: 15, scale: 2 }).default('0').notNull(),
   totalEmployerCost: numeric('total_employer_cost', { precision: 15, scale: 2 }).default('0').notNull(),
   journalHeaderId: uuid('journal_header_id').references(() => journalHeaders.id),
+  approvedBy: uuid('approved_by').references(() => users.id),
+  approvedAt: timestamp('approved_at'),
   createdBy: uuid('created_by').references(() => users.id),
   postedBy: uuid('posted_by').references(() => users.id),
   postedAt: timestamp('posted_at'),
+  paidAt: timestamp('paid_at'),
+  submittedToNraAt: timestamp('submitted_to_nra_at'),
+  calculationMetadata: jsonb('calculation_metadata').default({}),
+  contributionRateId: uuid('contribution_rate_id').references(() => contributionRates.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
@@ -48,9 +55,18 @@ export const payrollItems = pgTable('payroll_items', {
   insuranceBase: numeric('insurance_base', { precision: 12, scale: 2 }).notNull(),
   employeeInsurance: numeric('employee_insurance', { precision: 12, scale: 2 }).notNull(),
   employerInsurance: numeric('employer_insurance', { precision: 12, scale: 2 }).notNull(),
+  employeeDoo: numeric('employee_doo', { precision: 12, scale: 2 }).default('0').notNull(),
+  employeeHealth: numeric('employee_health', { precision: 12, scale: 2 }).default('0').notNull(),
+  employerDoo: numeric('employer_doo', { precision: 12, scale: 2 }).default('0').notNull(),
+  employerHealth: numeric('employer_health', { precision: 12, scale: 2 }).default('0').notNull(),
+  employerOther: numeric('employer_other', { precision: 12, scale: 2 }).default('0').notNull(),
   incomeTax: numeric('income_tax', { precision: 12, scale: 2 }).notNull(),
+  overtimePay: numeric('overtime_pay', { precision: 12, scale: 2 }).default('0').notNull(),
   net: numeric('net', { precision: 12, scale: 2 }).notNull(),
   employerCost: numeric('employer_cost', { precision: 12, scale: 2 }).notNull(),
+  paymentDate: date('payment_date'),
+  ibanEncrypted: text('iban_encrypted'),
+  metadata: jsonb('metadata').default({}),
   hasWarning: boolean('has_warning').default(false).notNull(),
   warning: text('warning'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
