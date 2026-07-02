@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { provisionUserFromClerk } from '@/lib/auth/provision-user';
 import { getUserRole, type AppRole } from '@/lib/auth/rbac';
 import { withTenantContext, type DbClient } from '@/lib/db/tenant-db';
+import { ensureAuthSchema } from '@/lib/auth/ensure-auth-schema';
 
 const userContextColumns = {
   id: users.id,
@@ -38,6 +39,8 @@ export async function requireTenant() {
   if (!userId) {
     throw new Error('Not authenticated');
   }
+
+  await ensureAuthSchema();
 
   let userRecords = await db.select(userContextColumns).from(users).where(eq(users.clerkId, userId));
 
