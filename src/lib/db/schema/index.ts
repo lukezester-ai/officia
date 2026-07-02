@@ -34,4 +34,5 @@ export * from './reports';
 export * from './tasks';
 export * from './counterparties';
 export * from './employees';
+export * from './payroll';
 export * from './access';

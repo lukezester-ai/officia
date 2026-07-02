@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, ExternalLink, Sparkles } from 'lucide-react';
+import { ArrowUpRight, CreditCard, Sparkles } from 'lucide-react';
 
 type BillingCycle = 'monthly' | 'annual';
 
@@ -111,7 +111,7 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
         )}
         {initial.canManageSubscription && (
           <Button variant="outline" onClick={manageSubscription} disabled={pending !== null} className="w-full gap-2">
-            <ExternalLink size={16} />
+            <ArrowUpRight size={16} />
             {pending === 'portal' ? 'Отваряне...' : 'Управление или отказ на абонамента'}
           </Button>
         )}

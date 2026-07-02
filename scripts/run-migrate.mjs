@@ -139,6 +139,17 @@ async function ensureAiMemoryRag(sql) {
   console.log('✓ AI memory/RAG migration applied');
 }
 
+async function ensurePayroll(sql) {
+  if (await tableExists(sql, 'payroll_batches')) {
+    console.log('✓ payroll migration already applied');
+    return;
+  }
+
+  console.log('Applying payroll migration...');
+  await applySqlFile(sql, 'drizzle/migrations/0005_payroll.sql');
+  console.log('✓ payroll migration applied');
+}
+
 async function runDrizzleKitMigrate() {
   execSync('npx drizzle-kit migrate', {
     stdio: 'inherit',
@@ -160,6 +171,7 @@ try {
     await ensureTenantBilling(sql);
     await ensureRlsRbacNapBank(sql);
     await ensureAiMemoryRag(sql);
+    await ensurePayroll(sql);
   } else {
     console.log('Fresh database — running full drizzle-kit migrate');
     await sql.end({ timeout: 5 });
