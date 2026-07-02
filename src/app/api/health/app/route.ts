@@ -56,7 +56,21 @@ async function applyMigrationFile(sql: postgres.Sql, fileName: string) {
     .filter(Boolean);
 
   for (const statement of statements) {
-    await sql.unsafe(statement);
+    try {
+      await sql.unsafe(statement);
+    } catch (error) {
+      const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+      const message = error instanceof Error ? error.message : String(error);
+      const isAlreadyApplied =
+        code === '42710' ||
+        code === '42P07' ||
+        code === '42701' ||
+        /already exists/i.test(message);
+
+      if (!isAlreadyApplied) {
+        throw error;
+      }
+    }
   }
 }
 
@@ -117,7 +131,7 @@ export async function GET() {
     let repaired = false;
     let { checks, failed } = await inspectSchema(sql);
 
-    if (checks.some((check) => check.table === 'tenants' && !check.exists)) {
+    if (failed.some((check) => !check.exists)) {
       await applyFreshDatabaseMigrations(sql);
       repaired = true;
       ({ checks, failed } = await inspectSchema(sql));
