@@ -5,8 +5,22 @@ import { users, tenants } from '@/lib/db/schema';
 import { TRIAL_DAYS } from '@/lib/billing/plans';
 import { assignUserRole } from '@/lib/auth/rbac';
 
+const userProvisionColumns = {
+  id: users.id,
+  tenantId: users.tenantId,
+  clerkId: users.clerkId,
+  email: users.email,
+  name: users.name,
+};
+
+const tenantProvisionColumns = {
+  id: tenants.id,
+  name: tenants.name,
+  plan: tenants.plan,
+};
+
 export async function provisionUserFromClerk(clerkId: string) {
-  const existing = await db.select().from(users).where(eq(users.clerkId, clerkId));
+  const existing = await db.select(userProvisionColumns).from(users).where(eq(users.clerkId, clerkId));
   if (existing.length > 0) {
     return existing[0];
   }
@@ -34,7 +48,7 @@ export async function provisionUserFromClerk(clerkId: string) {
       plan: 'starter',
       trialEndsAt,
     })
-    .returning();
+    .returning(tenantProvisionColumns);
 
   const [newUser] = await db
     .insert(users)
@@ -44,7 +58,7 @@ export async function provisionUserFromClerk(clerkId: string) {
       name,
       tenantId: newTenant.id,
     })
-    .returning();
+    .returning(userProvisionColumns);
 
   await client.users.updateUser(clerkId, {
     publicMetadata: { tenantId: newTenant.id },

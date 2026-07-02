@@ -1,8 +1,8 @@
 import { ReportEngine } from "@/lib/accounting/report-engine";
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "lucide-react";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
+import { requireTenant } from "@/lib/auth/get-tenant";
 
 const NAMES: Record<string, string> = {
   "701": "Приходи продажби", "702": "Приходи услуги", "709": "Други приходи",
@@ -10,18 +10,9 @@ const NAMES: Record<string, string> = {
   "604": "Разходи заплати", "609": "Други разходи",
 };
 
-import { db } from "@/lib/db/db";
-import { users } from "@/lib/db/schema/users";
-import { eq } from "drizzle-orm";
-
 export default async function PLReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const { userId } = await auth();
-
-  if (!userId) return <div className="p-8 text-white">Unauthenticated</div>;
-
-  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
-  const tenantId = user?.tenantId;
+  const { tenantId } = await requireTenant();
 
   if (!tenantId) return <div className="p-8 text-white">No tenant configured for this user.</div>;
 

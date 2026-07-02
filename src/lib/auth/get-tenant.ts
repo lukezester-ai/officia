@@ -7,6 +7,27 @@ import { provisionUserFromClerk } from '@/lib/auth/provision-user';
 import { getUserRole, type AppRole } from '@/lib/auth/rbac';
 import { withTenantContext, type DbClient } from '@/lib/db/tenant-db';
 
+const userContextColumns = {
+  id: users.id,
+  tenantId: users.tenantId,
+  clerkId: users.clerkId,
+  email: users.email,
+  name: users.name,
+};
+
+const tenantContextColumns = {
+  id: tenants.id,
+  name: tenants.name,
+  bulstat: tenants.bulstat,
+  vatNumber: tenants.vatNumber,
+  address: tenants.address,
+  plan: tenants.plan,
+  trialEndsAt: tenants.trialEndsAt,
+  stripeCustomerId: tenants.stripeCustomerId,
+  stripeSubscriptionId: tenants.stripeSubscriptionId,
+  createdAt: tenants.createdAt,
+};
+
 /**
  * Взима текущия tenant (работно пространство) за логнатия потребител.
  * Хвърля грешка, ако потребителят не е логнат или няма достъп.
@@ -18,11 +39,11 @@ export async function requireTenant() {
     throw new Error('Not authenticated');
   }
 
-  let userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
+  let userRecords = await db.select(userContextColumns).from(users).where(eq(users.clerkId, userId));
 
   if (userRecords.length === 0) {
     await provisionUserFromClerk(userId);
-    userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
+    userRecords = await db.select(userContextColumns).from(users).where(eq(users.clerkId, userId));
   }
 
   if (userRecords.length === 0) {
@@ -35,7 +56,7 @@ export async function requireTenant() {
     throw new Error('User does not belong to any tenant');
   }
 
-  const tenantRecords = await db.select().from(tenants).where(eq(tenants.id, tenantId));
+  const tenantRecords = await db.select(tenantContextColumns).from(tenants).where(eq(tenants.id, tenantId));
   const role = await getUserRole(tenantId, userRecords[0].id);
 
   return {
