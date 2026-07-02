@@ -5,15 +5,16 @@ import { invoices } from '@/lib/db/schema/invoices';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { employees } from '@/lib/db/schema/employees';
 import { journalHeaders } from '@/lib/db/schema/journal_entries';
-import { users } from '@/lib/db/schema/users';
-import { eq, desc, and, sql } from 'drizzle-orm';
-import { auth } from '@clerk/nextjs/server';
+import { desc, and, sql } from 'drizzle-orm';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 async function getCurrentUser() {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
-  return user;
+  try {
+    const { user } = await requireTenant();
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 import { runAIAssistant } from '@/lib/ai/assistant';
