@@ -66,8 +66,11 @@ async function applyMigrationFile(sql: postgres.Sql, fileName: string) {
         code === '42P07' ||
         code === '42701' ||
         /already exists/i.test(message);
+      const isNonCriticalProjectFk =
+        statement.includes('journal_lines_project_id_projects_id_fk') &&
+        /cannot be implemented/i.test(message);
 
-      if (!isAlreadyApplied) {
+      if (!isAlreadyApplied && !isNonCriticalProjectFk) {
         throw error;
       }
     }
