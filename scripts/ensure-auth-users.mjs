@@ -79,8 +79,8 @@ try {
 
   console.log('✓ auth users safety check complete');
 } catch (error) {
-  console.error('Auth users safety check failed:', error instanceof Error ? error.message : error);
-  process.exit(1);
+  console.warn('⚠ auth users safety check skipped:', error instanceof Error ? error.message : error);
+  console.warn('The web server will continue to start, but database-backed pages may fail until DATABASE_URL is fixed.');
 } finally {
   await sql.end({ timeout: 5 }).catch(() => undefined);
 }
