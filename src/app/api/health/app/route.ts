@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import postgres from 'postgres';
 import { getPostgresClientOptions } from '@/lib/db/postgres-client';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const requiredSchema: Record<string, string[]> = {
   users: ['id', 'tenant_id', 'clerk_id', 'email', 'name', 'created_at', 'updated_at'],
@@ -13,6 +18,18 @@ const requiredSchema: Record<string, string[]> = {
   documents: ['id', 'tenant_id', 'status'],
   tax_declarations: ['id', 'tenant_id', 'status'],
 };
+
+const migrationFiles = [
+  '0000_init.sql',
+  '0001_inventory_product_codes.sql',
+  '0002_tenant_billing.sql',
+  '0003_rls_rbac_nap_bank.sql',
+  '0004_ai_memory_rag.sql',
+  '0005_payroll.sql',
+  '0006_hr_core_upgrade.sql',
+  '0007_payroll_rate_components.sql',
+  '0008_auth_users_safety.sql',
+];
 
 function maskDatabaseUrl(rawUrl: string) {
   try {
@@ -28,6 +45,53 @@ function maskDatabaseUrl(rawUrl: string) {
   } catch {
     return { host: null, database: null, sslmode: null, masked: 'invalid-url-format' };
   }
+}
+
+async function applyMigrationFile(sql: postgres.Sql, fileName: string) {
+  const filePath = path.join(process.cwd(), 'drizzle', 'migrations', fileName);
+  const content = await fs.readFile(filePath, 'utf8');
+  const statements = content
+    .split('--> statement-breakpoint')
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+
+  for (const statement of statements) {
+    await sql.unsafe(statement);
+  }
+}
+
+async function applyFreshDatabaseMigrations(sql: postgres.Sql) {
+  for (const fileName of migrationFiles) {
+    await applyMigrationFile(sql, fileName);
+  }
+}
+
+async function inspectSchema(sql: postgres.Sql) {
+  const rows = await sql`
+    select table_name, column_name
+    from information_schema.columns
+    where table_schema = 'public'
+  `;
+
+  const present = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const table = String(row.table_name);
+    const column = String(row.column_name);
+    if (!present.has(table)) present.set(table, new Set());
+    present.get(table)!.add(column);
+  }
+
+  const checks = Object.entries(requiredSchema).map(([table, columns]) => {
+    const tableColumns = present.get(table);
+    return {
+      table,
+      exists: Boolean(tableColumns),
+      missingColumns: tableColumns ? columns.filter((column) => !tableColumns.has(column)) : columns,
+    };
+  });
+
+  const failed = checks.filter((check) => !check.exists || check.missingColumns.length > 0);
+  return { checks, failed };
 }
 
 export async function GET() {
@@ -50,34 +114,20 @@ export async function GET() {
   });
 
   try {
-    const rows = await sql`
-      select table_name, column_name
-      from information_schema.columns
-      where table_schema = 'public'
-    `;
+    let repaired = false;
+    let { checks, failed } = await inspectSchema(sql);
 
-    const present = new Map<string, Set<string>>();
-    for (const row of rows) {
-      const table = String(row.table_name);
-      const column = String(row.column_name);
-      if (!present.has(table)) present.set(table, new Set());
-      present.get(table)!.add(column);
+    if (checks.some((check) => check.table === 'tenants' && !check.exists)) {
+      await applyFreshDatabaseMigrations(sql);
+      repaired = true;
+      ({ checks, failed } = await inspectSchema(sql));
     }
 
-    const checks = Object.entries(requiredSchema).map(([table, columns]) => {
-      const tableColumns = present.get(table);
-      return {
-        table,
-        exists: Boolean(tableColumns),
-        missingColumns: tableColumns ? columns.filter((column) => !tableColumns.has(column)) : columns,
-      };
-    });
-
-    const failed = checks.filter((check) => !check.exists || check.missingColumns.length > 0);
     const [dbInfo] = await sql`select current_database() as database, current_user as user`;
 
     return NextResponse.json({
       ok: failed.length === 0,
+      repaired,
       databaseUrl: maskDatabaseUrl(rawUrl),
       connection: dbInfo,
       failed,
