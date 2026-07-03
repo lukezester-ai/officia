@@ -26,7 +26,7 @@ type PayrollData = {
   history: HistoryItem[];
 };
 
-const fmt = (value: number) => value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const fmt = (value: number) => `${value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 const numeric = (value: string) => Number(value.replace(',', '.')) || 0;
 
 export function PayrollClient({ initial }: { initial: PayrollData }) {
@@ -97,13 +97,25 @@ export function PayrollClient({ initial }: { initial: PayrollData }) {
               {locked ? 'Осчетоводена' : initial.status === 'draft' ? 'Чернова' : 'Нова'}
             </span>
           </div>
-          <p className="mt-1 text-sm text-zinc-400">Месечна ведомост, удръжки, работодателски осигуровки и счетоводно приключване.</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            Месечна ведомост, удръжки, работодателски осигуровки и счетоводно приключване.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Input type="month" value={month} onChange={(event) => openMonth(event.target.value)} className="w-40 bg-white/5" />
           <PayrollExportButton month={month} rows={rows} />
-          {!locked && <Button variant="outline" onClick={save} disabled={pending !== null || rows.length === 0} className="gap-2"><Save size={16} />{pending === 'save' ? 'Записване...' : 'Запиши чернова'}</Button>}
-          {!locked && <Button onClick={post} disabled={pending !== null || rows.length === 0} className="gap-2 bg-emerald-600 hover:bg-emerald-700"><CheckCircle size={16} />{pending === 'post' ? 'Осчетоводяване...' : 'Потвърди и осчетоводи'}</Button>}
+          {!locked && (
+            <Button variant="outline" onClick={save} disabled={pending !== null || rows.length === 0} className="gap-2">
+              <Save size={16} />
+              {pending === 'save' ? 'Записване...' : 'Запиши чернова'}
+            </Button>
+          )}
+          {!locked && (
+            <Button onClick={post} disabled={pending !== null || rows.length === 0} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+              <CheckCircle size={16} />
+              {pending === 'post' ? 'Осчетоводяване...' : 'Потвърди и осчетоводи'}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -115,56 +127,130 @@ export function PayrollClient({ initial }: { initial: PayrollData }) {
       </div>
 
       <Card className="border-white/10 bg-white/5">
-        <CardHeader><CardTitle className="text-base text-white">Параметри на изчислението</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base text-white">Параметри на изчислението</CardTitle>
+        </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <RateInput label="Максимален осигурителен доход" value={rates.maxInsuranceBase} onChange={(value) => updateRate('maxInsuranceBase', value)} disabled={locked} suffix="€" />
           <RateInput label="Лични осигуровки" value={rates.employeeInsuranceRate} onChange={(value) => updateRate('employeeInsuranceRate', value)} disabled={locked} suffix="%" />
           <RateInput label="Осигуровки работодател" value={rates.employerInsuranceRate} onChange={(value) => updateRate('employerInsuranceRate', value)} disabled={locked} suffix="%" />
           <RateInput label="Данък върху дохода" value={rates.incomeTaxRate} onChange={(value) => updateRate('incomeTaxRate', value)} disabled={locked} suffix="%" />
-          <p className="col-span-full text-xs text-zinc-500">Стандартни параметри за трета категория труд през 2026 г. Работодателската ставка включва примерен риск ТЗПБ 0,50%; настройте я според икономическата дейност.</p>
+          <p className="col-span-full text-xs text-zinc-500">
+            Стандартни параметри за трета категория труд през 2026 г. Работодателската ставка включва примерен риск ТЗПБ 0,50%; настройте я според икономическата дейност.
+          </p>
         </CardContent>
       </Card>
 
       <Card className="overflow-hidden border-white/10 bg-white/5">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader><TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="min-w-52 pl-6">Служител</TableHead><TableHead>Основна</TableHead><TableHead>Работни дни</TableHead><TableHead>Отработени</TableHead><TableHead>Бонус</TableHead><TableHead>Друг облагаем</TableHead><TableHead>Други удръжки</TableHead><TableHead className="text-right">Брутно</TableHead><TableHead className="text-right">Лични осиг.</TableHead><TableHead className="text-right">Данък</TableHead><TableHead className="text-right pr-6">Нетно</TableHead>
-            </TableRow></TableHeader>
+            <TableHeader>
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHead className="min-w-52 pl-6">Служител</TableHead>
+                <TableHead>Основна</TableHead>
+                <TableHead>Работни дни</TableHead>
+                <TableHead>Отработени</TableHead>
+                <TableHead>Бонус</TableHead>
+                <TableHead>Друг облагаем</TableHead>
+                <TableHead>Други удръжки</TableHead>
+                <TableHead className="text-right">Брутно</TableHead>
+                <TableHead className="text-right">Лични осиг.</TableHead>
+                <TableHead className="text-right">Данък</TableHead>
+                <TableHead className="text-right pr-6">Нетно</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
-              {rows.map((row) => <TableRow key={row.employeeId} className="border-white/10">
-                <TableCell className="pl-6"><div className="font-medium text-zinc-100">{row.employeeName}</div><div className="text-xs text-zinc-500">{row.position || 'Без длъжност'}</div>{row.warning && <div className="mt-1 flex items-start gap-1 text-xs text-amber-400"><AlertTriangle size={12} className="mt-0.5 shrink-0" />{row.warning}</div>}</TableCell>
-                <EditableMoney value={row.baseSalary} onChange={(value) => updateRow(row.employeeId, 'baseSalary', value)} disabled={locked} />
-                <EditableNumber value={row.workingDays} onChange={(value) => updateRow(row.employeeId, 'workingDays', value)} disabled={locked} />
-                <EditableNumber value={row.workedDays} onChange={(value) => updateRow(row.employeeId, 'workedDays', value)} disabled={locked} />
-                <EditableMoney value={row.bonus} onChange={(value) => updateRow(row.employeeId, 'bonus', value)} disabled={locked} />
-                <EditableMoney value={row.otherTaxable} onChange={(value) => updateRow(row.employeeId, 'otherTaxable', value)} disabled={locked} />
-                <EditableMoney value={row.otherDeductions} onChange={(value) => updateRow(row.employeeId, 'otherDeductions', value)} disabled={locked} />
-                <TableCell className="text-right font-medium text-violet-300">{fmt(row.gross)}</TableCell>
-                <TableCell className="text-right text-zinc-400">{fmt(row.employeeInsurance)}</TableCell>
-                <TableCell className="text-right text-rose-300">{fmt(row.incomeTax)}</TableCell>
-                <TableCell className="text-right pr-6 font-bold text-emerald-400">{fmt(row.net)}</TableCell>
-              </TableRow>)}
-              {rows.length === 0 && <TableRow><TableCell colSpan={11} className="py-16 text-center text-zinc-500">Няма активни служители. Добавете служител от раздел „Човешки ресурси“.</TableCell></TableRow>}
+              {rows.map((row) => (
+                <TableRow key={row.employeeId} className="border-white/10">
+                  <TableCell className="pl-6">
+                    <div className="font-medium text-zinc-100">{row.employeeName}</div>
+                    <div className="text-xs text-zinc-500">{row.position || 'Без длъжност'}</div>
+                    {row.warning && (
+                      <div className="mt-1 flex items-start gap-1 text-xs text-amber-400">
+                        <AlertTriangle size={12} className="mt-0.5 shrink-0" />
+                        {row.warning}
+                      </div>
+                    )}
+                  </TableCell>
+                  <EditableMoney value={row.baseSalary} onChange={(value) => updateRow(row.employeeId, 'baseSalary', value)} disabled={locked} />
+                  <EditableNumber value={row.workingDays} onChange={(value) => updateRow(row.employeeId, 'workingDays', value)} disabled={locked} />
+                  <EditableNumber value={row.workedDays} onChange={(value) => updateRow(row.employeeId, 'workedDays', value)} disabled={locked} />
+                  <EditableMoney value={row.bonus} onChange={(value) => updateRow(row.employeeId, 'bonus', value)} disabled={locked} />
+                  <EditableMoney value={row.otherTaxable} onChange={(value) => updateRow(row.employeeId, 'otherTaxable', value)} disabled={locked} />
+                  <EditableMoney value={row.otherDeductions} onChange={(value) => updateRow(row.employeeId, 'otherDeductions', value)} disabled={locked} />
+                  <TableCell className="text-right font-medium text-violet-300">{fmt(row.gross)}</TableCell>
+                  <TableCell className="text-right text-zinc-400">{fmt(row.employeeInsurance)}</TableCell>
+                  <TableCell className="text-right text-rose-300">{fmt(row.incomeTax)}</TableCell>
+                  <TableCell className="text-right pr-6 font-bold text-emerald-400">{fmt(row.net)}</TableCell>
+                </TableRow>
+              ))}
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={11} className="py-16 text-center text-zinc-500">
+                    Няма активни служители. Добавете служител от раздел „Човешки ресурси“.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      {initial.history.length > 0 && <Card className="border-white/10 bg-white/5"><CardHeader><CardTitle className="text-base text-white">Последни ведомости</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{initial.history.map((item) => <Button key={item.id} variant="outline" size="sm" onClick={() => openMonth(item.month.slice(0, 7))}>{item.month.slice(0, 7)} · {item.status === 'posted' ? 'осчетоводена' : 'чернова'}</Button>)}</CardContent></Card>}
+      {initial.history.length > 0 && (
+        <Card className="border-white/10 bg-white/5">
+          <CardHeader>
+            <CardTitle className="text-base text-white">Последни ведомости</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {initial.history.map((item) => (
+              <Button key={item.id} variant="outline" size="sm" onClick={() => openMonth(item.month.slice(0, 7))}>
+                {item.month.slice(0, 7)} · {item.status === 'posted' ? 'осчетоводена' : 'чернова'}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
 
 function SummaryCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return <Card className="border-white/10 bg-white/5"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-medium text-zinc-400">{icon}{label}</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-white tabular-nums">{value}</div></CardContent></Card>;
+  return (
+    <Card className="border-white/10 bg-white/5">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium text-zinc-400">{icon}{label}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-white tabular-nums">{value}</div>
+      </CardContent>
+    </Card>
+  );
 }
+
 function RateInput({ label, value, onChange, disabled, suffix }: { label: string; value: number; onChange: (value: number) => void; disabled: boolean; suffix: string }) {
-  return <label className="space-y-1 text-xs text-zinc-400"><span>{label}</span><div className="flex items-center gap-2"><Input type="number" step="0.01" value={value} disabled={disabled} onChange={(event) => onChange(numeric(event.target.value))} /><span>{suffix}</span></div></label>;
+  return (
+    <label className="space-y-1 text-xs text-zinc-400">
+      <span>{label}</span>
+      <div className="flex items-center gap-2">
+        <Input type="number" step="0.01" value={value} disabled={disabled} onChange={(event) => onChange(numeric(event.target.value))} />
+        <span>{suffix}</span>
+      </div>
+    </label>
+  );
 }
+
 function EditableMoney({ value, onChange, disabled }: { value: number; onChange: (value: number) => void; disabled: boolean }) {
-  return <TableCell><Input className="min-w-24 text-right" type="number" min="0" step="0.01" value={value} disabled={disabled} onChange={(event) => onChange(numeric(event.target.value))} /></TableCell>;
+  return (
+    <TableCell>
+      <Input className="min-w-24 text-right" type="number" min="0" step="0.01" value={value} disabled={disabled} onChange={(event) => onChange(numeric(event.target.value))} />
+    </TableCell>
+  );
 }
+
 function EditableNumber({ value, onChange, disabled }: { value: number; onChange: (value: number) => void; disabled: boolean }) {
-  return <TableCell><Input className="min-w-20 text-right" type="number" min="0" step="1" value={value} disabled={disabled} onChange={(event) => onChange(numeric(event.target.value))} /></TableCell>;
+  return (
+    <TableCell>
+      <Input className="min-w-20 text-right" type="number" min="0" step="1" value={value} disabled={disabled} onChange={(event) => onChange(numeric(event.target.value))} />
+    </TableCell>
+  );
 }
