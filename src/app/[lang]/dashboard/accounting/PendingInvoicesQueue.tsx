@@ -8,8 +8,8 @@ import { CheckCircle, FileText, Loader2, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { postPendingInvoice } from './actions';
 import { cn } from '@/lib/utils';
+import { postPendingInvoice } from './actions';
 
 import type { PendingAccountingItem } from '@/lib/accounting/post-invoice';
 
@@ -55,7 +55,7 @@ export function PendingInvoicesQueue({
       <TableHeader>
         <TableRow>
           <TableHead className="pl-6">Източник</TableHead>
-          <TableHead>Основание / Описание</TableHead>
+          <TableHead>Основание / описание</TableHead>
           <TableHead className="text-right">Сума</TableHead>
           <TableHead>Предложена контировка</TableHead>
           <TableHead />
