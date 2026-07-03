@@ -34,8 +34,8 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Грешка при плащането');
       if (data.url) window.location.href = data.url;
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Грешка при преминаване към плащане');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Грешка при преминаване към плащане');
     } finally {
       setPending(null);
     }

@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { Building2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { getTenantProfile, updateTenantProfile } from './actions';
 import { getBillingSummary } from '@/lib/billing/actions';
 import { BillingPlanCard } from './BillingPlanCard';
-import { toast } from 'sonner';
-import { useParams } from 'next/navigation';
-
-import { Building2, Save } from 'lucide-react';
+import { getTenantProfile, updateTenantProfile } from './actions';
 
 export default function WorkspaceSettingsPage() {
   const params = useParams();
@@ -37,6 +36,7 @@ export default function WorkspaceSettingsPage() {
   useEffect(() => {
     async function load() {
       const [profileRes, billingRes] = await Promise.all([getTenantProfile(), getBillingSummary()]);
+
       if (profileRes.success && profileRes.data) {
         setFormData({
           name: profileRes.data.name || '',
@@ -45,34 +45,39 @@ export default function WorkspaceSettingsPage() {
           address: profileRes.data.address || '',
         });
       }
+
       if (billingRes.success && billingRes.data) {
         setBilling(billingRes.data);
       }
+
       setLoading(false);
     }
+
     load();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSaving(true);
-    const res = await updateTenantProfile(formData);
-    if (res.success) {
-      toast.success('Данните на фирмата са запазени успешно!');
+
+    const result = await updateTenantProfile(formData);
+    if (result.success) {
+      toast.success('Данните на фирмата са запазени успешно.');
     } else {
-      toast.error('Грешка: ' + res.error);
+      toast.error(`Грешка: ${result.error}`);
     }
+
     setSaving(false);
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Зареждане на данни...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Зареждане на данните...</div>;
   }
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Настройки на Фирмата</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Настройки на фирмата</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Тези данни се използват за издаване на фактури и генериране на данъчни декларации.
         </p>
@@ -84,7 +89,7 @@ export default function WorkspaceSettingsPage() {
         <CardHeader className="bg-gray-50/50 border-b pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <Building2 size={18} className="text-indigo-600" />
-            Фирмен Профил
+            Фирмен профил
           </CardTitle>
           <CardDescription>
             Въведете официалните данни на търговското дружество.
@@ -94,11 +99,11 @@ export default function WorkspaceSettingsPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="name">Име на фирмата</label>
-              <Input 
-                id="name" 
+              <Input
+                id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="напр. Офисиа ООД"
+                onChange={(event) => setFormData({ ...formData, name: event.target.value })}
+                placeholder="напр. Офисия ООД"
                 required
               />
             </div>
@@ -106,20 +111,20 @@ export default function WorkspaceSettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="bulstat">ЕИК / Булстат</label>
-                <Input 
-                  id="bulstat" 
+                <Input
+                  id="bulstat"
                   value={formData.bulstat}
-                  onChange={(e) => setFormData({...formData, bulstat: e.target.value})}
-                  placeholder="9 цифри"
+                  onChange={(event) => setFormData({ ...formData, bulstat: event.target.value })}
+                  placeholder="9 или 13 цифри"
                   required
                 />
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="vatNumber">ИН по ЗДДС (по избор)</label>
-                <Input 
-                  id="vatNumber" 
+                <Input
+                  id="vatNumber"
                   value={formData.vatNumber}
-                  onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
+                  onChange={(event) => setFormData({ ...formData, vatNumber: event.target.value })}
                   placeholder="напр. BG123456789"
                 />
               </div>
@@ -127,10 +132,10 @@ export default function WorkspaceSettingsPage() {
 
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="address">Седалище и адрес на управление</label>
-              <Input 
-                id="address" 
+              <Input
+                id="address"
                 value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                onChange={(event) => setFormData({ ...formData, address: event.target.value })}
                 placeholder="гр. София, ул. Примерна 1"
               />
             </div>
