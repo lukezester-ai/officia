@@ -31,22 +31,6 @@ const migrationFiles = [
   '0008_auth_users_safety.sql',
 ];
 
-function maskDatabaseUrl(rawUrl: string) {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.password) parsed.password = '***';
-    if (parsed.username) parsed.username = parsed.username.slice(0, 3) + '***';
-    return {
-      host: parsed.host,
-      database: parsed.pathname.replace(/^\//, ''),
-      sslmode: parsed.searchParams.get('sslmode'),
-      masked: parsed.toString(),
-    };
-  } catch {
-    return { host: null, database: null, sslmode: null, masked: 'invalid-url-format' };
-  }
-}
-
 async function applyMigrationFile(sql: postgres.Sql, fileName: string) {
   const filePath = path.join(process.cwd(), 'drizzle', 'migrations', fileName);
   const content = await fs.readFile(filePath, 'utf8');
@@ -111,7 +95,7 @@ async function inspectSchema(sql: postgres.Sql) {
   return { checks, failed };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const rawUrl = process.env.DATABASE_URL;
 
   if (!rawUrl) {
@@ -120,6 +104,16 @@ export async function GET() {
       { status: 500 },
     );
   }
+
+  const configuredRepairToken = process.env.HEALTH_REPAIR_TOKEN?.trim();
+  const suppliedRepairToken =
+    new URL(req.url).searchParams.get('repairToken') ||
+    req.headers.get('x-health-repair-token');
+  const repairAuthorized = Boolean(
+    configuredRepairToken &&
+    suppliedRepairToken &&
+    suppliedRepairToken === configuredRepairToken,
+  );
 
   const { url, options } = getPostgresClientOptions(rawUrl);
   const sql = postgres(url, {
@@ -135,6 +129,16 @@ export async function GET() {
     let { checks, failed } = await inspectSchema(sql);
 
     if (failed.some((check) => !check.exists)) {
+      if (!repairAuthorized) {
+        return NextResponse.json({
+          ok: false,
+          repairRequired: true,
+          repairAuthorized: false,
+          failed,
+          checks,
+        }, { status: 500 });
+      }
+
       await applyFreshDatabaseMigrations(sql);
       repaired = true;
       ({ checks, failed } = await inspectSchema(sql));
@@ -145,8 +149,8 @@ export async function GET() {
     return NextResponse.json({
       ok: failed.length === 0,
       repaired,
-      databaseUrl: maskDatabaseUrl(rawUrl),
-      connection: dbInfo,
+      repairAuthorized,
+      connection: { database: dbInfo.database },
       failed,
       checks,
     }, { status: failed.length === 0 ? 200 : 500 });
@@ -154,7 +158,6 @@ export async function GET() {
     return NextResponse.json({
       ok: false,
       reason: 'APP_HEALTH_CHECK_FAILED',
-      databaseUrl: maskDatabaseUrl(rawUrl),
       error: error instanceof Error ? error.message : String(error),
     }, { status: 500 });
   } finally {

@@ -2,29 +2,6 @@ import { NextResponse } from 'next/server';
 import postgres from 'postgres';
 import { getPostgresClientOptions } from '@/lib/db/postgres-client';
 
-function maskDatabaseUrl(rawUrl: string) {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.password) parsed.password = '***';
-    if (parsed.username) parsed.username = parsed.username.slice(0, 3) + '***';
-    return {
-      protocol: parsed.protocol,
-      host: parsed.host,
-      database: parsed.pathname.replace(/^\//, ''),
-      sslmode: parsed.searchParams.get('sslmode'),
-      masked: parsed.toString(),
-    };
-  } catch {
-    return {
-      protocol: null,
-      host: null,
-      database: null,
-      sslmode: null,
-      masked: 'invalid-url-format',
-    };
-  }
-}
-
 export async function GET() {
   const rawUrl = process.env.DATABASE_URL;
 
@@ -35,8 +12,6 @@ export async function GET() {
       message: 'DATABASE_URL is not set in this Render web service runtime.',
     }, { status: 500 });
   }
-
-  const details = maskDatabaseUrl(rawUrl);
 
   try {
     const { url, options } = getPostgresClientOptions(rawUrl);
@@ -52,14 +27,12 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      databaseUrl: details,
-      connection: result,
+      connection: { database: result.database },
     });
   } catch (error) {
     return NextResponse.json({
       ok: false,
       reason: 'DATABASE_CONNECTION_FAILED',
-      databaseUrl: details,
       error: error instanceof Error ? error.message : String(error),
     }, { status: 500 });
   }

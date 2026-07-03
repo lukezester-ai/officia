@@ -16,7 +16,7 @@ export default async function DashboardPage(props: { params: Promise<{ lang: str
   const dict = await getDictionary(lang as Locale);
   const t = dict.dashboard;
   let dashboardError: string | null = null;
-  let invoiceError: string | null = null;
+  const invoiceError: string | null = null;
   let data: Awaited<ReturnType<typeof getDashboardData>> | null = null;
 
   try {
