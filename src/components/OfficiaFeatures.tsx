@@ -342,7 +342,7 @@ const featureCards: FeatureCardData[] = [
     tag: "Счетоводство",
     title: "Пълен сметкоплан и автоматично ДДС",
     description: "Журнални записи, ДДС дневници, баланс и отчет за приходи/загуби — всичко автоматизирано.",
-    mockup: <AccountingMockup />,
+    mockup: <LazyMockup importPath="./AccountingMockup" />,
     tags: ["ЗДДС", "ДДС дневници", "НАП export"],
     delay: 0.1,
   },
@@ -351,8 +351,13 @@ const featureCards: FeatureCardData[] = [
     tag: "AI асистент",
     title: "Качи документ — AI извлича всичко",
     description: "PDF или снимка на фактура → Claude AI разпознава доставчик, сума, ДДС, дата и предлага осчетоводяване.",
+<<<<<<< HEAD
     mockup: <AIDocumentsMockup />,
     tags: ["Claude", "Разпознаване", "Предложено осчетоводяване"],
+=======
+    mockup: <LazyMockup importPath="./AIDocumentsMockup" />,
+    tags: ["Claude AI", "OCR", "Auto-осчетоводяване"],
+>>>>>>> 4f9afa8 (Add purchase invoices migration and update env to use port 3001)
     delay: 0.2,
   },
   {
@@ -360,8 +365,13 @@ const featureCards: FeatureCardData[] = [
     tag: "Банкиране",
     title: "Банкова демонстрация и интелигентно съпоставяне",
     description: "Демо транзакции за тестване на reconciliation. Реален PSD2 конектор — в разработка.",
+<<<<<<< HEAD
     mockup: <BankSyncMockup />,
     tags: ["Демонстрация", "Автоматично съпоставяне", "PSD2 в разработка"],
+=======
+    mockup: <LazyMockup importPath="./BankSyncMockup" />,
+    tags: ["Demo", "Auto-match", "Roadmap: PSD2"],
+>>>>>>> 4f9afa8 (Add purchase invoices migration and update env to use port 3001)
     delay: 0.3,
   },
 ];

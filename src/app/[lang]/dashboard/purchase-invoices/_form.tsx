@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import { createPurchaseInvoice, getSuppliersForSelect } from './actions-read';
 import { Button } from '@/components/ui/button';

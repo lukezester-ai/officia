@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db/db';
 import { userRoles } from '@/lib/db/schema/access';
 import { and, eq } from 'drizzle-orm';
+<<<<<<< HEAD
 import { type AppRole, INVITABLE_ROLES } from './rbac-shared';
 
 export { type AppRole, INVITABLE_ROLES } from './rbac-shared';
@@ -32,6 +33,10 @@ const PERMISSIONS: Record<AppRole, string[]> = {
   auditor: ['*:read', 'vat:export'],
   tax_consultant: ['invoice:read', 'vat:*', 'report:*'],
 };
+=======
+import type { AppRole } from './rbac-types';
+import { roleCan } from './rbac-types';
+>>>>>>> 4f9afa8 (Add purchase invoices migration and update env to use port 3001)
 
 export async function getUserRole(tenantId: string, userId: string): Promise<AppRole> {
   const [row] = await db
@@ -50,20 +55,6 @@ export async function assignUserRole(tenantId: string, userId: string, role: App
       target: [userRoles.userId, userRoles.tenantId],
       set: { role },
     });
-}
-
-function matchesPermission(granted: string, required: string): boolean {
-  if (granted === '*') return true;
-  if (granted === required) return true;
-  const [gResource, gAction] = granted.split(':');
-  const [rResource, rAction] = required.split(':');
-  if (gResource === rResource && gAction === '*') return true;
-  if (gResource === '*' && gAction === rAction) return true;
-  return false;
-}
-
-export function roleCan(role: AppRole, permission: string): boolean {
-  return PERMISSIONS[role].some((p) => matchesPermission(p, permission));
 }
 
 export async function requirePermission(

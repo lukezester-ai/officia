@@ -4,7 +4,8 @@ import { users } from '@/lib/db/schema/users';
 import { tenants } from '@/lib/db/schema/tenants';
 import { eq } from 'drizzle-orm';
 import { provisionUserFromClerk } from '@/lib/auth/provision-user';
-import { getUserRole, type AppRole } from '@/lib/auth/rbac';
+import { getUserRole } from '@/lib/auth/rbac';
+import type { AppRole } from '@/lib/auth/rbac-types';
 import { withTenantContext, type DbClient } from '@/lib/db/tenant-db';
 import { ensureAuthSchema } from '@/lib/auth/ensure-auth-schema';
 

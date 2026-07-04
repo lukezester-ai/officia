@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { convertToModelMessages, stepCountIs, streamText } from 'ai';
 import {
   buildOrchestratorSystemPrompt,

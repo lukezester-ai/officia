@@ -6,7 +6,8 @@ import { tenantInvites, userRoles } from '@/lib/db/schema/access';
 import { users } from '@/lib/db/schema/users';
 import { eq, and, gt, isNull } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
-import { requirePermission, INVITABLE_ROLES, type AppRole, assignUserRole } from '@/lib/auth/rbac';
+import { requirePermission, assignUserRole } from '@/lib/auth/rbac';
+import { INVITABLE_ROLES, type AppRole } from '@/lib/auth/rbac-types';
 import { revalidatePath } from 'next/cache';
 import { auditLog } from '@/lib/db/schema/audit_log';
 

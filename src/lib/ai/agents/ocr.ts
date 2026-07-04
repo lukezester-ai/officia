@@ -1,4 +1,4 @@
-﻿import { generateObject } from 'ai';
+import { generateObject } from 'ai';
 import { getAnthropicChatModel } from '../model';
 import { z } from 'zod';
 
