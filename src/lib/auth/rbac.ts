@@ -6,6 +6,8 @@ import { and, eq } from 'drizzle-orm';
 import type { AppRole } from './rbac-types';
 import { roleCan } from './rbac-types';
 
+export { roleCan };
+
 export async function getUserRole(tenantId: string, userId: string): Promise<AppRole> {
   const [row] = await db
     .select({ role: userRoles.role })

@@ -15,8 +15,8 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { db } from "./db";
-import { invoices, invoiceItems, purchaseInvoices, purchaseInvoiceItems } from "./schema";
+import { db } from "@/lib/db/db";
+import { invoices, invoiceLines, purchaseInvoices, purchaseInvoiceLines } from "@/lib/db/schema";
 import { and, gte, lte } from "drizzle-orm";
 
 const server = new Server(
