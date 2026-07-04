@@ -1,4 +1,4 @@
-
+import { SVGProps, ReactElement } from 'react';
 
 export interface LucideProps extends SVGProps<SVGSVGElement> {
   size?: string | number;
