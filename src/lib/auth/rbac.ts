@@ -3,40 +3,8 @@ import 'server-only';
 import { db } from '@/lib/db/db';
 import { userRoles } from '@/lib/db/schema/access';
 import { and, eq } from 'drizzle-orm';
-<<<<<<< HEAD
-import { type AppRole, INVITABLE_ROLES } from './rbac-shared';
-
-export { type AppRole, INVITABLE_ROLES } from './rbac-shared';
-
-const PERMISSIONS: Record<AppRole, string[]> = {
-  owner: ['*'],
-  senior_accountant: [
-    'invoice:*',
-    'journal:*',
-    'vat:*',
-    'employee:*',
-    'bank:*',
-    'report:*',
-    'team:invite',
-    'ai:approve',
-  ],
-  junior_accountant: [
-    'invoice:read',
-    'invoice:create',
-    'journal:read',
-    'journal:create',
-    'vat:read',
-    'employee:read',
-    'bank:read',
-    'report:read',
-  ],
-  auditor: ['*:read', 'vat:export'],
-  tax_consultant: ['invoice:read', 'vat:*', 'report:*'],
-};
-=======
 import type { AppRole } from './rbac-types';
 import { roleCan } from './rbac-types';
->>>>>>> 4f9afa8 (Add purchase invoices migration and update env to use port 3001)
 
 export async function getUserRole(tenantId: string, userId: string): Promise<AppRole> {
   const [row] = await db
