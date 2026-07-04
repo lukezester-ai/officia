@@ -8,7 +8,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, { apiVersion: '2026-04-22.dahlia' })
+  ? new Stripe(stripeSecretKey, { apiVersion: '2026-05-27.dahlia' })
   : null;
 
 export async function POST(req: Request) {

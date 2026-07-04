@@ -9,7 +9,7 @@ function getStripeClient() {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
     stripeClient = new Stripe(key, {
-      apiVersion: '2026-04-22.dahlia',
+      apiVersion: '2026-05-27.dahlia',
       appInfo: {
         name: 'Officia ERP',
         version: '1.0.0',

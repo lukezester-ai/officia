@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { ClerkProvider } from '@clerk/nextjs';
 import { Fira_Sans, Fira_Code } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
@@ -46,6 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    <ClerkProvider>
       <html lang="bg" className="dark" suppressHydrationWarning>
         <body className={`${firaSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>
           {/* Premium Background Grid */}
@@ -63,5 +65,6 @@ export default function RootLayout({
           </ThemeProvider>
         </body>
       </html>
+    </ClerkProvider>
   );
 }
