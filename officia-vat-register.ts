@@ -17,8 +17,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { db } from "./src/lib/db/mcp-db";
-import { invoices, purchaseInvoices } from "./src/lib/db/schema";
-import { and, gte, lte } from "drizzle-orm";
+import { invoices, invoiceLines, purchaseInvoices, purchaseInvoiceLines } from "./src/lib/db/schema";
+import { and, gte, lte, eq } from "drizzle-orm";
 
 const server = new Server(
   { name: "officia-vat-register", version: "1.0.0" },
@@ -94,11 +94,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       const rows = await db.query.invoices.findMany({
         where: and(gte(invoices.issueDate, start), lte(invoices.issueDate, end)),
-        with: { items: true },
       });
 
       const ledger = rows.map((inv: any) => {
-        const items = inv.items ?? [];
+        const items = (inv.items ?? []) as any[];
         const base20 = items
           .filter((i: any) => i.vatRate === 20)
           .reduce((s: number, i: any) => s + Number(i.quantity) * Number(i.unitPrice), 0);
@@ -136,15 +135,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     case "generate_purchase_ledger": {
       const { year, month } = PeriodSchema.parse(args);
-      const { start, end } = periodBounds(year, month);
+      const startDate = new Date(Date.UTC(year, month - 1, 1));
+      const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
 
       const rows = await db.query.purchaseInvoices.findMany({
-        where: and(gte(purchaseInvoices.createdAt, start), lte(purchaseInvoices.createdAt, end)),
-        with: { items: true },
+        where: and(gte(purchaseInvoices.createdAt, startDate), lte(purchaseInvoices.createdAt, endDate)),
       });
 
+      const allPurchaseLines = await db.query.purchaseInvoiceLines.findMany();
+      const purchaseLinesByInvoice = new Map<string, any[]>();
+      for (const line of allPurchaseLines) {
+        const arr = purchaseLinesByInvoice.get(line.invoiceId) ?? [];
+        arr.push(line);
+        purchaseLinesByInvoice.set(line.invoiceId, arr);
+      }
+
       const ledger = rows.map((inv: any) => {
-        const items = inv.items ?? [];
+        const items = purchaseLinesByInvoice.get(inv.id) ?? [];
         const deductibleBase = items
           .filter((i: any) => i.lineNet)
           .reduce((s: number, i: any) => s + Number(i.quantity) * Number(i.unitPrice), 0);
