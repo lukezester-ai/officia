@@ -16,8 +16,8 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { db } from "@/lib/db/db";
-import { invoices, purchaseInvoices } from "@/lib/db/schema";
+import { db } from "./src/lib/db/mcp-db";
+import { invoices, purchaseInvoices } from "./src/lib/db/schema";
 import { and, gte, lte } from "drizzle-orm";
 
 const server = new Server(
@@ -211,5 +211,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
+async function main() {
+  const transport = new StdioServerTransport();
+  console.error("officia-vat-register MCP server starting on stdio...");
+  await server.connect(transport);
+}
+main().catch(console.error);
