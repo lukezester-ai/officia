@@ -5,10 +5,6 @@ interface LazyMockupProps {
   fallback?: React.ReactNode;
 }
 
-/**
- * LazyMockup – dynamically loads a component when it becomes visible in the viewport.
- * Usage: <LazyMockup importFn={() => import("./AccountingMockup")} fallback={<div>Loading...</div>} />
- */
 export default function LazyMockup({ importFn, fallback = null }: LazyMockupProps) {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null);
   const ref = useRef<HTMLDivElement>(null);
