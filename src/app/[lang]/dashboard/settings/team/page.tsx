@@ -6,11 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createTeamInvite, getTeamMembers } from './actions';
-<<<<<<< HEAD
-import { INVITABLE_ROLES, type AppRole } from '@/lib/auth/rbac-shared';
-=======
 import { INVITABLE_ROLES, type AppRole } from '@/lib/auth/rbac-types';
->>>>>>> 4f9afa8 (Add purchase invoices migration and update env to use port 3001)
 import { toast } from 'sonner';
 import { Copy, UserPlus, Users } from 'lucide-react';
 
