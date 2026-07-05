@@ -1,7 +1,6 @@
 'use server';
 
 import { eq } from 'drizzle-orm';
-import { eq } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { requirePermission } from '@/lib/auth/rbac';
 import { db } from '@/lib/db/db';
