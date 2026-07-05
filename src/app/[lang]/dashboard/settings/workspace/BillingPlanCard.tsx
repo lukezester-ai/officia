@@ -30,27 +30,13 @@ const PLAN_PRICES: Record<string, { monthly: number; annual: number; annualTotal
 };
 
 export function BillingPlanCard({ lang, initial }: { lang: string; initial: BillingData }) {
-  const [pending, setPending] = useState<'checkout' | 'portal' | null>(null);
+  const [pending, setPending] = useState<'portal' | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
   const [targetPlan, setTargetPlan] = useState<'business' | 'pro'>('business');
   const trialActive = initial.trialEndsAt && new Date(initial.trialEndsAt) > new Date();
 
-  const upgrade = async () => {
-    setPending('checkout');
-    try {
-      const res = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang, billingCycle, plan: targetPlan }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Грешка при плащането');
-      if (data.url) window.location.href = data.url;
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Грешка при преминаване към плащане');
-    } finally {
-      setPending(null);
-    }
+  const upgrade = () => {
+    window.location.href = `/api/billing/go?plan=${targetPlan}&cycle=${billingCycle}`;
   };
 
   const manageSubscription = async () => {
@@ -135,9 +121,9 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
                 <span className="text-xs text-muted-foreground">неограничени</span>
               </button>
             </div>
-            <Button onClick={upgrade} disabled={pending !== null} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700">
+            <Button onClick={upgrade} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700">
               <Sparkles size={16} />
-              {pending === 'checkout' ? 'Пренасочване...' : `Избери ${targetPlan === 'business' ? 'Бизнес' : 'Професионален'} план`}
+              Избери {targetPlan === 'business' ? 'Бизнес' : 'Професионален'} план
             </Button>
           </div>
         )}
