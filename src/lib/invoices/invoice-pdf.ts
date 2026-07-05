@@ -16,6 +16,7 @@ export type InvoicePdfInput = {
   sellerName: string;
   sellerAddress?: string | null;
   sellerVat?: string | null;
+  sellerLogo?: string | null;
   buyerName: string;
   buyerAddress?: string | null;
   buyerVat?: string | null;
@@ -25,18 +26,46 @@ export type InvoicePdfInput = {
   lines: InvoicePdfLine[];
 };
 
-export function generateInvoicePdf(input: InvoicePdfInput): Buffer {
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    const mime = res.headers.get('content-type') || 'image/png';
+    return `data:${mime};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateInvoicePdf(input: InvoicePdfInput): Promise<Buffer> {
   const doc = new jsPDF('portrait', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
 
+  let logoBase64: string | null = null;
+  if (input.sellerLogo) {
+    logoBase64 = await fetchImageAsBase64(input.sellerLogo);
+  }
+
   doc.setFillColor(79, 70, 229);
   doc.rect(0, 0, pageWidth, 28, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('ФАКТУРА', pageWidth / 2, 12, { align: 'center' });
-  doc.setFontSize(11);
-  doc.text(`№ ${input.invoiceNumber}`, pageWidth / 2, 20, { align: 'center' });
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'PNG', 14, 3, 22, 22);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('ФАКТУРА', pageWidth / 2, 12, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`№ ${input.invoiceNumber}`, pageWidth / 2, 20, { align: 'center' });
+  } else {
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('ФАКТУРА', pageWidth / 2, 12, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`№ ${input.invoiceNumber}`, pageWidth / 2, 20, { align: 'center' });
+  }
 
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);

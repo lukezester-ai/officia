@@ -1,11 +1,29 @@
 'use server';
 
 import { eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { requirePermission } from '@/lib/auth/rbac';
 import { db } from '@/lib/db/db';
 import { auditLog } from '@/lib/db/schema/audit_log';
 import { tenants } from '@/lib/db/schema/tenants';
+
+export async function removeLogo() {
+  try {
+    const { tenantId, user } = await requireTenant();
+    const gate = await requirePermission(tenantId, user.id, 'workspace:update');
+    if (!gate.ok) return { success: false, error: gate.error };
+
+    await db
+      .update(tenants)
+      .set({ logoUrl: null, updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
+
+    return { success: true };
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : 'Грешка при премахване на логото' };
+  }
+}
 
 export async function getTenantProfile() {
   try {

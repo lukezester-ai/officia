@@ -42,6 +42,13 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
             <p className="text-zinc-500 font-mono text-lg">№ {inv.invoiceNumber}</p>
           </div>
           <div className="text-right">
+            {(tenant as any).logoUrl ? (
+              <img
+                src={(tenant as any).logoUrl}
+                alt="Лого"
+                className="h-16 object-contain mb-2 ml-auto"
+              />
+            ) : null}
             <h2 className="text-xl font-bold">{tenant.name || 'Моята Компания ООД'}</h2>
             <div className="text-sm text-zinc-500 mt-1 leading-relaxed">
               <p>ЕИК/Булстат: {tenant.bulstat || 'Непосочен'}</p>

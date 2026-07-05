@@ -1,21 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Building2, Save } from 'lucide-react';
+import { Building2, Save, ImagePlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getBillingSummary } from '@/lib/billing/actions';
 import { BillingPlanCard } from './BillingPlanCard';
-import { getTenantProfile, updateTenantProfile } from './actions';
+import { getTenantProfile, updateTenantProfile, removeLogo } from './actions';
 
 export default function WorkspaceSettingsPage() {
   const params = useParams();
   const lang = String(params?.lang ?? 'bg');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     bulstat: '',
@@ -44,6 +47,7 @@ export default function WorkspaceSettingsPage() {
           vatNumber: profileRes.data.vatNumber || '',
           address: profileRes.data.address || '',
         });
+        setLogoUrl((profileRes.data as any).logoUrl || null);
       }
 
       if (billingRes.success && billingRes.data) {
@@ -55,6 +59,52 @@ export default function WorkspaceSettingsPage() {
 
     load();
   }, []);
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Логото трябва да е под 2MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/upload/logo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      setLogoUrl(data.url);
+      toast.success('Логото е качено успешно.');
+    } catch {
+      toast.error('Грешка при качване на логото');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    const result = await removeLogo();
+    if (result.success) {
+      setLogoUrl(null);
+      toast.success('Логото е премахнато.');
+    } else {
+      toast.error(`Грешка: ${result.error}`);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -138,6 +188,42 @@ export default function WorkspaceSettingsPage() {
                 onChange={(event) => setFormData({ ...formData, address: event.target.value })}
                 placeholder="гр. София, ул. Примерна 1"
               />
+            </div>
+
+            <div className="border-t pt-4">
+              <label className="text-sm font-medium block mb-2">Фирмено лого за фактури (по избор)</label>
+              <div className="flex items-center gap-4">
+                {logoUrl ? (
+                  <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-white">
+                    <img src={logoUrl} alt="Лого" className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-20 h-20 rounded-lg border-2 border-dashed border-zinc-300 flex items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors bg-zinc-50"
+                  >
+                    <ImagePlus size={24} className="text-zinc-400" />
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                {!logoUrl && (
+                  <p className="text-xs text-zinc-400">PNG, JPG до 2MB</p>
+                )}
+                {uploading && <span className="text-sm text-zinc-500">Качване...</span>}
+              </div>
             </div>
 
             <div className="pt-4 flex justify-end">

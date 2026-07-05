@@ -23,6 +23,7 @@ const tenantContextColumns = {
   bulstat: tenants.bulstat,
   vatNumber: tenants.vatNumber,
   address: tenants.address,
+  logoUrl: tenants.logoUrl,
   plan: tenants.plan,
   trialEndsAt: tenants.trialEndsAt,
   stripeCustomerId: tenants.stripeCustomerId,

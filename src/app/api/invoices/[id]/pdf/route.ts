@@ -43,7 +43,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
       ? await db.select().from(tenants).where(eq(tenants.id, invoice.tenantId))
       : [];
 
-    const pdf = generateInvoicePdf({
+    const pdf = await generateInvoicePdf({
       invoiceNumber: invoice.invoiceNumber || String(invoice.id),
       issueDate: invoice.issueDate,
       dueDate: invoice.dueDate,
@@ -51,6 +51,7 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
       sellerName: tenant?.name || 'Officia',
       sellerAddress: tenant?.address,
       sellerVat: tenant?.vatNumber || tenant?.bulstat,
+      sellerLogo: tenant?.logoUrl,
       buyerName: invoice.counterpartyName || invoice.clientName || 'Клиент',
       buyerAddress: invoice.counterpartyAddress || invoice.clientAddress,
       buyerVat: invoice.counterpartyVat || invoice.clientVatNumber,
