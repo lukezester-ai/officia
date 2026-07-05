@@ -1,4 +1,4 @@
-export type PlanId = 'starter' | 'pro';
+export type PlanId = 'starter' | 'business' | 'pro';
 
 export const PLAN_LIMITS = {
   starter: {
@@ -7,6 +7,13 @@ export const PLAN_LIMITS = {
     aiOcr: true,
     bankSync: false,
     label: 'Стартер',
+  },
+  business: {
+    invoicesPerMonth: 500,
+    maxUsers: 3,
+    aiOcr: true,
+    bankSync: false,
+    label: 'Бизнес',
   },
   pro: {
     invoicesPerMonth: Infinity,
@@ -20,7 +27,7 @@ export const PLAN_LIMITS = {
 export const TRIAL_DAYS = 14;
 
 export function resolveEffectivePlan(plan: string | null | undefined, trialEndsAt: Date | null | undefined): PlanId {
-  if (plan === 'pro') return 'pro';
+  if (plan === 'pro' || plan === 'business') return plan;
   if (trialEndsAt && trialEndsAt.getTime() > Date.now()) return 'pro';
   return 'starter';
 }

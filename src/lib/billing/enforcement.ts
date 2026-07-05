@@ -19,7 +19,7 @@ export async function getTenantBilling(tenantId: string): Promise<TenantBilling 
   if (!tenant) return null;
 
   const trialEndsAt = tenant.trialEndsAt ? new Date(tenant.trialEndsAt) : null;
-  const storedPlan: PlanId = tenant.plan === 'pro' ? 'pro' : 'starter';
+  const storedPlan: PlanId = tenant.plan === 'pro' || tenant.plan === 'business' ? tenant.plan as PlanId : 'starter';
   const plan = resolveEffectivePlan(tenant.plan, trialEndsAt);
 
   return {
@@ -61,7 +61,7 @@ export async function assertCanCreateInvoice(tenantId: string): Promise<{ ok: tr
   if (used >= limit) {
     return {
       ok: false,
-      error: `Достигнахте лимита от ${limit} фактури/месец (Стартер). Надградете до Про за неограничен брой.`,
+      error: `Достигнахте лимита от ${limit} фактури/месец (Стартер). Надградете за повече.`,
     };
   }
 

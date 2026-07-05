@@ -40,6 +40,23 @@ const plans: PricingPlan[] = [
     ctaVariant: "outline",
   },
   {
+    id: "business",
+    name: "БИЗНЕС",
+    labelColor: "text-[#f59e0b]",
+    priceMonthly: 14.9,
+    priceAnnual: 11.9,
+    subtitle: "За малки екипи",
+    annualNote: "Таксува се 142.80 € веднъж годишно",
+    features: [
+      "До 500 фактури/месец",
+      "Анализ на документи с изкуствен интелект",
+      "До 3 потребители",
+      "Поддръжка по електронна поща",
+    ],
+    ctaText: "Избери Бизнес",
+    ctaVariant: "outline",
+  },
+  {
     id: "pro",
     name: "ПРО",
     labelColor: "text-[#a78bfa]",
@@ -147,7 +164,7 @@ export default function PricingSection({ lang }: { lang: string }) {
           </div>
         </div>
 
-        <div className="grid w-full max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2">
+        <div className="grid w-full max-w-5xl grid-cols-1 items-stretch gap-6 md:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.id}

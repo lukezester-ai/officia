@@ -51,10 +51,11 @@ export async function POST(req: Request) {
     }
 
     if (tenantId && session.mode === 'subscription') {
+      const plan = session.metadata?.plan === 'business' ? 'business' : 'pro';
       await db
         .update(tenants)
         .set({
-          plan: 'pro',
+          plan,
           stripeCustomerId: typeof session.customer === 'string' ? session.customer : null,
           stripeSubscriptionId:
             typeof session.subscription === 'string' ? session.subscription : null,
@@ -72,10 +73,13 @@ export async function POST(req: Request) {
     const tenantId = subscription.metadata?.tenantId;
     if (tenantId) {
       const active = subscription.status === 'active' || subscription.status === 'trialing';
+      const plan = active
+        ? (subscription.metadata?.plan === 'business' ? 'business' : 'pro')
+        : 'starter';
       await db
         .update(tenants)
         .set({
-          plan: active ? 'pro' : 'starter',
+          plan,
           stripeSubscriptionId: active ? subscription.id : null,
         })
         .where(eq(tenants.id, tenantId));

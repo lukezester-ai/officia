@@ -18,9 +18,21 @@ type BillingData = {
   bankSync: boolean;
 };
 
+const PLAN_LABELS: Record<string, string> = {
+  starter: 'Стартов',
+  business: 'Бизнес',
+  pro: 'Професионален',
+};
+
+const PLAN_PRICES: Record<string, { monthly: number; annual: number; annualTotal: number }> = {
+  business: { monthly: 14.90, annual: 11.90, annualTotal: 142.80 },
+  pro: { monthly: 39.20, annual: 31.36, annualTotal: 376.32 },
+};
+
 export function BillingPlanCard({ lang, initial }: { lang: string; initial: BillingData }) {
   const [pending, setPending] = useState<'checkout' | 'portal' | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
+  const [targetPlan, setTargetPlan] = useState<'business' | 'pro'>('business');
   const trialActive = initial.trialEndsAt && new Date(initial.trialEndsAt) > new Date();
 
   const upgrade = async () => {
@@ -29,7 +41,7 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang, billingCycle }),
+        body: JSON.stringify({ lang, billingCycle, plan: targetPlan }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Грешка при плащането');
@@ -55,6 +67,8 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
     }
   };
 
+  const currentLabel = PLAN_LABELS[initial.plan] || initial.plan;
+
   return (
     <Card className="shadow-sm border-0 ring-1 ring-black/5">
       <CardHeader className="bg-gray-50/50 border-b pb-4">
@@ -67,7 +81,7 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
       <CardContent className="pt-6 space-y-4">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">План</span>
-          <span className="font-semibold">{initial.plan === 'pro' ? 'Професионален' : 'Стартов'}</span>
+          <span className="font-semibold">{currentLabel}</span>
         </div>
         {trialActive && (
           <div className="flex items-center justify-between text-sm">
@@ -91,7 +105,7 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
                 className={`rounded-lg border p-3 text-left text-sm ${billingCycle === 'annual' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'hover:bg-gray-50'}`}
               >
                 <span className="block font-semibold">Годишно</span>
-                <span className="text-muted-foreground">376,32 € / година</span>
+                <span className="text-muted-foreground">от {PLAN_PRICES[targetPlan].annual.toLocaleString('bg-BG', { minimumFractionDigits: 2 })} € / мес</span>
                 <span className="block text-xs font-medium text-emerald-700">Спестявате 20%</span>
               </button>
               <button
@@ -100,12 +114,30 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
                 className={`rounded-lg border p-3 text-left text-sm ${billingCycle === 'monthly' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'hover:bg-gray-50'}`}
               >
                 <span className="block font-semibold">Месечно</span>
-                <span className="text-muted-foreground">39,20 € / месец</span>
+                <span className="text-muted-foreground">{PLAN_PRICES[targetPlan].monthly.toLocaleString('bg-BG', { minimumFractionDigits: 2 })} € / месец</span>
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setTargetPlan('business')}
+                className={`flex-1 rounded-lg border p-2 text-center text-sm ${targetPlan === 'business' ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500' : 'hover:bg-gray-50'}`}
+              >
+                <span className="block font-semibold text-amber-700">Бизнес</span>
+                <span className="text-xs text-muted-foreground">до 500 фактури</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetPlan('pro')}
+                className={`flex-1 rounded-lg border p-2 text-center text-sm ${targetPlan === 'pro' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'hover:bg-gray-50'}`}
+              >
+                <span className="block font-semibold text-indigo-700">Професионален</span>
+                <span className="text-xs text-muted-foreground">неограничени</span>
               </button>
             </div>
             <Button onClick={upgrade} disabled={pending !== null} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700">
               <Sparkles size={16} />
-              {pending === 'checkout' ? 'Пренасочване...' : billingCycle === 'annual' ? 'Избери годишен план' : 'Избери месечен план'}
+              {pending === 'checkout' ? 'Пренасочване...' : `Избери ${targetPlan === 'business' ? 'Бизнес' : 'Професионален'} план`}
             </Button>
           </div>
         )}
