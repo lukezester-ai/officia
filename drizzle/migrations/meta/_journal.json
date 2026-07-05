@@ -43,6 +43,13 @@
       "when": 1744740000000,
       "tag": "0009_tenant_logo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1744740100000,
+      "tag": "0010_dashboard_indexes",
+      "breakpoints": true
     }
   ]
 }

@@ -26,12 +26,13 @@ export async function getFinancialPeriodSummary(
   end: string,
 ): Promise<FinancialPeriodSummary> {
   const [salesResult] = await db
-    .select({ totalRevenue: sql<number>`COALESCE(SUM(CAST(${invoices.totalAmount} AS NUMERIC)), 0)` })
+    .select({ totalRevenue: sql<number>`COALESCE(SUM(${invoices.totalAmount}), 0)` })
     .from(invoices)
     .where(
       and(
         eq(invoices.tenantId, tenantId),
-        sql`${invoices.issueDate} >= ${start} AND ${invoices.issueDate} <= ${end}`,
+        sql`${invoices.issueDate} >= ${start}`,
+        sql`${invoices.issueDate} <= ${end}`,
         sql`${invoices.status} IN ('paid', 'платена', 'issued', 'sent', 'издадена')`,
       ),
     );
@@ -42,17 +43,19 @@ export async function getFinancialPeriodSummary(
     .where(
       and(
         eq(purchaseInvoices.tenantId, tenantId),
-        sql`${purchaseInvoices.issueDate} >= ${start} AND ${purchaseInvoices.issueDate} <= ${end}`,
+        sql`${purchaseInvoices.issueDate} >= ${start}`,
+        sql`${purchaseInvoices.issueDate} <= ${end}`,
       ),
     );
 
   const [expensesResult] = await db
-    .select({ totalExpenses: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS NUMERIC)), 0)` })
+    .select({ totalExpenses: sql<number>`COALESCE(SUM(${expenses.amount}), 0)` })
     .from(expenses)
     .where(
       and(
         eq(expenses.tenantId, tenantId),
-        sql`${expenses.expenseDate} >= ${start}::timestamp AND ${expenses.expenseDate} <= ${end}::timestamp`,
+        sql`${expenses.expenseDate} >= ${start}::date`,
+        sql`${expenses.expenseDate} <= ${end}::date + interval '1 day'`,
       ),
     );
 

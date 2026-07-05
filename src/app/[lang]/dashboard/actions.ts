@@ -8,82 +8,83 @@ import { bankTransactions } from "@/lib/db/schema/bank_transactions";
 import { bankAccounts } from "@/lib/db/schema/bank_accounts";
 import { documents } from "@/lib/db/schema/documents";
 import { taxDeclarations } from "@/lib/db/schema/tax_declarations";
-import { eq, and, inArray, or } from "drizzle-orm";
+import { eq, and, inArray, or, sql } from "drizzle-orm";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import { getCurrentMonthFinancialSummary } from "@/lib/financial/period-summary";
+import { getCachedData } from "@/lib/cache/cache-manager";
 
 const UNPAID_STATUSES = ["issued", "sent", "pending", "издадена", "изпратена"];
+
+async function quickCount(table: any, column: any, tenantId: string, ...extra: any[]) {
+  const [row] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(table)
+    .where(and(eq(column, tenantId), ...extra));
+  return Number(row?.count ?? 0);
+}
 
 export async function getDashboardData() {
   const { tenantId } = await requireTenant();
 
-  const [
-    unpaidInvoices,
-    openInbox,
-    pendingApprovals,
-    invoicesForReview,
-    txForReview,
-    documentsForReview,
-    draftTaxDeclarations,
-    financials,
-  ] = await Promise.all([
-    db
-      .select()
-      .from(invoices)
-      .where(and(eq(invoices.tenantId, tenantId), inArray(invoices.status, UNPAID_STATUSES))),
-    db
-      .select()
-      .from(aiInboxItems)
-      .where(and(eq(aiInboxItems.tenantId, tenantId), eq(aiInboxItems.status, "open"))),
-    db
-      .select()
-      .from(approvals)
-      .where(and(eq(approvals.tenantId, tenantId), eq(approvals.status, "pending"))),
-    db
-      .select()
-      .from(invoices)
-      .where(and(eq(invoices.tenantId, tenantId), eq(invoices.aiStatus, "needs_review"))),
-    db
-      .select({ tx: bankTransactions })
-      .from(bankTransactions)
-      .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
-      .where(and(eq(bankAccounts.tenantId, tenantId), eq(bankTransactions.reviewRequired, true))),
-    db
-      .select()
-      .from(documents)
-      .where(
-        and(
-          eq(documents.tenantId, tenantId),
-          or(eq(documents.aiStatus, "needs_review"), eq(documents.status, "pending_analysis")),
-        ),
-      ),
-    db
-      .select()
-      .from(taxDeclarations)
-      .where(and(eq(taxDeclarations.tenantId, tenantId), eq(taxDeclarations.status, "draft"))),
-    getCurrentMonthFinancialSummary(tenantId),
-  ]);
+  const cached = await getCachedData(
+    `dashboard:${tenantId}`,
+    async () => {
+      const [
+        unpaidCount,
+        pendingApprovals,
+        reviewInvoices,
+        reviewDocs,
+        financials,
+        inboxItems,
+      ] = await Promise.all([
+        quickCount(invoices, invoices.tenantId, tenantId, inArray(invoices.status, UNPAID_STATUSES)),
+        quickCount(approvals, approvals.tenantId, tenantId, eq(approvals.status, "pending")),
+        quickCount(invoices, invoices.tenantId, tenantId, eq(invoices.aiStatus, "needs_review")),
+        quickCount(documents, documents.tenantId, tenantId, or(eq(documents.aiStatus, "needs_review"), eq(documents.status, "pending_analysis"))),
+        getCurrentMonthFinancialSummary(tenantId),
+        db
+          .select()
+          .from(aiInboxItems)
+          .where(and(eq(aiInboxItems.tenantId, tenantId), eq(aiInboxItems.status, "open")))
+          .limit(5),
+      ]);
 
-  return {
-    overviewStats: {
-      revenue: financials.revenue,
-      expenses: financials.expenses,
-      netProfit: financials.netProfit,
-      periodLabel: `${financials.start} – ${financials.end}`,
-      unpaidInvoices: unpaidInvoices.length,
-      approvalsPending: pendingApprovals.length,
-      inboxOpenItems: openInbox.length,
+      const [txCount] = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(bankTransactions)
+        .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+        .where(and(eq(bankAccounts.tenantId, tenantId), eq(bankTransactions.reviewRequired, true)));
+
+      const [draftCount] = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(taxDeclarations)
+        .where(and(eq(taxDeclarations.tenantId, tenantId), eq(taxDeclarations.status, "draft")));
+
+      return {
+        overviewStats: {
+          revenue: financials.revenue,
+          expenses: financials.expenses,
+          netProfit: financials.netProfit,
+          periodLabel: `${financials.start} – ${financials.end}`,
+          unpaidInvoices: unpaidCount,
+          approvalsPending: pendingApprovals,
+          inboxOpenItems: inboxItems.length,
+        },
+        needsReview: {
+          invoices: reviewInvoices,
+          transactions: Number(txCount?.count ?? 0),
+          documents: reviewDocs,
+          vatIssues: Number(draftCount?.count ?? 0),
+        },
+        upcomingDeadlines: {
+          dueInvoices: unpaidCount,
+          expiringDocs: reviewDocs,
+        },
+        aiRecommendations: inboxItems,
+      };
     },
-    needsReview: {
-      invoices: invoicesForReview.length,
-      transactions: txForReview.length,
-      documents: documentsForReview.length,
-      vatIssues: draftTaxDeclarations.length,
-    },
-    upcomingDeadlines: {
-      dueInvoices: unpaidInvoices.length,
-      expiringDocs: documentsForReview.length,
-    },
-    aiRecommendations: openInbox.slice(0, 5),
-  };
+    30,
+  );
+
+  return cached;
 }
