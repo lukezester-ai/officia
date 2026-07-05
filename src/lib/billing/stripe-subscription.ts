@@ -8,8 +8,14 @@ const stripe = process.env.STRIPE_SECRET_KEY
 type CheckoutPlan = 'business' | 'pro';
 
 function getPriceId(plan: CheckoutPlan, cycle: 'monthly' | 'annual'): string | undefined {
-  const key = `STRIPE_PRICE_${plan.toUpperCase()}_${cycle.toUpperCase()}` as const;
-  return process.env[key];
+  if (plan === 'business') {
+    return cycle === 'annual'
+      ? process.env.STRIPE_PRICE_BUSINESS_ANNUAL
+      : process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+  }
+  return cycle === 'annual'
+    ? process.env.STRIPE_PRICE_PRO_ANNUAL
+    : process.env.STRIPE_PRICE_PRO_MONTHLY;
 }
 
 export async function createSubscriptionCheckout(params: {
