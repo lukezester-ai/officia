@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       tenantId,
       userEmail: user.email,
       customerId: tenant?.stripeCustomerId,
-      includeTrial: !tenant?.stripeCustomerId,
+      includeTrial: false,
       billingCycle,
       plan,
       successUrl: `${origin}/${lang}/dashboard/settings/workspace?billing=success`,
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
+    console.error('[CHECKOUT ERROR]', error);
     return NextResponse.json({ error: error.message || 'Грешка при плащането' }, { status: 500 });
   }
 }
