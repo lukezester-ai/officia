@@ -87,6 +87,7 @@ export const FileText = makeIcon('FileText');
 export const Filter = makeIcon('Filter');
 export const HelpCircle = makeIcon('HelpCircle');
 export const History = makeIcon('History');
+export const ImagePlus = makeIcon('ImagePlus');
 export const Inbox = makeIcon('Inbox');
 export const InfoIcon = makeIcon('InfoIcon');
 export const Landmark = makeIcon('Landmark');
