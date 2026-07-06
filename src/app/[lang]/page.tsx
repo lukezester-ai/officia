@@ -79,7 +79,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       <footer className="border-t border-white/10 py-10 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <AppLogoLink lang={lang} variant="circle" />
-          <p className="text-zinc-500 text-sm">© 2026 Officia. Направено с ❤️ за българския бизнес.</p>
+          <p className="text-zinc-500 text-sm">© 2026 AgriNexus Ltd. Всички права запазени. info@agrinexus.eu</p>
           <div className="flex gap-6 text-sm text-zinc-500">
             <Link href={`/${lang}/terms`} className="hover:text-white transition-colors">Условия</Link>
             <Link href={`/${lang}/privacy`} className="hover:text-white transition-colors">Поверителност</Link>
