@@ -11,6 +11,8 @@ export const tenants = pgTable('tenants', {
   trialEndsAt: timestamp('trial_ends_at'),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
+  nordigenSecretId: text('nordigen_secret_id'),
+  nordigenSecretKey: text('nordigen_secret_key'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

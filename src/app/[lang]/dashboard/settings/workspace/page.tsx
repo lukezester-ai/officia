@@ -3,13 +3,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Building2, Save, ImagePlus, X } from 'lucide-react';
+import { Building2, Save, ImagePlus, X, Landmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getBillingSummary } from '@/lib/billing/actions';
 import { BillingPlanCard } from './BillingPlanCard';
-import { getTenantProfile, updateTenantProfile, removeLogo } from './actions';
+import { getTenantProfile, updateTenantProfile, removeLogo, updateNordigenKeys } from './actions';
 
 export default function WorkspaceSettingsPage() {
   const params = useParams();
@@ -25,6 +25,9 @@ export default function WorkspaceSettingsPage() {
     vatNumber: '',
     address: '',
   });
+
+  const [nordigen, setNordigen] = useState({ secretId: '', secretKey: '' });
+  const [savingNordigen, setSavingNordigen] = useState(false);
 
   const [billing, setBilling] = useState<{
     plan: string;
@@ -48,6 +51,10 @@ export default function WorkspaceSettingsPage() {
           address: profileRes.data.address || '',
         });
         setLogoUrl((profileRes.data as any).logoUrl || null);
+        setNordigen({
+          secretId: (profileRes.data as any).nordigenSecretId || '',
+          secretKey: (profileRes.data as any).nordigenSecretKey || '',
+        });
       }
 
       if (billingRes.success && billingRes.data) {
@@ -118,6 +125,17 @@ export default function WorkspaceSettingsPage() {
     }
 
     setSaving(false);
+  };
+
+  const handleNordigenSave = async () => {
+    setSavingNordigen(true);
+    const result = await updateNordigenKeys(nordigen);
+    if (result.success) {
+      toast.success('Open Banking ключовете са запазени.');
+    } else {
+      toast.error(`Грешка: ${result.error}`);
+    }
+    setSavingNordigen(false);
   };
 
   if (loading) {
@@ -233,6 +251,50 @@ export default function WorkspaceSettingsPage() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm border-0 ring-1 ring-black/5">
+        <CardHeader className="bg-gray-50/50 border-b pb-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Landmark size={18} className="text-indigo-600" />
+            Open Banking (PSD2)
+          </CardTitle>
+          <CardDescription>
+            Свържете банковите си сметки чрез GoCardless. Регистрирайте се безплатно на{' '}
+            <a href="https://gocardless.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">gocardless.com</a>,
+            добавете своите <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">secret_id</code> и{' '}
+            <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">secret_key</code> тук.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium" htmlFor="nordigenId">Secret ID</label>
+              <Input
+                id="nordigenId"
+                value={nordigen.secretId}
+                onChange={(e) => setNordigen({ ...nordigen, secretId: e.target.value })}
+                placeholder="от GoCardless Dashboard → API"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium" htmlFor="nordigenKey">Secret Key</label>
+              <Input
+                id="nordigenKey"
+                type="password"
+                value={nordigen.secretKey}
+                onChange={(e) => setNordigen({ ...nordigen, secretKey: e.target.value })}
+                placeholder="от GoCardless Dashboard → API"
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleNordigenSave} disabled={savingNordigen} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                <Save size={16} />
+                {savingNordigen ? 'Запазване...' : 'Запази ключовете'}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

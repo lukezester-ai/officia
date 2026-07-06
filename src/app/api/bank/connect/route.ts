@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { assertFeature, getTenantBilling } from '@/lib/billing/enforcement';
+import { db } from '@/lib/db/db';
+import { tenants as tenantsSchema } from '@/lib/db/schema/tenants';
+import { eq } from 'drizzle-orm';
 import {
   BG_INSTITUTIONS,
   createBankRequisition,
   isNordigenConfigured,
+  type NordigenCredentials,
 } from '@/lib/banking/nordigen';
 
 export async function POST(req: Request) {
@@ -16,9 +20,19 @@ export async function POST(req: Request) {
       if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: 403 });
     }
 
-    if (!isNordigenConfigured()) {
+    const [tenant] = await db
+      .select({ nordigenSecretId: tenantsSchema.nordigenSecretId, nordigenSecretKey: tenantsSchema.nordigenSecretKey })
+      .from(tenantsSchema)
+      .where(eq(tenantsSchema.id, tenantId));
+
+    const credentials: NordigenCredentials | undefined =
+      tenant?.nordigenSecretId && tenant?.nordigenSecretKey
+        ? { secretId: tenant.nordigenSecretId, secretKey: tenant.nordigenSecretKey }
+        : undefined;
+
+    if (!isNordigenConfigured(credentials)) {
       return NextResponse.json(
-        { error: 'Nordigen is not configured. Set NORDIGEN_SECRET_ID and NORDIGEN_SECRET_KEY.' },
+        { error: 'Open Banking не е конфигуриран. Добавете своите GoCardless ключове в Настройки > Работно пространство.' },
         { status: 503 },
       );
     }
@@ -37,11 +51,10 @@ export async function POST(req: Request) {
     const lang = body.lang || 'bg';
     const redirectUrl = `${origin}/api/bank/callback?lang=${lang}`;
 
-    const requisition = await createBankRequisition({
-      institutionId,
-      redirectUrl,
-      reference: `${tenantId}:${Date.now()}`,
-    });
+    const requisition = await createBankRequisition(
+      { institutionId, redirectUrl, reference: `${tenantId}:${Date.now()}` },
+      credentials,
+    );
 
     return NextResponse.json({
       link: requisition.link,

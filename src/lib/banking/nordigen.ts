@@ -1,17 +1,29 @@
 const BASE_URL = 'https://bankaccountdata.gocardless.com/api/v2';
 
-export function isNordigenConfigured(): boolean {
-  return Boolean(process.env.NORDIGEN_SECRET_ID && process.env.NORDIGEN_SECRET_KEY);
+export type NordigenCredentials = {
+  secretId: string;
+  secretKey: string;
+};
+
+function resolveCredentials(tenantCredentials?: NordigenCredentials): NordigenCredentials {
+  if (tenantCredentials?.secretId && tenantCredentials?.secretKey) {
+    return tenantCredentials;
+  }
+  if (process.env.NORDIGEN_SECRET_ID && process.env.NORDIGEN_SECRET_KEY) {
+    return {
+      secretId: process.env.NORDIGEN_SECRET_ID,
+      secretKey: process.env.NORDIGEN_SECRET_KEY,
+    };
+  }
+  throw new Error('Nordigen is not configured. Set global NORDIGEN_SECRET_ID/NORDIGEN_SECRET_KEY or configure tenant-level keys.');
 }
 
-async function getAccessToken(): Promise<string> {
+async function getAccessToken(credentials?: NordigenCredentials): Promise<string> {
+  const { secretId, secretKey } = resolveCredentials(credentials);
   const res = await fetch(`${BASE_URL}/token/new/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({
-      secret_id: process.env.NORDIGEN_SECRET_ID,
-      secret_key: process.env.NORDIGEN_SECRET_KEY,
-    }),
+    body: JSON.stringify({ secret_id: secretId, secret_key: secretKey }),
   });
 
   if (!res.ok) {
@@ -22,12 +34,20 @@ async function getAccessToken(): Promise<string> {
   return data.access as string;
 }
 
-export async function createBankRequisition(params: {
-  institutionId: string;
-  redirectUrl: string;
-  reference: string;
-}) {
-  const token = await getAccessToken();
+export function isNordigenConfigured(tenantCredentials?: NordigenCredentials): boolean {
+  try {
+    resolveCredentials(tenantCredentials);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function createBankRequisition(
+  params: { institutionId: string; redirectUrl: string; reference: string },
+  credentials?: NordigenCredentials,
+) {
+  const token = await getAccessToken(credentials);
   const res = await fetch(`${BASE_URL}/requisitions/`, {
     method: 'POST',
     headers: {
@@ -51,8 +71,8 @@ export async function createBankRequisition(params: {
   return res.json() as Promise<{ id: string; link: string }>;
 }
 
-export async function getRequisition(requisitionId: string) {
-  const token = await getAccessToken();
+export async function getRequisition(requisitionId: string, credentials?: NordigenCredentials) {
+  const token = await getAccessToken(credentials);
   const res = await fetch(`${BASE_URL}/requisitions/${requisitionId}/`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });
@@ -60,8 +80,8 @@ export async function getRequisition(requisitionId: string) {
   return res.json() as Promise<{ id: string; accounts: string[]; status: string }>;
 }
 
-export async function getAccountDetails(accountId: string) {
-  const token = await getAccessToken();
+export async function getAccountDetails(accountId: string, credentials?: NordigenCredentials) {
+  const token = await getAccessToken(credentials);
   const res = await fetch(`${BASE_URL}/accounts/${accountId}/details/`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });
@@ -69,8 +89,8 @@ export async function getAccountDetails(accountId: string) {
   return res.json() as Promise<{ account: { iban?: string; name?: string; currency?: string } }>;
 }
 
-export async function getAccountTransactions(accountId: string) {
-  const token = await getAccessToken();
+export async function getAccountTransactions(accountId: string, credentials?: NordigenCredentials) {
+  const token = await getAccessToken(credentials);
   const res = await fetch(`${BASE_URL}/accounts/${accountId}/transactions/`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });

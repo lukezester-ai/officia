@@ -4,7 +4,8 @@ import { assertFeature, getTenantBilling } from '@/lib/billing/enforcement';
 import { db } from '@/lib/db/db';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
-import { getAccountTransactions } from '@/lib/banking/nordigen';
+import { tenants as tenantsSchema } from '@/lib/db/schema/tenants';
+import { getAccountTransactions, type NordigenCredentials } from '@/lib/banking/nordigen';
 import { eq, and } from 'drizzle-orm';
 
 export async function POST(req: Request) {
@@ -15,6 +16,16 @@ export async function POST(req: Request) {
       const gate = assertFeature(billing, 'bankSync');
       if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: 403 });
     }
+
+    const [tenant] = await db
+      .select({ nordigenSecretId: tenantsSchema.nordigenSecretId, nordigenSecretKey: tenantsSchema.nordigenSecretKey })
+      .from(tenantsSchema)
+      .where(eq(tenantsSchema.id, tenantId));
+
+    const credentials: NordigenCredentials | undefined =
+      tenant?.nordigenSecretId && tenant?.nordigenSecretKey
+        ? { secretId: tenant.nordigenSecretId, secretKey: tenant.nordigenSecretKey }
+        : undefined;
 
     const body = await req.json().catch(() => ({}));
     const accountId = body.accountId as string | undefined;
@@ -31,7 +42,7 @@ export async function POST(req: Request) {
     for (const account of accounts) {
       if (account.provider !== 'nordigen' || !account.externalAccountId) continue;
 
-      const txData = await getAccountTransactions(account.externalAccountId);
+      const txData = await getAccountTransactions(account.externalAccountId, credentials);
       const booked = txData.transactions?.booked || [];
 
       for (const tx of booked) {

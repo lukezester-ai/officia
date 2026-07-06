@@ -37,6 +37,27 @@ export async function getTenantProfile() {
   }
 }
 
+export async function updateNordigenKeys(data: { nordigenSecretId: string; nordigenSecretKey: string }) {
+  try {
+    const { tenantId, user } = await requireTenant();
+    const gate = await requirePermission(tenantId, user.id, 'workspace:update');
+    if (!gate.ok) return { success: false, error: gate.error };
+
+    await db
+      .update(tenants)
+      .set({
+        nordigenSecretId: data.nordigenSecretId || null,
+        nordigenSecretKey: data.nordigenSecretKey || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(tenants.id, tenantId));
+
+    return { success: true };
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : 'Грешка при записване на Open Banking ключове' };
+  }
+}
+
 export async function updateTenantProfile(data: {
   name: string;
   bulstat: string;

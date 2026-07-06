@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { db } from '@/lib/db/db';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
-import { getAccountDetails, getRequisition } from '@/lib/banking/nordigen';
+import { tenants as tenantsSchema } from '@/lib/db/schema/tenants';
+import { getAccountDetails, getRequisition, type NordigenCredentials } from '@/lib/banking/nordigen';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(req: Request) {
@@ -16,10 +17,20 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL(`/${lang}/dashboard/banking?error=missing_ref`, req.url));
     }
 
-    const requisition = await getRequisition(requisitionId);
+    const [tenant] = await db
+      .select({ nordigenSecretId: tenantsSchema.nordigenSecretId, nordigenSecretKey: tenantsSchema.nordigenSecretKey })
+      .from(tenantsSchema)
+      .where(eq(tenantsSchema.id, tenantId));
+
+    const credentials: NordigenCredentials | undefined =
+      tenant?.nordigenSecretId && tenant?.nordigenSecretKey
+        ? { secretId: tenant.nordigenSecretId, secretKey: tenant.nordigenSecretKey }
+        : undefined;
+
+    const requisition = await getRequisition(requisitionId, credentials);
 
     for (const externalAccountId of requisition.accounts || []) {
-      const details = await getAccountDetails(externalAccountId);
+      const details = await getAccountDetails(externalAccountId, credentials);
       const iban = details.account?.iban;
       const name = details.account?.name || 'Bank Account';
 
