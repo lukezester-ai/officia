@@ -26,7 +26,7 @@ export default function WorkspaceSettingsPage() {
     address: '',
   });
 
-  const [nordigen, setNordigen] = useState({ secretId: '', secretKey: '' });
+  const [nordigen, setNordigen] = useState({ nordigenSecretId: '', nordigenSecretKey: '' });
   const [savingNordigen, setSavingNordigen] = useState(false);
 
   const [billing, setBilling] = useState<{
@@ -52,8 +52,8 @@ export default function WorkspaceSettingsPage() {
         });
         setLogoUrl((profileRes.data as any).logoUrl || null);
         setNordigen({
-          secretId: (profileRes.data as any).nordigenSecretId || '',
-          secretKey: (profileRes.data as any).nordigenSecretKey || '',
+          nordigenSecretId: (profileRes.data as any).nordigenSecretId || '',
+          nordigenSecretKey: (profileRes.data as any).nordigenSecretKey || '',
         });
       }
 
@@ -273,8 +273,8 @@ export default function WorkspaceSettingsPage() {
               <label className="text-sm font-medium" htmlFor="nordigenId">Secret ID</label>
               <Input
                 id="nordigenId"
-                value={nordigen.secretId}
-                onChange={(e) => setNordigen({ ...nordigen, secretId: e.target.value })}
+                value={nordigen.nordigenSecretId}
+                onChange={(e) => setNordigen({ ...nordigen, nordigenSecretId: e.target.value })}
                 placeholder="от GoCardless Dashboard → API"
               />
             </div>
@@ -283,8 +283,8 @@ export default function WorkspaceSettingsPage() {
               <Input
                 id="nordigenKey"
                 type="password"
-                value={nordigen.secretKey}
-                onChange={(e) => setNordigen({ ...nordigen, secretKey: e.target.value })}
+                value={nordigen.nordigenSecretKey}
+                onChange={(e) => setNordigen({ ...nordigen, nordigenSecretKey: e.target.value })}
                 placeholder="от GoCardless Dashboard → API"
               />
             </div>
