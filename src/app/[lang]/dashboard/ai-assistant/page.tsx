@@ -1,5 +1,4 @@
 'use client';
-// Fix client side crash by avoiding next/image for blob URLs
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
+import ReactMarkdown from 'react-markdown';
 import { officiaChatTransport } from '@/lib/ai/officia-chat-transport';
 import { getChatErrorMessage } from '@/lib/ai/chat-error';
 import { AppLogoLink } from '@/components/brand/app-logo-link';
@@ -126,7 +126,7 @@ export default function AIAssistantPage() {
   };
 
   return (
-    <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
+    <div className="space-y-6 flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-3">
         <AppLogoLink lang={lang} variant="circle" showLabel={false} />
         <h1 className="text-3xl font-bold tracking-tight text-white">AI Асистент</h1>
@@ -150,9 +150,10 @@ export default function AIAssistantPage() {
                       ? 'bg-violet-600 text-white rounded-tr-sm' 
                       : 'bg-white/5 text-zinc-300 rounded-tl-sm border border-white/10'
                   }`}>
-                    {/* Визуализация на съдържанието */}
-                    <div className="whitespace-pre-wrap font-sans">
-                      {getMessageText(msg)}
+                    <div className="text-sm leading-relaxed">
+                      <ReactMarkdown>
+                        {getMessageText(msg)}
+                      </ReactMarkdown>
                     </div>
 
                     {/* Визуализация на AI Инструменти (Графики) */}
