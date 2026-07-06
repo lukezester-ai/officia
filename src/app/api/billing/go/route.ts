@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { auth } from '@clerk/nextjs/server';
+import { db } from '@/lib/db/db';
+import { users } from '@/lib/db/schema/users';
+import { tenants } from '@/lib/db/schema/tenants';
+import { eq } from 'drizzle-orm';
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2026-05-27.dahlia' as any })
@@ -8,6 +13,20 @@ const stripe = process.env.STRIPE_SECRET_KEY
 export async function GET(req: Request) {
   if (!stripe) {
     return new NextResponse('Stripe not configured', { status: 500 });
+  }
+
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    return NextResponse.redirect(new URL('/sign-in', req.url));
+  }
+
+  const [user] = await db
+    .select({ email: users.email, tenantId: users.tenantId })
+    .from(users)
+    .where(eq(users.clerkId, clerkId));
+
+  if (!user?.email) {
+    return new NextResponse('User not found', { status: 404 });
   }
 
   const url = new URL(req.url);
@@ -27,9 +46,11 @@ export async function GET(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
+      customer_email: user.email,
+      client_reference_id: clerkId,
       success_url: `${origin}/dashboard/settings/workspace?billing=success`,
       cancel_url: `${origin}/dashboard?billing=canceled`,
-      metadata: { plan },
+      metadata: { plan, tenantId: user.tenantId ?? '' },
     });
 
     return NextResponse.redirect(session.url!);
