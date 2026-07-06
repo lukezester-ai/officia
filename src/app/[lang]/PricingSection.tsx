@@ -74,6 +74,25 @@ const plans: PricingPlan[] = [
     ctaVariant: "solid",
     isPopular: true,
   },
+  {
+    id: "accounting-firm",
+    name: "СЧЕТОВОДНА КАНТОРА",
+    labelColor: "text-emerald-400",
+    priceMonthly: 99,
+    priceAnnual: 79.2,
+    subtitle: "За професионални счетоводни кантори",
+    annualNote: "Таксува се 950.40 € веднъж годишно",
+    features: [
+      "Неограничени фактури",
+      "Анализ на документи с изкуствен интелект",
+      "Open Banking (PSD2)",
+      "Неограничени потребители",
+      "API достъп",
+      "Приоритетна поддръжка",
+    ],
+    ctaText: "Избери Кантора",
+    ctaVariant: "outline",
+  },
 ];
 
 const footerLinks = ['14 дни пробен период', 'Защитено удостоверяване', 'Поддръжка на български'];
@@ -163,7 +182,7 @@ export default function PricingSection({ lang }: { lang: string }) {
           </div>
         </div>
 
-        <div className="grid w-full max-w-5xl grid-cols-1 items-stretch gap-6 md:grid-cols-3">
+        <div className="grid w-full max-w-7xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.id}

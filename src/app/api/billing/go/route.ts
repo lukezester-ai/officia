@@ -30,13 +30,19 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  const plan = url.searchParams.get('plan') === 'business' ? 'business' : 'pro';
+  const planParam = url.searchParams.get('plan');
+  const plan = planParam === 'business' || planParam === 'accounting-firm' ? planParam : 'pro';
   const cycle = url.searchParams.get('cycle') === 'annual' ? 'annual' : 'monthly';
   const origin = url.origin;
 
-  const priceId = plan === 'business'
-    ? (cycle === 'annual' ? process.env.STRIPE_PRICE_BUSINESS_ANNUAL : process.env.STRIPE_PRICE_BUSINESS_MONTHLY)
-    : (cycle === 'annual' ? process.env.STRIPE_PRICE_PRO_ANNUAL : process.env.STRIPE_PRICE_PRO_MONTHLY);
+  let priceId: string | undefined;
+  if (plan === 'business') {
+    priceId = cycle === 'annual' ? process.env.STRIPE_PRICE_BUSINESS_ANNUAL : process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+  } else if (plan === 'accounting-firm') {
+    priceId = cycle === 'annual' ? process.env.STRIPE_PRICE_ACCOUNTING_FIRM_ANNUAL : process.env.STRIPE_PRICE_ACCOUNTING_FIRM_MONTHLY;
+  } else {
+    priceId = cycle === 'annual' ? process.env.STRIPE_PRICE_PRO_ANNUAL : process.env.STRIPE_PRICE_PRO_MONTHLY;
+  }
 
   if (!priceId) {
     return new NextResponse('Price not configured', { status: 500 });

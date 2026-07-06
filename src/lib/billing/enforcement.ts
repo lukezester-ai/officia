@@ -19,7 +19,7 @@ export async function getTenantBilling(tenantId: string): Promise<TenantBilling 
   if (!tenant) return null;
 
   const trialEndsAt = tenant.trialEndsAt ? new Date(tenant.trialEndsAt) : null;
-  const storedPlan: PlanId = tenant.plan === 'pro' || tenant.plan === 'business' ? tenant.plan as PlanId : 'starter';
+  const storedPlan: PlanId = tenant.plan === 'pro' || tenant.plan === 'business' || tenant.plan === 'accounting-firm' ? tenant.plan as PlanId : 'starter';
   const plan = resolveEffectivePlan(tenant.plan, trialEndsAt);
 
   return {

@@ -5,13 +5,18 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2026-05-27.dahlia' as any })
   : null;
 
-type CheckoutPlan = 'business' | 'pro';
+type CheckoutPlan = 'business' | 'pro' | 'accounting-firm';
 
 function getPriceId(plan: CheckoutPlan, cycle: 'monthly' | 'annual'): string | undefined {
   if (plan === 'business') {
     return cycle === 'annual'
       ? process.env.STRIPE_PRICE_BUSINESS_ANNUAL
       : process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+  }
+  if (plan === 'accounting-firm') {
+    return cycle === 'annual'
+      ? process.env.STRIPE_PRICE_ACCOUNTING_FIRM_ANNUAL
+      : process.env.STRIPE_PRICE_ACCOUNTING_FIRM_MONTHLY;
   }
   return cycle === 'annual'
     ? process.env.STRIPE_PRICE_PRO_ANNUAL
