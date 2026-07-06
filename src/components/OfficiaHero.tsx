@@ -19,8 +19,8 @@ type MetricItem = {
 const metricsData: MetricItem[] = [
   { id: "trial", numericValue: 14, suffix: " дни", label: "Пълен достъп при регистрация", highlightColor: "purple" },
   { id: "starter", numericValue: 50, suffix: "", label: "Фактури/месец (Стартер)", highlightColor: "white" },
-  { id: "modules", numericValue: 3, suffix: "", label: "Модула: счетоводство, фактури, HR", highlightColor: "purple" },
-  { id: "lang", numericValue: 2, suffix: "", label: "Езика: BG и EN", highlightColor: "purple" },
+  { id: "modules", numericValue: 3, suffix: "", label: "Модула: счетоводство, фактури, кадри", highlightColor: "purple" },
+  { id: "lang", numericValue: 1, suffix: "", label: "Език: BG", highlightColor: "purple" },
 ];
 
 const easeOutQuart: [number, number, number, number] = [0.25, 1, 0.5, 1];

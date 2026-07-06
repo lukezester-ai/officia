@@ -41,7 +41,8 @@ function getLastUserMessageText(messages: any[]) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, tenantId } = await requireTenant();
+    const { userId, tenantId, user } = await requireTenant();
+    const dbUserId = user.id; // internal UUID, not Clerk's user_xxx
 
     const rateLimit = await checkRateLimit(`ai-chat:${userId}`, MAX_REQUESTS_PER_WINDOW, RATE_LIMIT_WINDOW_MS);
     if (!rateLimit.success) {
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
 
     const lastUserText = getLastUserMessageText(messages);
-    const persistedHistory = await getConversationHistory(tenantId, userId, 20);
+    const persistedHistory = await getConversationHistory(tenantId, dbUserId, 20);
     const memoryContext = formatConversationMemory(persistedHistory);
 
     let documentContext = '';
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
       .filter(Boolean)
       .join('\n');
 
-    await saveConversationMessage(tenantId, userId, 'user', lastUserText);
+    await saveConversationMessage(tenantId, dbUserId, 'user', lastUserText);
 
     const result = streamText({
       model: getAnthropicChatModel(),
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
       tools,
       stopWhen: stepCountIs(5),
       onFinish: async ({ text, totalUsage, finishReason }) => {
-        await saveConversationMessage(tenantId, userId, 'assistant', text, {
+        await saveConversationMessage(tenantId, dbUserId, 'assistant', text, {
           finishReason,
           inputTokens: totalUsage.inputTokens,
           outputTokens: totalUsage.outputTokens,
