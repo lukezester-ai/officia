@@ -82,10 +82,10 @@ export async function POST(req: NextRequest) {
     const { routing, tenantSnapshot } = await prepareOrchestratedChat(
       lastUserText,
       tenantId,
-      userId,
+      dbUserId,
       messages,
     );
-    const tools = buildRoutedChatTools(routing, { tenantId, userId });
+    const tools = buildRoutedChatTools(routing, { tenantId, userId: dbUserId });
     const system = [
       buildOrchestratorSystemPrompt(tenantId, routing, tenantSnapshot),
       memoryContext
