@@ -5,14 +5,14 @@ export const PLAN_LIMITS = {
     invoicesPerMonth: 50,
     maxUsers: 1,
     aiOcr: true,
-    bankSync: false,
+    bankSync: true,
     label: 'Стартер',
   },
   business: {
     invoicesPerMonth: 500,
     maxUsers: 3,
     aiOcr: true,
-    bankSync: false,
+    bankSync: true,
     label: 'Бизнес',
   },
   pro: {
