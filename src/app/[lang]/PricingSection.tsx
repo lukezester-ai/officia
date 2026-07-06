@@ -88,7 +88,6 @@ const plans: PricingPlan[] = [
       "Open Banking (PSD2)",
       "Неограничени потребители",
       "API достъп",
-      "Приоритетна поддръжка",
     ],
     ctaText: "Избери Кантора",
     ctaVariant: "outline",
