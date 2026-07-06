@@ -190,6 +190,16 @@ async function ensureAuthUserColumns(sql) {
   console.log('✓ auth user columns safety migration applied');
 }
 
+async function ensureNordigenTenantKeys(sql) {
+  if (await columnExists(sql, 'tenants', 'nordigen_secret_id')) {
+    console.log('✓ nordigen tenant keys already applied');
+    return;
+  }
+  console.log('Applying nordigen tenant keys migration...');
+  await applySqlFile(sql, 'drizzle/migrations/0011_nordigen_tenant_keys.sql');
+  console.log('✓ nordigen tenant keys migration applied');
+}
+
 async function runDrizzleKitMigrate() {
   execSync('npx drizzle-kit migrate', {
     stdio: 'inherit',
@@ -215,6 +225,7 @@ try {
     await ensureHrCoreUpgrade(sql);
     await ensurePayrollRateComponents(sql);
     await ensureAuthUserColumns(sql);
+    await ensureNordigenTenantKeys(sql);
   } else {
     console.log('Fresh database — running full drizzle-kit migrate');
     await sql.end({ timeout: 5 });
