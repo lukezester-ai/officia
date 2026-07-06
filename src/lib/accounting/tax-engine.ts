@@ -1,8 +1,9 @@
 import { db } from '@/lib/db/db';
 import { taxDeclarations } from '@/lib/db/schema/tax_declarations';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
+import { payrollBatches, payrollItems } from '@/lib/db/schema/payroll';
 import { ReportEngine } from './report-engine';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, sum } from 'drizzle-orm';
 
 export class TaxEngine {
 
@@ -84,6 +85,180 @@ export class TaxEngine {
     ));
 
     return Number(result[0]?.totalVAT || 0);
+  }
+
+  // Обр. 1 — Осигурителна декларация (месечна)
+  static async generateObra1Declaration(tenantId: string, year: number, month: number) {
+    const monthStr = `${year}-${String(month).padStart(2, '0')}-01`;
+    const periodStart = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const periodEnd = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    const [batch] = await db.select()
+      .from(payrollBatches)
+      .where(and(
+        eq(payrollBatches.tenantId, tenantId),
+        eq(payrollBatches.month, monthStr)
+      ));
+
+    if (!batch) throw new Error(`Няма изчислен ТРЗ за ${month}/${year}`);
+
+    const items = await db.select()
+      .from(payrollItems)
+      .where(eq(payrollItems.batchId, batch.id));
+
+    const employees = items.map(item => ({
+      name: item.employeeName,
+      insuranceBase: Number(item.insuranceBase),
+      employeeDoo: Number(item.employeeDoo),
+      employeeHealth: Number(item.employeeHealth),
+      employerDoo: Number(item.employerDoo),
+      employerHealth: Number(item.employerHealth),
+      employerOther: Number(item.employerOther),
+    }));
+
+    const totals = {
+      totalInsuranceBase: employees.reduce((s, e) => s + e.insuranceBase, 0),
+      totalEmployeeDoo: employees.reduce((s, e) => s + e.employeeDoo, 0),
+      totalEmployeeHealth: employees.reduce((s, e) => s + e.employeeHealth, 0),
+      totalEmployerDoo: employees.reduce((s, e) => s + e.employerDoo, 0),
+      totalEmployerHealth: employees.reduce((s, e) => s + e.employerHealth, 0),
+      totalEmployerOther: employees.reduce((s, e) => s + e.employerOther, 0),
+      totalEmployeeInsurance: employees.reduce((s, e) => s + e.employeeDoo + e.employeeHealth, 0),
+      totalEmployerInsurance: employees.reduce((s, e) => s + e.employerDoo + e.employerHealth + e.employerOther, 0),
+    };
+
+    const report = {
+      periodStart,
+      periodEnd,
+      type: 'obra1',
+      employees,
+      totals,
+      employeeCount: employees.length,
+    };
+
+    const result = await db.insert(taxDeclarations).values({
+      tenantId,
+      type: 'obra1',
+      periodStart,
+      periodEnd,
+      totalAmount: totals.totalInsuranceBase.toString(),
+      data: report,
+      status: 'draft',
+    }).returning();
+
+    return result[0];
+  }
+
+  // Обр. 6 — Данъчна декларация за удържан данък общ доход (месечна)
+  static async generateObra6Declaration(tenantId: string, year: number, month: number) {
+    const monthStr = `${year}-${String(month).padStart(2, '0')}-01`;
+    const periodStart = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const periodEnd = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    const [batch] = await db.select()
+      .from(payrollBatches)
+      .where(and(
+        eq(payrollBatches.tenantId, tenantId),
+        eq(payrollBatches.month, monthStr)
+      ));
+
+    if (!batch) throw new Error(`Няма изчислен ТРЗ за ${month}/${year}`);
+
+    const items = await db.select()
+      .from(payrollItems)
+      .where(eq(payrollItems.batchId, batch.id));
+
+    const employees = items.map(item => ({
+      name: item.employeeName,
+      gross: Number(item.gross),
+      employeeInsurance: Number(item.employeeInsurance),
+      taxableIncome: Number(item.gross) - Number(item.employeeInsurance),
+      incomeTax: Number(item.incomeTax),
+    }));
+
+    const totals = {
+      totalGross: employees.reduce((s, e) => s + e.gross, 0),
+      totalEmployeeInsurance: employees.reduce((s, e) => s + e.employeeInsurance, 0),
+      totalTaxableIncome: employees.reduce((s, e) => s + e.taxableIncome, 0),
+      totalIncomeTax: employees.reduce((s, e) => s + e.incomeTax, 0),
+    };
+
+    const report = {
+      periodStart,
+      periodEnd,
+      type: 'obra6',
+      employees,
+      totals,
+      employeeCount: employees.length,
+    };
+
+    const result = await db.insert(taxDeclarations).values({
+      tenantId,
+      type: 'obra6',
+      periodStart,
+      periodEnd,
+      totalAmount: totals.totalIncomeTax.toString(),
+      data: report,
+      status: 'draft',
+    }).returning();
+
+    return result[0];
+  }
+
+  // VIES — Декларация за вътреобщностна търговия (месечна)
+  static async generateViesDeclaration(tenantId: string, year: number, month: number) {
+    const periodStart = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const periodEnd = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    const records = await db.select()
+      .from(vatJournals)
+      .where(and(
+        eq(vatJournals.tenantId, tenantId),
+        eq(vatJournals.periodYear, year),
+        eq(vatJournals.periodMonth, month),
+        eq(vatJournals.isIntraCommunity, true),
+      ));
+
+    const sales = records.filter(r => r.type === 'sales');
+    const purchases = records.filter(r => r.type === 'purchases');
+
+    const mapRecord = (r: typeof records[0]) => ({
+      documentNumber: r.documentNumber || '',
+      invoiceDate: r.invoiceDate || '',
+      counterpartyName: r.counterpartyName || '',
+      counterpartyVat: r.counterpartyVat || '',
+      netAmount: Number(r.netAmount || 0),
+      vatAmount: Number(r.vatAmount || 0),
+      totalAmount: Number(r.totalAmount || 0),
+    });
+
+    const report = {
+      periodStart,
+      periodEnd,
+      sales: sales.map(mapRecord),
+      purchases: purchases.map(mapRecord),
+      totals: {
+        salesNet: sales.reduce((s, r) => s + Number(r.netAmount || 0), 0),
+        purchasesNet: purchases.reduce((s, r) => s + Number(r.netAmount || 0), 0),
+        salesCount: sales.length,
+        purchasesCount: purchases.length,
+      },
+    };
+
+    const result = await db.insert(taxDeclarations).values({
+      tenantId,
+      type: 'vies',
+      periodStart,
+      periodEnd,
+      totalAmount: report.totals.salesNet.toString(),
+      data: report,
+      status: 'draft',
+    }).returning();
+
+    return result[0];
   }
 
   // ==================== XML ЕКСПОРТ ЗА НАП ====================

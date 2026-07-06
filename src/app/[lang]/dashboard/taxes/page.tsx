@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getDeclarations, generateDds, generateProfitTaxAction } from './actions';
+import { getDeclarations, generateDds, generateProfitTaxAction, generateObra1, generateObra6, generateVies } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Download, FileArchive, CheckCircle, PieChart } from 'lucide-react';
+import { Calculator, Download, FileArchive, CheckCircle, PieChart, Users, Receipt, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TaxesPage() {
@@ -56,6 +56,9 @@ export default function TaxesPage() {
 
   const ddsDeclarations = declarations.filter(d => d.type === 'dds');
   const profitDeclarations = declarations.filter(d => d.type === 'profit_tax');
+  const obra1Declarations = declarations.filter(d => d.type === 'obra1');
+  const obra6Declarations = declarations.filter(d => d.type === 'obra6');
+  const viesDeclarations = declarations.filter(d => d.type === 'vies');
 
   return (
     <div className="space-y-8 pb-10">
@@ -124,6 +127,191 @@ export default function TaxesPage() {
                        >
                          <FileArchive size={14} className="mr-1.5"/> Експорт за НАП (.zip)
                        </a>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* ОБР. 1 — ОСИГУРИТЕЛНА ДЕКЛАРАЦИЯ */}
+      <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/10 bg-white/5 pb-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg text-white flex items-center gap-2">
+            <Users className="text-sky-500" size={18} />
+            Обр. 1 — Осигурителна декларация
+          </CardTitle>
+          <Button onClick={async () => {
+            const now = new Date();
+            let year = now.getFullYear();
+            let month = now.getMonth();
+            if (month === 0) { month = 12; year -= 1; }
+            const res = await generateObra1(year, month);
+            if (res.success) { toast.success(`Обр. 1 за ${month}/${year} е генерирана!`); await load(); }
+            else { toast.error('Грешка: ' + res.error); }
+          }} size="sm" className="gap-2 bg-sky-600 hover:bg-sky-700 text-white">
+            <Calculator size={14} />
+            Обр. 1 за мин. месец
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-white/10">
+                <TableHead className="text-zinc-400">Период</TableHead>
+                <TableHead className="text-zinc-400">Служители</TableHead>
+                <TableHead className="text-zinc-400">Осиг. доход</TableHead>
+                <TableHead className="text-zinc-400">Статус</TableHead>
+                <TableHead className="text-right text-zinc-400">Действия</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow className="border-white/10"><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Зареждане...</TableCell></TableRow>
+              ) : obra1Declarations.length === 0 ? (
+                <TableRow className="border-white/10"><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Няма генерирани декларации</TableCell></TableRow>
+              ) : obra1Declarations.map((d) => (
+                <TableRow key={d.id} className="border-white/10 hover:bg-white/5 transition-colors">
+                  <TableCell className="font-medium text-zinc-200 tabular-nums">{d.periodStart} - {d.periodEnd}</TableCell>
+                  <TableCell className="text-zinc-300">{d.data?.employeeCount || 0}</TableCell>
+                  <TableCell className="tabular-nums font-semibold text-zinc-200">
+                    {parseFloat(d.totalAmount || '0').toFixed(2)} €
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`flex items-center gap-1 w-max ${d.status === 'draft' ? 'bg-zinc-800 text-zinc-400 border-zinc-700' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                      {d.status === 'draft' ? 'Чернова' : <><CheckCircle size={12}/>Подадена</>}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <a href={`/api/tax-declarations/${d.id}/pdf`} download
+                      className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
+                      <Download size={14} className="mr-1.5"/> PDF
+                    </a>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* ОБР. 6 — ДАНЪЧНА ДЕКЛАРАЦИЯ */}
+      <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/10 bg-white/5 pb-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg text-white flex items-center gap-2">
+            <Receipt className="text-orange-500" size={18} />
+            Обр. 6 — Данък общ доход (удържан)
+          </CardTitle>
+          <Button onClick={async () => {
+            const now = new Date();
+            let year = now.getFullYear();
+            let month = now.getMonth();
+            if (month === 0) { month = 12; year -= 1; }
+            const res = await generateObra6(year, month);
+            if (res.success) { toast.success(`Обр. 6 за ${month}/${year} е генерирана!`); await load(); }
+            else { toast.error('Грешка: ' + res.error); }
+          }} size="sm" className="gap-2 bg-orange-600 hover:bg-orange-700 text-white">
+            <Calculator size={14} />
+            Обр. 6 за мин. месец
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-white/10">
+                <TableHead className="text-zinc-400">Период</TableHead>
+                <TableHead className="text-zinc-400">Брутен доход</TableHead>
+                <TableHead className="text-zinc-400">Удържан данък</TableHead>
+                <TableHead className="text-zinc-400">Статус</TableHead>
+                <TableHead className="text-right text-zinc-400">Действия</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow className="border-white/10"><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Зареждане...</TableCell></TableRow>
+              ) : obra6Declarations.length === 0 ? (
+                <TableRow className="border-white/10"><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Няма генерирани декларации</TableCell></TableRow>
+              ) : obra6Declarations.map((d) => {
+                const data = d.data as any;
+                return (
+                  <TableRow key={d.id} className="border-white/10 hover:bg-white/5 transition-colors">
+                    <TableCell className="font-medium text-zinc-200 tabular-nums">{d.periodStart} - {d.periodEnd}</TableCell>
+                    <TableCell className="tabular-nums text-zinc-200">{data?.totals?.totalGross?.toFixed(2) || '0.00'} €</TableCell>
+                    <TableCell className="tabular-nums font-semibold text-rose-400">{parseFloat(d.totalAmount || '0').toFixed(2)} €</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`flex items-center gap-1 w-max ${d.status === 'draft' ? 'bg-zinc-800 text-zinc-400 border-zinc-700' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                        {d.status === 'draft' ? 'Чернова' : <><CheckCircle size={12}/>Подадена</>}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <a href={`/api/tax-declarations/${d.id}/pdf`} download
+                        className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
+                        <Download size={14} className="mr-1.5"/> PDF
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* VIES — ВЪТРЕОБЩНОСТНА ТЪРГОВИЯ */}
+      <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/10 bg-white/5 pb-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg text-white flex items-center gap-2">
+            <Globe className="text-emerald-500" size={18} />
+            VIES — Вътреобщностна търговия (ЕС)
+          </CardTitle>
+          <Button onClick={async () => {
+            const now = new Date();
+            let year = now.getFullYear();
+            let month = now.getMonth();
+            if (month === 0) { month = 12; year -= 1; }
+            const res = await generateVies(year, month);
+            if (res.success) { toast.success(`VIES за ${month}/${year} е генерирана!`); await load(); }
+            else { toast.error('Грешка: ' + res.error); }
+          }} size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Calculator size={14} />
+            VIES за мин. месец
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-white/10">
+                <TableHead className="text-zinc-400">Период</TableHead>
+                <TableHead className="text-zinc-400">Доставки (ЕС)</TableHead>
+                <TableHead className="text-zinc-400">Придобивания (ЕС)</TableHead>
+                <TableHead className="text-zinc-400">Статус</TableHead>
+                <TableHead className="text-right text-zinc-400">Действия</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow className="border-white/10"><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Зареждане...</TableCell></TableRow>
+              ) : viesDeclarations.length === 0 ? (
+                <TableRow className="border-white/10"><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Няма генерирани декларации</TableCell></TableRow>
+              ) : viesDeclarations.map((d) => {
+                const data = d.data as any;
+                return (
+                  <TableRow key={d.id} className="border-white/10 hover:bg-white/5 transition-colors">
+                    <TableCell className="font-medium text-zinc-200 tabular-nums">{d.periodStart} - {d.periodEnd}</TableCell>
+                    <TableCell className="tabular-nums text-zinc-200">{data?.totals?.salesNet?.toFixed(2) || '0.00'} € ({data?.totals?.salesCount || 0})</TableCell>
+                    <TableCell className="tabular-nums text-zinc-200">{data?.totals?.purchasesNet?.toFixed(2) || '0.00'} € ({data?.totals?.purchasesCount || 0})</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`flex items-center gap-1 w-max ${d.status === 'draft' ? 'bg-zinc-800 text-zinc-400 border-zinc-700' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                        {d.status === 'draft' ? 'Чернова' : <><CheckCircle size={12}/>Подадена</>}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <a href={`/api/tax-declarations/${d.id}/pdf`} download
+                        className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
+                        <Download size={14} className="mr-1.5"/> PDF
+                      </a>
                     </TableCell>
                   </TableRow>
                 );

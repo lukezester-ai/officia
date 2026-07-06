@@ -42,3 +42,33 @@ export async function generateProfitTaxAction(year: number) {
   }
 }
 
+export async function generateObra1(year: number, month: number) {
+  try {
+    const { tenantId } = await requireTenant();
+    await TaxEngine.generateObra1Declaration(tenantId, year, month);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function generateObra6(year: number, month: number) {
+  try {
+    const { tenantId } = await requireTenant();
+    await TaxEngine.generateObra6Declaration(tenantId, year, month);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function generateVies(year: number, month: number) {
+  try {
+    const { tenantId } = await requireTenant();
+    await TaxEngine.generateViesDeclaration(tenantId, year, month);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
