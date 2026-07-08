@@ -2,9 +2,10 @@ import { ReportEngine } from "@/lib/accounting/report-engine";
 import Link from "next/link";
 import { Waves, ArrowLeft, TrendingUp, TrendingDown, ArrowUpDown, DollarSign } from "lucide-react";
 import { requireTenant } from "@/lib/auth/get-tenant";
+import { ExportButtons } from "@/components/accounting/ExportButtons";
 
 function fmt(n: number) {
-  return n.toFixed(2);
+  return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, useGrouping: true });
 }
 
 export default async function CashFlowPage({ params, searchParams }: { params: Promise<{ lang: string }>; searchParams: Promise<{ period?: string }> }) {
@@ -65,6 +66,9 @@ export default async function CashFlowPage({ params, searchParams }: { params: P
               <h1 className="text-2xl font-bold">Паричен Поток</h1>
               <p className="text-zinc-400 text-sm">Cash Flow Statement</p>
             </div>
+          </div>
+          <div className="ml-auto">
+            <ExportButtons data={report} reportType="pnl" period={`${startDate.toLocaleDateString('bg-BG')} - ${endDate.toLocaleDateString('bg-BG')}`} />
           </div>
         </div>
 

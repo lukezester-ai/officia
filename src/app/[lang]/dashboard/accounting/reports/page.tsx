@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Download, FileSpreadsheet, FileText, TrendingUp, TrendingDown, DollarSign, Wallet } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, TrendingUp, TrendingDown, DollarSign, Wallet, Scale, Waves, Lock } from 'lucide-react';
+import Link from 'next/link';
 import { getReportsData } from './actions';
 
 export default function ReportsPage() {
@@ -129,6 +130,58 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Navigation Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link href="./balance" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+              <Scale size={20} />
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Баланс</div>
+              <div className="text-xs text-gray-500">Balance Sheet</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400">Активи, пасиви и капитал</div>
+        </Link>
+        <Link href="./pl" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+              <FileText size={20} />
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">ОПР (P&amp;L)</div>
+              <div className="text-xs text-gray-500">Profit &amp; Loss</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400">Приходи и разходи</div>
+        </Link>
+        <Link href="./cashflow" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-violet-200 transition-all group">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-lg bg-violet-50 text-violet-600 group-hover:bg-violet-100 transition-colors">
+              <Waves size={20} />
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Паричен Поток</div>
+              <div className="text-xs text-gray-500">Cash Flow</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400">Оперативна, инвестиционна, финансова</div>
+        </Link>
+        <Link href="./period-close" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-amber-200 transition-all group">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
+              <Lock size={20} />
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">Приключване</div>
+              <div className="text-xs text-gray-500">Period Close</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400">Месечно и годишно приключване</div>
+        </Link>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">

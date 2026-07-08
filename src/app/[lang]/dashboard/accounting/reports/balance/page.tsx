@@ -57,12 +57,12 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
                 <span className="text-xs font-mono text-zinc-400">{acc}</span>
                 <span className="text-xs text-zinc-500 ml-2">{NAMES[acc] ?? "Сметка"}</span>
               </div>
-              <span className={`text-sm font-mono tabular-nums ${totalColor}`}>{val.toFixed(2)}</span>
+              <span className={`text-sm font-mono tabular-nums ${totalColor}`}>{val.toLocaleString('bg-BG', { minimumFractionDigits: 2, useGrouping: true })}</span>
             </div>
           ))}
           <div className={`flex items-center justify-between px-5 py-3 ${bg} font-semibold`}>
             <span className="text-xs">Общо</span>
-            <span className={`text-sm font-bold tabular-nums ${totalColor}`}>{total.toFixed(2)}</span>
+            <span className={`text-sm font-bold tabular-nums ${totalColor}`}>{total.toLocaleString('bg-BG', { minimumFractionDigits: 2, useGrouping: true })}</span>
           </div>
         </div>
       )}
@@ -89,8 +89,8 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
             <ExportButtons data={report} reportType="balance" period={asOf.toLocaleDateString('bg-BG')} />
             <div className="flex items-center gap-2">
               {balanced
-                ? <><CheckCircle size={16} className="text-emerald-400" /><span className="text-xs text-emerald-400">Balansirano</span></>
-                : <><AlertCircle size={16} className="text-amber-400" /><span className="text-xs text-amber-400">Nebalansirano</span></>
+                ? <><CheckCircle size={16} className="text-emerald-400" /><span className="text-xs text-emerald-400">Балансирано</span></>
+                : <><AlertCircle size={16} className="text-amber-400" /><span className="text-xs text-amber-400">Небалансирано</span></>
               }
             </div>
           </div>
@@ -98,31 +98,31 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
 
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Aktivi", value: totalA, color: "text-blue-400", border: "border-blue-500/20", bg: "bg-blue-950/30" },
-            { label: "Pasivi", value: totalL, color: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-950/30" },
-            { label: "Kapital", value: totalE, color: "text-violet-400", border: "border-violet-500/20", bg: "bg-violet-950/30" },
+            { label: "Активи", value: totalA, color: "text-blue-400", border: "border-blue-500/20", bg: "bg-blue-950/30" },
+            { label: "Пасиви", value: totalL, color: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-950/30" },
+            { label: "Капитал", value: totalE, color: "text-violet-400", border: "border-violet-500/20", bg: "bg-violet-950/30" },
           ].map(s => (
             <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-5`}>
               <div className="text-xs text-zinc-400 mb-2">{s.label}</div>
-              <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value.toFixed(2)}</div>
+              <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, useGrouping: true })}</div>
               <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-2 gap-5">
-          <Section title="AKTIVI" color="text-blue-400" rows={assets} total={totalA} totalColor="text-blue-400" bg="bg-blue-950/20" />
+          <Section title="АКТИВИ" color="text-blue-400" rows={assets} total={totalA} totalColor="text-blue-400" bg="bg-blue-950/20" />
           <div className="space-y-4">
-            <Section title="PASIVI" color="text-orange-400" rows={liabilities} total={totalL} totalColor="text-orange-400" bg="bg-orange-950/20" />
-            <Section title="KAPITAL" color="text-violet-400" rows={equity} total={totalE} totalColor="text-violet-400" bg="bg-violet-950/20" />
+            <Section title="ПАСИВИ" color="text-orange-400" rows={liabilities} total={totalL} totalColor="text-orange-400" bg="bg-orange-950/20" />
+            <Section title="КАПИТАЛ" color="text-violet-400" rows={equity} total={totalE} totalColor="text-violet-400" bg="bg-violet-950/20" />
           </div>
         </div>
 
         <div className={`border rounded-2xl p-5 flex items-center justify-between ${balanced ? "bg-emerald-950/20 border-emerald-500/20" : "bg-amber-950/20 border-amber-500/20"}`}>
-          <span className="font-semibold">Aktivi = Pasivi + Kapital</span>
+          <span className="font-semibold">Активи = Пасиви + Капитал</span>
           <div className="text-right font-mono text-sm">
-            <div className="text-blue-400">{totalA.toFixed(2)}</div>
-            <div className={balanced ? "text-emerald-400" : "text-amber-400"}>= {(totalL + totalE).toFixed(2)}</div>
+            <div className="text-blue-400">{(totalA).toLocaleString('bg-BG', { minimumFractionDigits: 2, useGrouping: true })}</div>
+            <div className={balanced ? "text-emerald-400" : "text-amber-400"}>= {(totalL + totalE).toLocaleString('bg-BG', { minimumFractionDigits: 2, useGrouping: true })}</div>
           </div>
         </div>
       </div>
