@@ -7,9 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Download, FileSpreadsheet, FileText, TrendingUp, TrendingDown, DollarSign, Wallet, Scale, Waves, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { getReportsData } from './actions';
 
 export default function ReportsPage() {
+  const { lang } = useParams();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -134,7 +136,7 @@ export default function ReportsPage() {
 
       {/* Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="./balance" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group">
+        <Link href={`/${lang}/dashboard/accounting/reports/balance`} prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
               <Scale size={20} />
@@ -146,7 +148,7 @@ export default function ReportsPage() {
           </div>
           <div className="text-xs text-gray-400">Активи, пасиви и капитал</div>
         </Link>
-        <Link href="./pl" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
+        <Link href={`/${lang}/dashboard/accounting/reports/pl`} prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
               <FileText size={20} />
@@ -158,7 +160,7 @@ export default function ReportsPage() {
           </div>
           <div className="text-xs text-gray-400">Приходи и разходи</div>
         </Link>
-        <Link href="./cashflow" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-violet-200 transition-all group">
+        <Link href={`/${lang}/dashboard/accounting/reports/cashflow`} prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-violet-200 transition-all group">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2.5 rounded-lg bg-violet-50 text-violet-600 group-hover:bg-violet-100 transition-colors">
               <Waves size={20} />
@@ -170,7 +172,7 @@ export default function ReportsPage() {
           </div>
           <div className="text-xs text-gray-400">Оперативна, инвестиционна, финансова</div>
         </Link>
-        <Link href="./period-close" prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-amber-200 transition-all group">
+        <Link href={`/${lang}/dashboard/accounting/reports/period-close`} prefetch={true} className="block p-5 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-amber-200 transition-all group">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
               <Lock size={20} />
