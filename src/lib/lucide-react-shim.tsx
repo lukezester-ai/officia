@@ -85,6 +85,7 @@ export const FileSignature = makeIcon('FileSignature');
 export const FileSpreadsheet = makeIcon('FileSpreadsheet');
 export const FileText = makeIcon('FileText');
 export const Filter = makeIcon('Filter');
+export const Globe = makeIcon('Globe');
 export const HelpCircle = makeIcon('HelpCircle');
 export const History = makeIcon('History');
 export const ImagePlus = makeIcon('ImagePlus');
