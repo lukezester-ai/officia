@@ -5,7 +5,7 @@ import { employees } from '@/lib/db/schema/employees';
 import { employmentContracts } from '@/lib/db/schema/employment_contracts';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { auditLog } from '@/lib/db/schema/audit_log';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { requirePermission } from '@/lib/auth/rbac';
@@ -198,6 +198,152 @@ export async function createEmploymentContract(employeeId: string, data: { contr
     return { success: true as const };
   } catch (error: unknown) {
     return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при създаване на договор' };
+  }
+}
+
+export async function createLeaveRequest(data: {
+  employeeId: string; type: 'annual' | 'sick' | 'unpaid' | 'maternity' | 'parental' | 'other';
+  startDate: string; endDate: string; reason?: string;
+}) {
+  try {
+    const { tenantId, userId } = await context('employee:*');
+    const [employee] = await db.select({ id: employees.id, workStatus: employees.workStatus }).from(employees).where(and(eq(employees.id, data.employeeId), eq(employees.tenantId, tenantId)));
+    if (!employee) return { success: false as const, error: 'Служителят не е намерен.' };
+
+    const daysRequested = Math.floor((new Date(data.endDate).getTime() - new Date(data.startDate).getTime()) / 86400000) + 1;
+    if (daysRequested < 1) return { success: false as const, error: 'Невалиден период.' };
+
+    const [leave] = await db.insert(leaveRequests).values({
+      tenantId, employeeId: data.employeeId, startDate: data.startDate, endDate: data.endDate,
+      type: data.type, daysRequested, reason: data.reason || null,
+      status: 'pending', approvedBy: null,
+    }).returning();
+
+    if (data.type === 'sick') {
+      await db.update(employees).set({ workStatus: 'sick_leave', updatedAt: new Date() }).where(eq(employees.id, data.employeeId));
+    } else if (data.type === 'unpaid') {
+      await db.update(employees).set({ workStatus: 'unpaid_leave', updatedAt: new Date() }).where(eq(employees.id, data.employeeId));
+    }
+
+    await db.insert(auditLog).values({
+      tenantId, userId, action: 'CREATE', tableName: 'leave_requests', recordId: leave.id,
+      newData: { employeeId: data.employeeId, type: data.type, startDate: data.startDate, endDate: data.endDate, daysRequested },
+      metadata: { source: 'hr_ui' },
+    });
+
+    revalidatePath('/bg/dashboard/hr');
+    return { success: true as const, leaveId: leave.id };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при създаване на отпуск' };
+  }
+}
+
+export async function approveLeaveRequest(leaveId: string) {
+  try {
+    const { tenantId, userId } = await context('employee:*');
+    const [leave] = await db.select().from(leaveRequests).where(and(eq(leaveRequests.id, leaveId), eq(leaveRequests.tenantId, tenantId)));
+    if (!leave) return { success: false as const, error: 'Заявката не е намерена.' };
+    if (leave.status !== 'pending') return { success: false as const, error: 'Заявката вече е обработена.' };
+
+    await db.update(leaveRequests).set({ status: 'approved', approvedBy: userId, updatedAt: new Date() }).where(eq(leaveRequests.id, leaveId));
+
+    if (leave.type === 'annual' || leave.type === 'parental' || leave.type === 'maternity') {
+      await db.update(employees).set({ workStatus: 'on_leave', updatedAt: new Date() }).where(eq(employees.id, leave.employeeId));
+    }
+
+    await db.insert(auditLog).values({
+      tenantId, userId, action: 'UPDATE', tableName: 'leave_requests', recordId: leaveId,
+      oldData: { status: 'pending' }, newData: { status: 'approved' }, metadata: { source: 'hr_approval' },
+    });
+
+    revalidatePath('/bg/dashboard/hr');
+    return { success: true as const };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при одобрение' };
+  }
+}
+
+export async function rejectLeaveRequest(leaveId: string) {
+  try {
+    const { tenantId, userId } = await context('employee:*');
+    const [leave] = await db.select().from(leaveRequests).where(and(eq(leaveRequests.id, leaveId), eq(leaveRequests.tenantId, tenantId)));
+    if (!leave) return { success: false as const, error: 'Заявката не е намерена.' };
+    if (leave.status !== 'pending') return { success: false as const, error: 'Заявката вече е обработена.' };
+
+    await db.update(leaveRequests).set({ status: 'rejected', approvedBy: userId, updatedAt: new Date() }).where(eq(leaveRequests.id, leaveId));
+
+    if (leave.type === 'sick') {
+      await db.update(employees).set({ workStatus: 'at_work', updatedAt: new Date() }).where(eq(employees.id, leave.employeeId));
+    } else if (leave.type === 'unpaid') {
+      await db.update(employees).set({ workStatus: 'at_work', updatedAt: new Date() }).where(eq(employees.id, leave.employeeId));
+    }
+
+    await db.insert(auditLog).values({
+      tenantId, userId, action: 'UPDATE', tableName: 'leave_requests', recordId: leaveId,
+      oldData: { status: 'pending' }, newData: { status: 'rejected' }, metadata: { source: 'hr_approval' },
+    });
+
+    revalidatePath('/bg/dashboard/hr');
+    return { success: true as const };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при отказ' };
+  }
+}
+
+export async function getPendingLeaveRequests() {
+  try {
+    const { tenantId } = await context('employee:read');
+    const rows = await db
+      .select({
+        id: leaveRequests.id, employeeId: leaveRequests.employeeId, type: leaveRequests.type,
+        startDate: leaveRequests.startDate, endDate: leaveRequests.endDate, daysRequested: leaveRequests.daysRequested,
+        reason: leaveRequests.reason, status: leaveRequests.status, createdAt: leaveRequests.createdAt,
+        employeeName: sql<string>`CONCAT(${employees.firstName}, ' ', ${employees.lastName})`,
+        employeePosition: employees.position,
+      })
+      .from(leaveRequests)
+      .innerJoin(employees, eq(leaveRequests.employeeId, employees.id))
+      .where(and(eq(leaveRequests.tenantId, tenantId), eq(leaveRequests.status, 'pending')))
+      .orderBy(desc(leaveRequests.createdAt));
+    return { success: true as const, data: rows };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при зареждане на заявки' };
+  }
+}
+
+export async function getLeaveBalance(employeeId: string) {
+  try {
+    const { tenantId } = await context('employee:read');
+    const year = new Date().getFullYear();
+    const startOfYear = `${year}-01-01`;
+    const endOfYear = `${year}-12-31`;
+
+    const usedAnnual = await db
+      .select({ total: sql<number>`COALESCE(SUM(${leaveRequests.daysRequested}), 0)` })
+      .from(leaveRequests)
+      .where(and(
+        eq(leaveRequests.tenantId, tenantId), eq(leaveRequests.employeeId, employeeId),
+        eq(leaveRequests.type, 'annual'), eq(leaveRequests.status, 'approved'),
+        gte(leaveRequests.startDate, startOfYear), lte(leaveRequests.startDate, endOfYear),
+      ));
+
+    const usedSick = await db
+      .select({ total: sql<number>`COALESCE(SUM(${leaveRequests.daysRequested}), 0)` })
+      .from(leaveRequests)
+      .where(and(
+        eq(leaveRequests.tenantId, tenantId), eq(leaveRequests.employeeId, employeeId),
+        eq(leaveRequests.type, 'sick'), eq(leaveRequests.status, 'approved'),
+        gte(leaveRequests.startDate, startOfYear), lte(leaveRequests.startDate, endOfYear),
+      ));
+
+    const annualEntitlement = 20;
+    const used = Number(usedAnnual[0]?.total || 0);
+    const sickUsed = Number(usedSick[0]?.total || 0);
+    const remaining = Math.max(0, annualEntitlement - used);
+
+    return { success: true as const, data: { annualEntitlement, used, remaining, sickUsed } };
+  } catch (error: unknown) {
+    return { success: false as const, error: error instanceof Error ? error.message : 'Грешка при изчисление на баланс' };
   }
 }
 

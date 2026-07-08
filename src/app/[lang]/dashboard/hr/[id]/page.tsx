@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, FileText, History, ShieldCheck, User } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, History, ShieldCheck, User, CalendarPlus } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getEmployeeProfile } from '../actions';
 import { StatusUpdater } from './_status-updater';
 import { EmployeeProfileActions } from './EmployeeProfileActions';
+import { LeaveRequestDialog } from '../LeaveRequestDialog';
 
 const contractKind = { permanent: 'Безсрочен', fixed_term: 'Срочен', civil_contract: 'Граждански' } as const;
 const leaveType = { annual: 'Платен отпуск', sick: 'Болничен', unpaid: 'Неплатен', maternity: 'Майчинство', parental: 'Родителски', other: 'Друг' } as const;
@@ -44,7 +45,11 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
         <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck size={18} />Защитени данни</CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><p>ЕГН/ЛНЧ: {employee.personalIdentifierEncrypted ? 'въведено и криптирано' : 'не е въведено'}</p><p>IBAN: {employee.bankIbanEncrypted ? 'въведен и криптиран' : 'не е въведен'}</p><p>Банка: {employee.bankName || '—'}</p><p className="text-xs text-muted-foreground">Стойностите не се визуализират обратно. При промяна се въвеждат наново и се записват в audit trail без самите чувствителни стойности.</p></CardContent></Card>
       </TabsContent>
       <TabsContent value="leaves" className="mt-6 space-y-3">
-        {leaves.map((leave) => <Card key={leave.id}><CardContent className="flex items-center justify-between p-5"><div className="flex items-center gap-3"><Calendar size={18} /><div><p className="font-medium">{leaveType[leave.type]}</p><p className="text-sm text-muted-foreground">{new Date(leave.startDate).toLocaleDateString('bg-BG')} – {new Date(leave.endDate).toLocaleDateString('bg-BG')}</p></div></div><Badge variant="outline">{leave.status}</Badge></CardContent></Card>)}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-zinc-400">{leaves.length} регистрирани отпуски</p>
+          <LeaveRequestDialog employeeId={employee.id} />
+        </div>
+        {leaves.map((leave) => <Card key={leave.id}><CardContent className="flex items-center justify-between p-5"><div className="flex items-center gap-3"><Calendar size={18} /><div><p className="font-medium">{leaveType[leave.type]}</p><p className="text-sm text-muted-foreground">{new Date(leave.startDate).toLocaleDateString('bg-BG')} – {new Date(leave.endDate).toLocaleDateString('bg-BG')}</p></div></div><Badge variant="outline" className={leave.status === 'approved' ? 'text-emerald-400 border-emerald-800/50' : leave.status === 'rejected' ? 'text-red-400 border-red-800/50' : 'text-amber-400 border-amber-800/50'}>{leave.status === 'approved' ? 'Одобрен' : leave.status === 'rejected' ? 'Отказан' : 'Чакащ'}</Badge></CardContent></Card>)}
         {!leaves.length && <Empty icon={<Calendar />} text="Няма регистрирани отсъствия." />}
       </TabsContent>
       <TabsContent value="history" className="mt-6 space-y-3">

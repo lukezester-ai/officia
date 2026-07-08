@@ -2,7 +2,7 @@
 import { db } from '@/lib/db/db';
 import { taxDeclarations } from '@/lib/db/schema/tax_declarations';
 import { TaxEngine } from '@/lib/accounting/tax-engine';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function getDeclarations() {
@@ -67,6 +67,32 @@ export async function generateVies(year: number, month: number) {
     const { tenantId } = await requireTenant();
     await TaxEngine.generateViesDeclaration(tenantId, year, month);
     return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function exportPayrollNapXml(declarationId: string) {
+  try {
+    const { tenantId } = await requireTenant();
+    const [declaration] = await db
+      .select()
+      .from(taxDeclarations)
+      .where(and(eq(taxDeclarations.id, declarationId), eq(taxDeclarations.tenantId, tenantId)));
+
+    if (!declaration) return { success: false, error: 'Декларацията не е намерена' };
+
+    let xml: string;
+    if (declaration.type === 'obra1') {
+      xml = await TaxEngine.generateObra1Xml(declarationId);
+    } else if (declaration.type === 'obra6') {
+      xml = await TaxEngine.generateObra6Xml(declarationId);
+    } else {
+      return { success: false, error: 'Невалиден тип декларация' };
+    }
+
+    const fileName = `${declaration.type}_${declaration.periodStart}_${declaration.periodEnd}.xml`;
+    return { success: true, xml, fileName };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

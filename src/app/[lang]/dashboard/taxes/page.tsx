@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getDeclarations, generateDds, generateProfitTaxAction, generateObra1, generateObra6, generateVies } from './actions';
+import { getDeclarations, generateDds, generateProfitTaxAction, generateObra1, generateObra6, generateVies, exportPayrollNapXml } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -184,11 +184,25 @@ export default function TaxesPage() {
                       {d.status === 'draft' ? 'Чернова' : <><CheckCircle size={12}/>Подадена</>}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
                     <a href={`/api/tax-declarations/${d.id}/pdf`} download
                       className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
                       <Download size={14} className="mr-1.5"/> PDF
                     </a>
+                    <button onClick={async () => {
+                      const res = await exportPayrollNapXml(d.id);
+                      if (res.success && res.xml) {
+                        const blob = new Blob([res.xml], { type: 'text/xml;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = res.fileName; a.click();
+                        URL.revokeObjectURL(url);
+                        toast.success('XML файлът е изтеглен');
+                      } else { toast.error(res.error); }
+                    }}
+                      className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
+                      <FileArchive size={14} className="mr-1.5"/> XML
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -245,11 +259,25 @@ export default function TaxesPage() {
                         {d.status === 'draft' ? 'Чернова' : <><CheckCircle size={12}/>Подадена</>}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-2">
                       <a href={`/api/tax-declarations/${d.id}/pdf`} download
                         className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
                         <Download size={14} className="mr-1.5"/> PDF
                       </a>
+                      <button onClick={async () => {
+                        const res = await exportPayrollNapXml(d.id);
+                        if (res.success && res.xml) {
+                          const blob = new Blob([res.xml], { type: 'text/xml;charset=utf-8' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url; a.download = res.fileName; a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('XML файлът е изтеглен');
+                        } else { toast.error(res.error); }
+                      }}
+                        className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100">
+                        <FileArchive size={14} className="mr-1.5"/> XML
+                      </button>
                     </TableCell>
                   </TableRow>
                 );

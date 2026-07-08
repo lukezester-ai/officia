@@ -261,7 +261,119 @@ export class TaxEngine {
     return result[0];
   }
 
-  // ==================== XML ЕКСПОРТ ЗА НАП ====================
+  private static escXml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  }
+
+  // ==================== ПОДГОТОВКА НА XML ЗА НАП (ОБР.1) ====================
+  static async generateObra1Xml(declarationId: string) {
+    const declarations = await db.select().from(taxDeclarations).where(eq(taxDeclarations.id, declarationId));
+    const declaration = declarations[0];
+    if (!declaration) throw new Error('Декларацията не е намерена');
+
+    const { tenants } = await import('@/lib/db/schema/tenants');
+    const tenantRecords = await db.select().from(tenants).where(eq(tenants.id, declaration.tenantId));
+    const company = tenantRecords[0] || { bulstat: '', name: '', address: '' };
+
+    const data = declaration.data as any;
+    if (!data?.employees?.length) throw new Error('Няма служители в декларацията');
+
+    const emps = data.employees.map((e: any, i: number) => `    <Ред${i + 1}>
+      <Име>${TaxEngine.escXml(e.name || '')}</Име>
+      <ОсигурителенДоход>${(e.insuranceBase || 0).toFixed(2)}</ОсигурителенДоход>
+      <ВноскиРаботникДОО>${(e.employeeDoo || 0).toFixed(2)}</ВноскиРаботникДОО>
+      <ВноскиРаботникЗЗО>${(e.employeeHealth || 0).toFixed(2)}</ВноскиРаботникЗЗО>
+      <ВноскиРаботодателДОО>${(e.employerDoo || 0).toFixed(2)}</ВноскиРаботодателДОО>
+      <ВноскиРаботодателЗЗО>${(e.employerHealth || 0).toFixed(2)}</ВноскиРаботодателЗЗО>
+      <ВноскиРаботодателДруги>${(e.employerOther || 0).toFixed(2)}</ВноскиРаботодателДруги>
+    </Ред${i + 1}>`).join('\n');
+
+    const totals = data.totals || {};
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Образец1 xmlns="http://nap.bg/obra1">
+  <Идентификация>
+    <ЕИК>${TaxEngine.escXml(company.bulstat || '')}</ЕИК>
+    <Име>${TaxEngine.escXml(company.name || '')}</Име>
+    <Адрес>${TaxEngine.escXml(company.address || '')}</Адрес>
+  </Идентификация>
+  <Период>
+    <Начало>${data.periodStart || ''}</Начало>
+    <Край>${data.periodEnd || ''}</Край>
+  </Период>
+  <Данни>
+    <БройСлужители>${data.employeeCount || 0}</БройСлужители>
+    <ОбщОсигурителенДоход>${(totals.totalInsuranceBase || 0).toFixed(2)}</ОбщОсигурителенДоход>
+    <ОбщоВноскиРаботникДОО>${(totals.totalEmployeeDoo || 0).toFixed(2)}</ОбщоВноскиРаботникДОО>
+    <ОбщоВноскиРаботникЗЗО>${(totals.totalEmployeeHealth || 0).toFixed(2)}</ОбщоВноскиРаботникЗЗО>
+    <ОбщоВноскиРаботодателДОО>${(totals.totalEmployerDoo || 0).toFixed(2)}</ОбщоВноскиРаботодателДОО>
+    <ОбщоВноскиРаботодателЗЗО>${(totals.totalEmployerHealth || 0).toFixed(2)}</ОбщоВноскиРаботодателЗЗО>
+    <ОбщоВноскиРаботодателДруги>${(totals.totalEmployerOther || 0).toFixed(2)}</ОбщоВноскиРаботодателДруги>
+    <ОбщоВноскиРаботник>${(totals.totalEmployeeInsurance || 0).toFixed(2)}</ОбщоВноскиРаботник>
+    <ОбщоВноскиРаботодател>${(totals.totalEmployerInsurance || 0).toFixed(2)}</ОбщоВноскиРаботодател>
+  </Данни>
+  <Служители>
+${emps}
+  </Служители>
+  <Подпис>
+    <Дата>${new Date().toISOString().slice(0, 10)}</Дата>
+  </Подпис>
+</Образец1>`;
+
+    return xml;
+  }
+
+  // ==================== ПОДГОТОВКА НА XML ЗА НАП (ОБР.6) ====================
+  static async generateObra6Xml(declarationId: string) {
+    const declarations = await db.select().from(taxDeclarations).where(eq(taxDeclarations.id, declarationId));
+    const declaration = declarations[0];
+    if (!declaration) throw new Error('Декларацията не е намерена');
+
+    const { tenants } = await import('@/lib/db/schema/tenants');
+    const tenantRecords = await db.select().from(tenants).where(eq(tenants.id, declaration.tenantId));
+    const company = tenantRecords[0] || { bulstat: '', name: '', address: '' };
+
+    const data = declaration.data as any;
+    if (!data?.employees?.length) throw new Error('Няма служители в декларацията');
+
+    const emps = data.employees.map((e: any, i: number) => `    <Ред${i + 1}>
+      <Име>${TaxEngine.escXml(e.name || '')}</Име>
+      <БрутноВъзнаграждение>${(e.gross || 0).toFixed(2)}</БрутноВъзнаграждение>
+      <Осигуровки>${(e.employeeInsurance || 0).toFixed(2)}</Осигуровки>
+      <ОблагаемДоход>${(e.taxableIncome || 0).toFixed(2)}</ОблагаемДоход>
+      <УдържанДанък>${(e.incomeTax || 0).toFixed(2)}</УдържанДанък>
+    </Ред${i + 1}>`).join('\n');
+
+    const totals = data.totals || {};
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Образец6 xmlns="http://nap.bg/obra6">
+  <Идентификация>
+    <ЕИК>${TaxEngine.escXml(company.bulstat || '')}</ЕИК>
+    <Име>${TaxEngine.escXml(company.name || '')}</Име>
+    <Адрес>${TaxEngine.escXml(company.address || '')}</Адрес>
+  </Идентификация>
+  <Период>
+    <Начало>${data.periodStart || ''}</Начало>
+    <Край>${data.periodEnd || ''}</Край>
+  </Период>
+  <Данни>
+    <БройСлужители>${data.employeeCount || 0}</БройСлужители>
+    <ОбщБрутноВъзнаграждение>${(totals.totalGross || 0).toFixed(2)}</ОбщБрутноВъзнаграждение>
+    <ОбщоОсигуровки>${(totals.totalEmployeeInsurance || 0).toFixed(2)}</ОбщоОсигуровки>
+    <ОбщОблагаемДоход>${(totals.totalTaxableIncome || 0).toFixed(2)}</ОбщОблагаемДоход>
+    <ОбщУдържанДанък>${(totals.totalIncomeTax || 0).toFixed(2)}</ОбщУдържанДанък>
+  </Данни>
+  <Служители>
+${emps}
+  </Служители>
+  <Подпис>
+    <Дата>${new Date().toISOString().slice(0, 10)}</Дата>
+  </Подпис>
+</Образец6>`;
+
+    return xml;
+  }
+
+// ==================== XML ЕКСПОРТ ЗА НАП ====================
   static async generateDDSXml(declarationId: string) {
     const declarations = await db.select().from(taxDeclarations).where(eq(taxDeclarations.id, declarationId));
     const declaration = declarations[0];

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Users, Plus, ChevronRight, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { PendingLeavesQueue } from './PendingLeavesQueue';
 
 export default async function HrPage(props: { params: Promise<{ lang: string }> }) {
   const { lang } = await props.params;
@@ -15,6 +16,7 @@ export default async function HrPage(props: { params: Promise<{ lang: string }> 
 
   return (
     <div className="space-y-8 pb-10">
+      <PendingLeavesQueue />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Кадри (HR)</h1>

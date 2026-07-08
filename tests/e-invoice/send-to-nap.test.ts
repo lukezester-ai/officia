@@ -33,7 +33,7 @@ vi.mock('crypto', () => ({
 function makeMockReqRes() {
   const mockRes = { on: vi.fn(), statusCode: 200 };
   const mockReq = { on: vi.fn(), write: vi.fn(), end: vi.fn() };
-  mockRes.on.mockImplementation((event: string, cb: Function) => {
+  mockRes.on.mockImplementation((event: string, cb: (...args: any[]) => void) => {
     if (event === 'data') cb(Buffer.from('<response><status>ACCEPTED</status></response>'));
     if (event === 'end') cb();
     return mockRes;
@@ -81,12 +81,12 @@ describe('send-to-nap', () => {
 
   it('should send SOAP request via HTTPS with mTLS', async () => {
     const { mockRes, mockReq } = makeMockReqRes();
-    mockRes.on.mockImplementation((event: string, cb: Function) => {
+    mockRes.on.mockImplementation((event: string, cb: (...args: any[]) => void) => {
       if (event === 'data') cb(Buffer.from('<response><status>REGISTERED</status><napRegistrationId>NAP-ABC</napRegistrationId></response>'));
       if (event === 'end') cb();
       return mockRes;
     });
-    mockHttpsRequest.mockImplementation((_opts: any, cb: Function) => { cb(mockRes); return mockReq; });
+    mockHttpsRequest.mockImplementation((_opts: any, cb: (...args: any[]) => void) => { cb(mockRes); return mockReq; });
 
     const mod = await import('@/lib/e-invoice/send-to-nap');
     const result = await mod.sendInvoiceToNAP('<Invoice><Amount>100</Amount></Invoice>', 'test');
@@ -103,12 +103,12 @@ describe('send-to-nap', () => {
 
   it('should parse NAP REGISTERED status', async () => {
     const { mockRes, mockReq } = makeMockReqRes();
-    mockRes.on.mockImplementation((event: string, cb: Function) => {
+    mockRes.on.mockImplementation((event: string, cb: (...args: any[]) => void) => {
       if (event === 'data') cb(Buffer.from('<response><status>REGISTERED</status><napRegistrationId>NAP-XYZ-789</napRegistrationId></response>'));
       if (event === 'end') cb();
       return mockRes;
     });
-    mockHttpsRequest.mockImplementation((_opts: any, cb: Function) => { cb(mockRes); return mockReq; });
+    mockHttpsRequest.mockImplementation((_opts: any, cb: (...args: any[]) => void) => { cb(mockRes); return mockReq; });
 
     const mod = await import('@/lib/e-invoice/send-to-nap');
     const result = await mod.sendInvoiceToNAP('<Invoice/>', 'test');
@@ -118,12 +118,12 @@ describe('send-to-nap', () => {
 
   it('should handle NAP rejection response', async () => {
     const { mockRes, mockReq } = makeMockReqRes();
-    mockRes.on.mockImplementation((event: string, cb: Function) => {
+    mockRes.on.mockImplementation((event: string, cb: (...args: any[]) => void) => {
       if (event === 'data') cb(Buffer.from('<response><error>Invalid BULSTAT</error></response>'));
       if (event === 'end') cb();
       return mockRes;
     });
-    mockHttpsRequest.mockImplementation((_opts: any, cb: Function) => { cb(mockRes); return mockReq; });
+    mockHttpsRequest.mockImplementation((_opts: any, cb: (...args: any[]) => void) => { cb(mockRes); return mockReq; });
 
     const mod = await import('@/lib/e-invoice/send-to-nap');
     const result = await mod.sendInvoiceToNAP('<Invoice/>', 'test');
@@ -132,9 +132,9 @@ describe('send-to-nap', () => {
   });
 
   it('should handle HTTPS request errors', async () => {
-    mockHttpsRequest.mockImplementation((_opts: any, _cb: Function) => {
+    mockHttpsRequest.mockImplementation((_opts: any, _cb: (...args: any[]) => void) => {
       const mockReq = { on: vi.fn(), write: vi.fn(), end: vi.fn() };
-      mockReq.on.mockImplementation((event: string, cb: Function) => {
+      mockReq.on.mockImplementation((event: string, cb: (...args: any[]) => void) => {
         if (event === 'error') cb(new Error('Connection refused'));
         return mockReq;
       });
