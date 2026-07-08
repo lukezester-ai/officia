@@ -1,7 +1,7 @@
 import { db } from '@/lib/db/db';
 import { journalLines, journalHeaders } from '@/lib/db/schema/journal_entries';
 import { accountPlan } from '@/lib/db/schema/account_plan';
-import { eq, and, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, inArray } from 'drizzle-orm';
 
 type AccountBalanceRow = {
   accountId: string | null;
@@ -53,16 +53,13 @@ export class ReportEngine {
   }
 
   static async generateCashFlow(tenantId: string, startDate: Date, endDate: Date) {
-    const operating = await this.calculateOperatingCashFlow(tenantId, startDate, endDate);
-    const investing = await this.calculateInvestingCashFlow(tenantId, startDate, endDate);
-    const financing = await this.calculateFinancingCashFlow(tenantId, startDate, endDate);
-
+    const d = await this.generateCashFlowDetailed(tenantId, startDate, endDate);
     return {
       period: { start: startDate, end: endDate },
-      operating,
-      investing,
-      financing,
-      netCashFlow: operating + investing + financing,
+      operating: d.operating.total,
+      investing: d.investing.total,
+      financing: d.financing.total,
+      netCashFlow: d.netCashFlow,
     };
   }
 
@@ -142,15 +139,99 @@ export class ReportEngine {
     return items.reduce((sum, item) => sum + Math.abs(Number(item.balance) || 0), 0);
   }
 
-  private static async calculateOperatingCashFlow(_tenantId: string, _start: Date, _end: Date) {
-    return 0;
+  static async generateCashFlowDetailed(tenantId: string, startDate: Date, endDate: Date) {
+    const netProfit = await this.calcNetProfit(tenantId, startDate, endDate);
+    const depreciation = await this.sumByAccountCodes(tenantId, ['603'], startDate, endDate);
+    const receivables = await this.balanceChange(tenantId, ['411'], startDate, endDate);
+    const payables = await this.balanceChange(tenantId, ['401'], startDate, endDate);
+    const vatPurchases = await this.balanceChange(tenantId, ['4531'], startDate, endDate);
+    const vatSales = await this.balanceChange(tenantId, ['4532'], startDate, endDate);
+
+    const operatingActivity =
+      netProfit +
+      Math.abs(depreciation) +
+      receivables.change +
+      payables.change +
+      vatPurchases.change +
+      vatSales.change;
+
+    const fixedAssetPurchases = await this.sumByAccountCodes(tenantId, ['201', '204'], startDate, endDate);
+    const investingActivity = -Math.abs(fixedAssetPurchases);
+
+    const loansChange = await this.balanceChange(tenantId, ['151'], startDate, endDate);
+    const capitalChange = await this.balanceChange(tenantId, ['101'], startDate, endDate);
+    const financingActivity = loansChange.change + capitalChange.change;
+
+    const endingCash = await this.sumByAccountCodesBalances(tenantId, ['501', '503'], endDate);
+    const startingCash = await this.sumByAccountCodesBalances(tenantId, ['501', '503'], new Date(startDate.getTime() - 86400000));
+
+    return {
+      period: { start: startDate, end: endDate },
+      netProfit,
+      depreciation: Math.abs(depreciation),
+      workingCapital: {
+        receivables: { start: receivables.startBalance, end: receivables.endBalance, change: receivables.change },
+        payables: { start: payables.startBalance, end: payables.endBalance, change: payables.change },
+        vatPurchases: { start: vatPurchases.startBalance, end: vatPurchases.endBalance, change: vatPurchases.change },
+        vatSales: { start: vatSales.startBalance, end: vatSales.endBalance, change: vatSales.change },
+      },
+      operating: { total: operatingActivity },
+      investing: { total: investingActivity, fixedAssets: Math.abs(fixedAssetPurchases) },
+      financing: { total: financingActivity, loans: loansChange.change, capital: capitalChange.change },
+      netCashFlow: operatingActivity + investingActivity + financingActivity,
+      cash: { start: startingCash, end: endingCash, change: endingCash - startingCash },
+    };
   }
 
-  private static async calculateInvestingCashFlow(_tenantId: string, _start: Date, _end: Date) {
-    return 0;
+  private static async calcNetProfit(tenantId: string, start: Date, end: Date) {
+    const revenue = await this.sumByAccountType(tenantId, 'revenue', start, end);
+    const expenses = await this.sumByAccountType(tenantId, 'expense', start, end);
+    return revenue - expenses;
   }
 
-  private static async calculateFinancingCashFlow(_tenantId: string, _start: Date, _end: Date) {
-    return 0;
+  private static async sumByAccountCodes(tenantId: string, codes: string[], start: Date, end: Date) {
+    const rows = await db
+      .select({
+        total: sql<number>`SUM(CASE WHEN ${journalLines.entryType}::text = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
+      })
+      .from(journalLines)
+      .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
+      .innerJoin(accountPlan, eq(journalLines.accountId, accountPlan.id))
+      .where(
+        and(
+          eq(journalHeaders.tenantId, tenantId),
+          eq(journalHeaders.status, 'posted'),
+          inArray(accountPlan.accountNumber, codes),
+          gte(journalHeaders.entryDate, start),
+          lte(journalHeaders.entryDate, end),
+        ),
+      );
+    return rows[0]?.total ? Number(rows[0].total) : 0;
   }
+
+  private static async sumByAccountCodesBalances(tenantId: string, codes: string[], asOf: Date) {
+    const rows = await db
+      .select({
+        total: sql<number>`SUM(CASE WHEN ${journalLines.entryType}::text = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
+      })
+      .from(journalLines)
+      .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
+      .innerJoin(accountPlan, eq(journalLines.accountId, accountPlan.id))
+      .where(
+        and(
+          eq(journalHeaders.tenantId, tenantId),
+          eq(journalHeaders.status, 'posted'),
+          inArray(accountPlan.accountNumber, codes),
+          lte(journalHeaders.entryDate, asOf),
+        ),
+      );
+    return rows[0]?.total ? Number(rows[0].total) : 0;
+  }
+
+  private static async balanceChange(tenantId: string, codes: string[], start: Date, end: Date) {
+    const startBalance = await this.sumByAccountCodesBalances(tenantId, codes, new Date(start.getTime() - 86400000));
+    const endBalance = await this.sumByAccountCodesBalances(tenantId, codes, end);
+    return { startBalance, endBalance, change: endBalance - startBalance };
+  }
+
 }
