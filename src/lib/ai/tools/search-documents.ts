@@ -5,14 +5,16 @@ import { db } from '@/lib/db/db';
 import { documents } from '@/lib/db/schema/documents';
 import { retrieveRelevantDocuments } from '@/lib/ai/rag/retriever';
 
+const searchSchema = z.object({
+  query: z.string().min(1),
+  documentType: z.enum(['all', 'invoice', 'contract', 'receipt']).optional().default('all'),
+});
+
 export const buildSearchDocumentsTool = (tenantId: string) =>
   tool({
     description: 'Търси семантично в съдържанието на фирмените документи с текстов fallback.',
-    inputSchema: z.object({
-      query: z.string().min(1),
-      documentType: z.enum(['all', 'invoice', 'contract', 'receipt']).optional().default('all'),
-    }),
-    execute: async ({ query, documentType }) => {
+    inputSchema: searchSchema,
+    execute: async ({ query, documentType }: z.infer<typeof searchSchema>) => {
       const semanticResults = await retrieveRelevantDocuments(query, tenantId, 10);
       const relevant = semanticResults
         .filter((result) => documentType === 'all' || result.type === documentType)

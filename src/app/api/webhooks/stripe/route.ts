@@ -23,11 +23,7 @@ export async function POST(req: Request) {
 
   try {
     if (!signature || !stripeWebhookSecret) {
-      if (process.env.NODE_ENV === 'production') {
-        return new NextResponse('Webhook signature verification required', { status: 400 });
-      }
-      console.warn('[STRIPE_WEBHOOK] Skipping signature verification in development');
-      event = JSON.parse(body) as Stripe.Event;
+      return new NextResponse('Webhook signature verification required', { status: 400 });
     } else {
       event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
     }

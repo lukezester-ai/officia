@@ -18,8 +18,9 @@ export const buildCreateInvoiceTool = (tenantId: string, userId: string) =>
       dueDate: z.string().optional(),
       notes: z.string().optional(),
     }),
-    execute: async (input) => {
-      const total = input.items.reduce(
+    execute: async (input: Record<string, unknown>) => {
+      const items = input.items as Array<{ description: string; quantity: number; unitPrice: number; vatRate: number }>;
+      const total = items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice * (1 + item.vatRate / 100),
         0,
       );
@@ -32,7 +33,7 @@ export const buildCreateInvoiceTool = (tenantId: string, userId: string) =>
         description: `AI предлага продажна фактура на стойност ${total.toFixed(2)}.`,
         sourceType: 'invoice',
         payload: input,
-        summary: { clientName: input.clientName, total: total.toFixed(2), lineCount: input.items.length },
+        summary: { clientName: input.clientName, total: total.toFixed(2), lineCount: items.length },
       });
     },
   });

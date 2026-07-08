@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, numeric } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants';
 
 export const bankAccounts = pgTable('bank_accounts', {
@@ -7,7 +7,7 @@ export const bankAccounts = pgTable('bank_accounts', {
   institutionId: text('institution_id'), // e.g. 'SANDBOXFINANCE_SFIN0000'
   institutionName: text('institution_name'), // e.g. 'UniCredit Bulbank'
   iban: text('iban'),
-  balance: text('balance'),
+  balance: numeric('balance', { precision: 15, scale: 2 }),
   currency: text('currency').default('EUR'),
   provider: text('provider').default('manual'),
   externalRequisitionId: text('external_requisition_id'),

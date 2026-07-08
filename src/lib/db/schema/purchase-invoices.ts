@@ -1,8 +1,9 @@
-import { pgTable, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, uuid } from 'drizzle-orm/pg-core';
+import { tenants } from './tenants';
 
 export const purchaseInvoices = pgTable('purchase_invoices', {
-  id: text('id').primaryKey(),
-  tenantId: text('tenant_id').notNull(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
   invoiceNumber: text('invoice_number').notNull(),
   issueDate: text('issue_date'),
   dueDate: text('due_date'),

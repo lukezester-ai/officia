@@ -13,7 +13,7 @@ export const aiConversations = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => [uniqueIndex('ai_conversations_tenant_user_idx').on(table.tenantId, table.userId)],
+  (table) => [index('ai_conversations_tenant_user_idx').on(table.tenantId, table.userId)],
 );
 
 export const aiMessages = pgTable(

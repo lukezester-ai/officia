@@ -1,8 +1,9 @@
 import { pgTable, text, timestamp, varchar, date, jsonb, uuid } from 'drizzle-orm/pg-core';
+import { tenants } from './tenants';
 
 export const financialReports = pgTable('financial_reports', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: text('tenant_id').notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
   type: varchar('type', { length: 50 }).notNull(), // balance, pnl, cashflow, trial
   periodStart: date('period_start').notNull(),
   periodEnd: date('period_end').notNull(),

@@ -126,5 +126,5 @@ export async function generateInvoicePdf(input: InvoicePdfInput): Promise<Buffer
   doc.setTextColor(120);
   doc.text(`Генерирано от Officia · ${new Date().toLocaleString('bg-BG')}`, 14, 285);
 
-  return Buffer.from(doc.output('arraybuffer'));
+  return Buffer.from(doc.output('arraybuffer') as ArrayBuffer);
 }

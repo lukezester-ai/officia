@@ -78,7 +78,7 @@ export class ReportEngine {
       .from(journalLines)
       .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
       .innerJoin(accountPlan, eq(journalLines.accountId, accountPlan.id))
-      .where(and(eq(journalHeaders.tenantId, tenantId), lte(journalHeaders.entryDate, asOf)))
+      .where(and(eq(journalHeaders.tenantId, tenantId), eq(journalHeaders.status, 'posted'), lte(journalHeaders.entryDate, asOf)))
       .groupBy(journalLines.accountId, accountPlan.accountNumber, accountPlan.name, accountPlan.type);
   }
 
@@ -93,6 +93,7 @@ export class ReportEngine {
       .where(
         and(
           eq(journalHeaders.tenantId, tenantId),
+          eq(journalHeaders.status, 'posted'),
           eq(accountPlan.type, type),
           gte(journalHeaders.entryDate, start),
           lte(journalHeaders.entryDate, end),
@@ -115,6 +116,7 @@ export class ReportEngine {
       .where(
         and(
           eq(journalHeaders.tenantId, tenantId),
+          eq(journalHeaders.status, 'posted'),
           eq(accountPlan.type, type),
           gte(journalHeaders.entryDate, start),
           lte(journalHeaders.entryDate, end),

@@ -26,7 +26,7 @@ export class BankStatementParser {
 
       transactions.push({
         date: new Date(dateStr),
-        amount: parseFloat(amountStr.replace(/,/g, '')),
+        amount: parseFloat(amountStr.replace(/\s/g, '').replace(',', '.')),
         description: description || '',
         counterpartyName: counterpartyName || '',
         counterpartyIban: counterpartyIban || '',

@@ -28,7 +28,7 @@ const eslintConfig = [
     ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  {
+    {
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-explicit-any": "off",
@@ -37,6 +37,7 @@ const eslintConfig = [
       "react-hooks/exhaustive-deps": "off",
       "@next/next/no-async-client-component": "off",
       "react-hooks/rules-of-hooks": "off",
+      "react/display-name": "off",
     },
   },
 ];

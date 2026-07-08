@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, boolean, integer, numeric } from 'drizzle-orm/pg-core';
 import { bankAccounts } from './bank_accounts';
 import { expenses } from './expenses';
 import { invoices } from './invoices';
@@ -7,7 +7,7 @@ export const bankTransactions = pgTable('bank_transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
   accountId: uuid('account_id').references(() => bankAccounts.id).notNull(),
   transactionId: text('transaction_id').unique(),
-  amount: text('amount').notNull(),
+  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
   currency: text('currency').default('EUR'),
   date: timestamp('date'),
   description: text('description'),

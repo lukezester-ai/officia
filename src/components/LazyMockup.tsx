@@ -5,7 +5,7 @@ interface LazyMockupProps {
   fallback?: React.ReactNode;
 }
 
-export default function LazyMockup({ importFn, fallback = null }: LazyMockupProps) {
+function LazyMockup({ importFn, fallback = null }: LazyMockupProps) {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,3 +27,6 @@ export default function LazyMockup({ importFn, fallback = null }: LazyMockupProp
 
   return <div ref={ref}>{Component ? <Component /> : fallback}</div>;
 }
+
+LazyMockup.displayName = 'LazyMockup';
+export default LazyMockup;

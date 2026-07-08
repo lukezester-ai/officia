@@ -40,7 +40,8 @@ export async function retrieveRelevantDocuments(query: string, tenantId: string,
     prompt: `Подреди откъсите според това доколко помагат за отговор на въпроса. Върни само релевантните резултати със score поне 0.35.\n\nВъпрос: ${query}\n\nОткъси:\n${catalog}`,
   });
 
-  return object.results
+  const ranked: { index: number; score: number }[] = object.results ?? [];
+  return ranked
     .filter((result) => result.index < candidates.length && result.score >= 0.35)
     .sort((left, right) => right.score - left.score)
     .slice(0, limit)
@@ -50,6 +51,6 @@ export async function retrieveRelevantDocuments(query: string, tenantId: string,
 export async function retrieveRelevantContext(query: string, tenantId: string) {
   const results = await retrieveRelevantDocuments(query, tenantId, 5);
   return results
-    .map((result, index) => `[Документ ${index + 1}: ${result.title}]\n${result.content}`)
+    .map((result: { title: string; content: string }, index) => `[Документ ${index + 1}: ${result.title}]\n${result.content}`)
     .join('\n\n');
 }
