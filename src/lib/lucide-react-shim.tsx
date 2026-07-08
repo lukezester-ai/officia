@@ -98,6 +98,7 @@ export const LayoutList = makeIcon('LayoutList');
 export const Link = makeIcon('Link');
 export const Loader2 = makeIcon('Loader2');
 export const Loader2Icon = makeIcon('Loader2Icon');
+export const Lock = makeIcon('Lock');
 export const LogIn = makeIcon('LogIn');
 export const LogOut = makeIcon('LogOut');
 export const Mail = makeIcon('Mail');
