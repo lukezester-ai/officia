@@ -19,7 +19,7 @@ type MetricItem = {
 const metricsData: MetricItem[] = [
   { id: "trial", numericValue: 14, suffix: " дни", label: "Пълен достъп при регистрация", highlightColor: "purple" },
   { id: "starter", numericValue: 50, suffix: "", label: "Фактури/месец (Стартер)", highlightColor: "white" },
-  { id: "modules", numericValue: 3, suffix: "", label: "Модула: счетоводство, фактури, кадри", highlightColor: "purple" },
+  { id: "modules", numericValue: 5, suffix: "", label: "Модула: счетоводство, фактури, ТРЗ, HR, банкиране", highlightColor: "purple" },
   { id: "lang", numericValue: 1, suffix: "", label: "Език: BG", highlightColor: "purple" },
 ];
 

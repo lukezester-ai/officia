@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   Bot,
+  Calendar,
   CheckCircle2,
   Clock,
   CreditCard,
@@ -422,6 +423,95 @@ function PayrollMockup() {
   );
 }
 
+function HRMockup() {
+  const employees = [
+    { name: "Иван Петров", balance: 12, role: "Разработчик" },
+    { name: "Мария Георгиева", balance: 8, role: "Маркетинг" },
+    { name: "Георги Димитров", balance: 15, role: "Дизайнер" },
+  ];
+
+  const pending = [
+    { employee: "Иван Петров", type: "Платен отпуск", days: 3, from: "22.07.2025", to: "24.07.2025" },
+    { employee: "Мария Георгиева", type: "Болничен", days: 2, from: "18.07.2025", to: "19.07.2025" },
+  ];
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0a0a12] p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600">
+            <Users className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h5 className="text-[11px] font-semibold text-white">Управление на персонала</h5>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Отпуски и заявки
+            </span>
+          </div>
+        </div>
+        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10">
+          <span className="text-[8px] font-bold text-amber-400">2</span>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-500">Служители</span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-teal-600/30 bg-teal-600/10 px-2 py-0.5 text-[8px] font-medium text-teal-400">3 активни</span>
+          </div>
+        </div>
+
+        <div className="mb-3 space-y-1.5">
+          {employees.map((emp) => (
+            <div key={emp.name} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-medium text-zinc-200">{emp.name}</span>
+                <span className="text-[7px] text-zinc-500">{emp.role}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="rounded bg-emerald-600/15 px-1.5 py-0.5 text-[8px] font-semibold text-emerald-400">{emp.balance} дни</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-2 flex items-center gap-2">
+          <Calendar className="h-3 w-3 text-amber-400" />
+          <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-amber-400">Чакащи заявки</span>
+        </div>
+
+        <div className="space-y-1.5">
+          {pending.map((req) => (
+            <div key={`${req.employee}-${req.type}`} className="flex items-center justify-between rounded-lg border border-amber-500/15 bg-amber-500/5 px-3 py-2">
+              <div>
+                <span className="block text-[9px] font-medium text-zinc-200">{req.employee}</span>
+                <span className="text-[7px] text-zinc-500">{req.type} · {req.from} – {req.to} ({req.days} дни)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-600/20 text-emerald-400">
+                  <CheckCircle2 className="h-3 w-3" />
+                </span>
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-red-600/20 text-red-400">
+                  <span className="text-[10px] font-bold">✕</span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-lg border border-dashed border-white/[0.06] bg-white/[0.02] p-3 text-center">
+          <span className="text-[8px] text-zinc-500 flex items-center justify-center gap-1">
+            <Plus className="h-2.5 w-2.5" />
+            Нова заявка за отпуск
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const featureCards: FeatureCardData[] = [
   {
     id: "accounting",
@@ -458,6 +548,15 @@ const featureCards: FeatureCardData[] = [
     mockup: <PayrollMockup />,
     tags: ["Обр.1", "Обр.6", "XML export"],
     delay: 0.4,
+  },
+  {
+    id: "hr",
+    tag: "Човешки ресурси",
+    title: "Управление на отпуски и заявки",
+    description: "Платен, болничен, неплатен отпуск — заявки, одобрение, баланс и история за всеки служител.",
+    mockup: <HRMockup />,
+    tags: ["Отпуски", "Заявки", "Персонал"],
+    delay: 0.5,
   },
 ];
 
