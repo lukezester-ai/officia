@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  Download,
   FileText,
   HelpCircle,
   LayoutDashboard,
@@ -336,6 +337,91 @@ function FeatureCard({ data }: { data: FeatureCardData }) {
   );
 }
 
+function PayrollMockup() {
+  const employees = [
+    { name: "Иван Петров", gross: 2400.00, insurance: 366.00, tax: 203.40 },
+    { name: "Мария Георгиева", gross: 3200.00, insurance: 488.16, tax: 271.18 },
+    { name: "Георги Димитров", gross: 1800.00, insurance: 274.68, tax: 152.53 },
+  ];
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0a0a12] p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-600 to-orange-600">
+            <FileText className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h5 className="text-[11px] font-semibold text-white">Обр. 1 и Обр. 6</h5>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              XML за НАП
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-1.5">
+          <span className="rounded bg-amber-600/20 px-2 py-1 text-[8px] font-semibold text-amber-400">Обр.1</span>
+          <span className="rounded bg-orange-600/20 px-2 py-1 text-[8px] font-semibold text-orange-400">Обр.6</span>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-500">Служители</span>
+          <span className="rounded-full bg-purple-600/20 px-2 py-0.5 text-[8px] font-semibold text-purple-400">3 назначени</span>
+        </div>
+
+        <table className="w-full border-separate border-spacing-0 text-left">
+          <thead>
+            <tr>
+              <th className="pb-1.5 pr-2 text-[8px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Име</th>
+              <th className="pb-1.5 pr-2 text-right text-[8px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Бруто</th>
+              <th className="pb-1.5 pr-2 text-right text-[8px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Осиг.</th>
+              <th className="pb-1.5 text-right text-[8px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Данък</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map((emp, i) => (
+              <tr key={emp.name} style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.04)" }}>
+                <td className="py-1.5 pr-2 text-[9px] text-zinc-200">{emp.name}</td>
+                <td className="py-1.5 pr-2 text-right text-[9px] text-zinc-300">{emp.gross.toFixed(2)}</td>
+                <td className="py-1.5 pr-2 text-right text-[9px] text-zinc-300">{emp.insurance.toFixed(2)}</td>
+                <td className="py-1.5 text-right text-[9px] text-zinc-300">{emp.tax.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="rounded-lg border border-white/[0.05] bg-white/[0.03] p-2 text-center">
+            <span className="block text-[9px] font-bold text-white">7 400.00</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Общо бруто</span>
+          </div>
+          <div className="rounded-lg border border-white/[0.05] bg-white/[0.03] p-2 text-center">
+            <span className="block text-[9px] font-bold text-white">1 128.84</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Осигуровки</span>
+          </div>
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-2 text-center">
+            <span className="block text-[9px] font-bold text-amber-400">627.11</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-amber-500">Данък</span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <button className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-amber-600/30 bg-amber-600/10 py-1.5 text-[8px] font-bold text-amber-400">
+            <Download className="h-2.5 w-2.5" />
+            Обр.1 XML
+          </button>
+          <button className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-orange-600/30 bg-orange-600/10 py-1.5 text-[8px] font-bold text-orange-400">
+            <Download className="h-2.5 w-2.5" />
+            Обр.6 XML
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const featureCards: FeatureCardData[] = [
   {
     id: "accounting",
@@ -363,6 +449,15 @@ const featureCards: FeatureCardData[] = [
     mockup: <BankSyncMockup />,
     tags: ["Demo", "Auto-match", "Roadmap: PSD2"],
     delay: 0.3,
+  },
+  {
+    id: "payroll-tax",
+    tag: "ТРЗ и Данъци",
+    title: "Автоматични декларации Обр.1 и Обр.6",
+    description: "Изчисляване на ТРЗ, осигуровки и данък общ доход. XML export за НАП — Обр.1 и Обр.6 готови.",
+    mockup: <PayrollMockup />,
+    tags: ["Обр.1", "Обр.6", "XML export"],
+    delay: 0.4,
   },
 ];
 
@@ -405,7 +500,7 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3 lg:[grid-auto-rows:680px]">
+        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-4 lg:[grid-auto-rows:680px]">
           {featureCards.map((card) => (
             <FeatureCard key={card.id} data={card} />
           ))}
