@@ -26,7 +26,7 @@ export async function retrieveRelevantDocuments(query: string, tenantId: string,
   if (candidates.length === 0) return [];
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    return candidates.slice(0, limit).map((candidate) => ({ ...candidate, score: candidate.lexicalScore }));
+    return candidates.slice(0, limit).map((candidate) => ({ ...candidate, score: candidate.combinedScore }));
   }
 
   const catalog = candidates

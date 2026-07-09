@@ -534,10 +534,10 @@ const featureCards: FeatureCardData[] = [
   {
     id: "bank-sync",
     tag: "Банкиране",
-    title: "Банкова демонстрация и интелигентно съпоставяне",
-    description: "Демо транзакции за тестване на reconciliation. Реален PSD2 конектор — в разработка.",
+    title: "Банково свързване чрез PSD2 и интелигентно съпоставяне",
+    description: "Реална връзка с банка чрез GoCardless (PSD2). Автоматично синхронизиране на транзакции и AI съпоставяне със счетоводни записвания.",
     mockup: <BankSyncMockup />,
-    tags: ["Demo", "Auto-match", "Roadmap: PSD2"],
+    tags: ["PSD2", "Auto-match", "GoCardless"],
     delay: 0.3,
   },
   {

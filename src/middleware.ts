@@ -14,9 +14,29 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   const { pathname } = req.nextUrl;
+
+  // CORS headers for API routes
+  if (pathname.startsWith('/api')) {
+    if (req.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+    const response = NextResponse.next();
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    return response;
+  }
   
   // Избягваме пренасочване на логин/регистрация страниците
-  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/api')) {
+  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     return;
   }
 

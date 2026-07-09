@@ -1,5 +1,10 @@
 import 'server-only';
 
+import { db } from '@/lib/db/db';
+import { documents } from '@/lib/db/schema/documents';
+import { eq } from 'drizzle-orm';
+import { VectorStore } from './vector-store';
+
 export const RAG_INDEX_MODEL = 'claude-semantic-rerank-v1';
 
 const CHUNK_SIZE = 1_200;
@@ -34,4 +39,21 @@ export function chunkDocumentContent(content: string): string[] {
 
 export async function embedDocumentContent(content: string) {
   return { chunks: chunkDocumentContent(content), model: RAG_INDEX_MODEL };
+}
+
+export async function processDocumentForRag(documentId: string, tenantId: string) {
+  const [doc] = await db
+    .select({ contentExtracted: documents.contentExtracted })
+    .from(documents)
+    .where(eq(documents.id, documentId))
+    .limit(1);
+
+  const text = doc?.contentExtracted;
+  if (!text) return;
+
+  const { chunks } = await embedDocumentContent(text);
+  if (chunks.length === 0) return;
+
+  const store = new VectorStore(tenantId);
+  await store.replaceDocumentChunks(documentId, chunks, RAG_INDEX_MODEL);
 }
