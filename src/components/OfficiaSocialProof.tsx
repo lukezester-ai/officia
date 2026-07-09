@@ -42,7 +42,7 @@ export default function OfficiaSocialProof({ lang }: { lang: string }) {
             viewport={{ once: true }}
             className="mb-4 text-4xl font-bold tracking-tight text-white md:text-5xl"
           >
-            Какво получаваш реално
+            Какво работи днес
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: prefersReduced ? 0 : 20 }}
@@ -51,7 +51,7 @@ export default function OfficiaSocialProof({ lang }: { lang: string }) {
             transition={{ delay: 0.1 }}
             className="mx-auto max-w-2xl text-lg text-slate-400"
           >
-            Без измислени отзиви и фалшиви метрики. Ето какво работи в продукта днес.
+            Реални възможности, без PR преувеличения.
           </motion.p>
         </div>
 

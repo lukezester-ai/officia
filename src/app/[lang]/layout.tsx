@@ -2,10 +2,29 @@ import type { Metadata } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { SetHtmlLang } from "@/components/set-html-lang";
+import { OrganizationSchema, SoftwareAppSchema } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Officia — Вашият офис. По-умно.",
-  description: "Модерен SaaS за счетоводители и офис мениджъри",
+  title: "Officia — AI ERP за български фирми",
+  description: "Счетоводство, фактури, ТРЗ, HR и банкиране на едно място с AI. Безплатно за старт.",
+  keywords: ["счетоводен софтуер", "ERP българия", "AI счетоводство", "фактури онлайн", "ТРЗ програма", "такса сметка"],
+  openGraph: {
+    title: "Officia — AI ERP за български фирми",
+    description: "Счетоводство, фактури, ТРЗ, HR и банкиране на едно място с AI.",
+    url: "https://officiabg.com",
+    siteName: "Officia",
+    locale: "bg_BG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Officia — AI ERP за български фирми",
+    description: "Счетоводство, фактури, ТРЗ, HR и банкиране на едно място с AI.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default async function LangLayout({
@@ -20,6 +39,8 @@ export default async function LangLayout({
   return (
     <>
       <SetHtmlLang lang={lang} />
+      <OrganizationSchema />
+      <SoftwareAppSchema />
       <TooltipProvider>
         {children}
       </TooltipProvider>

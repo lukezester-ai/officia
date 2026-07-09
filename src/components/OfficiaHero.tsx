@@ -154,7 +154,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
             </div>
 
             <motion.p initial={skip ? false : { opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.5 }} className="mb-12 max-w-2xl text-lg leading-relaxed text-[#9191b0] md:text-xl">
-              Автоматизирай счетоводството, фактурите и документите с изкуствен интелект. Специално създаден за малки и средни фирми в България.
+              Счетоводство, фактури, ТРЗ и HR с AI — създаден за българския бизнес.
             </motion.p>
 
             <motion.div initial={skip ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.65 }} className="flex flex-col items-center gap-4 sm:flex-row">
