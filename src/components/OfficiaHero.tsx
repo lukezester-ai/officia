@@ -26,14 +26,16 @@ const metricsData: MetricItem[] = [
 const easeOutQuart: [number, number, number, number] = [0.25, 1, 0.5, 1];
 
 function useCountUp(target: number, duration = 1800, start = false, skip = false) {
-  const [count, setCount] = React.useState(0);
+  const [count, setCount] = React.useState(target);
 
   React.useEffect(() => {
-    if (!start || skip) {
+    if (skip) {
       setCount(target);
       return;
     }
+    if (!start) return;
 
+    setCount(0);
     let startTime: number | null = null;
     const step = (timestamp: number) => {
       startTime ??= timestamp;
