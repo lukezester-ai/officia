@@ -22,17 +22,19 @@ const PLAN_LABELS: Record<string, string> = {
   starter: 'Стартов',
   business: 'Бизнес',
   pro: 'Професионален',
+  'accounting-firm': 'Счетоводна кантора',
 };
 
 const PLAN_PRICES: Record<string, { monthly: number; annual: number; annualTotal: number }> = {
   business: { monthly: 14.90, annual: 11.90, annualTotal: 142.80 },
   pro: { monthly: 39.20, annual: 31.36, annualTotal: 376.32 },
+  'accounting-firm': { monthly: 99.00, annual: 79.20, annualTotal: 950.40 },
 };
 
 export function BillingPlanCard({ lang, initial }: { lang: string; initial: BillingData }) {
   const [pending, setPending] = useState<'portal' | null>(null);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annual');
-  const [targetPlan, setTargetPlan] = useState<'business' | 'pro'>('business');
+  const [targetPlan, setTargetPlan] = useState<'business' | 'pro' | 'accounting-firm'>('business');
   const trialActive = initial.trialEndsAt && new Date(initial.trialEndsAt) > new Date();
 
   const upgrade = () => {
@@ -120,10 +122,18 @@ export function BillingPlanCard({ lang, initial }: { lang: string; initial: Bill
                 <span className="block font-semibold text-indigo-700">Професионален</span>
                 <span className="text-xs text-muted-foreground">неограничени</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setTargetPlan('accounting-firm')}
+                className={`flex-1 rounded-lg border p-2 text-center text-sm ${targetPlan === 'accounting-firm' ? 'border-purple-600 bg-purple-50 ring-1 ring-purple-600' : 'hover:bg-gray-50'}`}
+              >
+                <span className="block font-semibold text-purple-700">Кантора</span>
+                <span className="text-xs text-muted-foreground">неограничени + всичко</span>
+              </button>
             </div>
             <Button onClick={upgrade} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700">
               <Sparkles size={16} />
-              Избери {targetPlan === 'business' ? 'Бизнес' : 'Професионален'} план
+              Избери {targetPlan === 'business' ? 'Бизнес' : targetPlan === 'pro' ? 'Професионален' : 'Кантора'} план
             </Button>
           </div>
         )}

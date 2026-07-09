@@ -47,7 +47,8 @@ export async function POST(req: Request) {
     }
 
     if (tenantId && session.mode === 'subscription') {
-      const plan = session.metadata?.plan === 'business' ? 'business' : 'pro';
+      const planMeta = session.metadata?.plan;
+      const plan = planMeta === 'business' || planMeta === 'accounting-firm' ? planMeta : 'pro';
       await db
         .update(tenants)
         .set({
@@ -69,8 +70,9 @@ export async function POST(req: Request) {
     const tenantId = subscription.metadata?.tenantId;
     if (tenantId) {
       const active = subscription.status === 'active' || subscription.status === 'trialing';
+      const planMeta = subscription.metadata?.plan;
       const plan = active
-        ? (subscription.metadata?.plan === 'business' ? 'business' : 'pro')
+        ? (planMeta === 'business' || planMeta === 'accounting-firm' ? planMeta : 'pro')
         : 'starter';
       await db
         .update(tenants)

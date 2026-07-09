@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { createSubscriptionCheckout } from '@/lib/billing/stripe-subscription';
 
-type CheckoutPlan = 'business' | 'pro';
+type CheckoutPlan = 'business' | 'pro' | 'accounting-firm';
 
 export async function POST(req: Request) {
   try {
     const { tenantId, user, tenant } = await requireTenant();
     const body = await req.json().catch(() => ({}));
     const billingCycle = body.billingCycle === 'monthly' ? 'monthly' : 'annual';
-    const plan: CheckoutPlan = body.plan === 'business' ? 'business' : 'pro';
+    const rawPlan = body.plan as string;
+    const plan: CheckoutPlan = rawPlan === 'business' || rawPlan === 'accounting-firm' ? rawPlan : 'pro';
     const origin = new URL(req.url).origin;
     const lang = 'bg';
 
