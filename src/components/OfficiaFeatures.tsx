@@ -5,15 +5,18 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  BarChart3,
   Bot,
   Calendar,
   CheckCircle2,
   Clock,
   CreditCard,
   Download,
+  FileCheck,
   FileText,
   HelpCircle,
   LayoutDashboard,
+  Package,
   Plus,
   Search,
   Settings,
@@ -512,6 +515,228 @@ function HRMockup() {
   );
 }
 
+function EInvoiceMockup() {
+  const invoices = [
+    { id: "EINV-001", to: "ТехноМ ЕООД", amount: "1 200,00", vat: "240,00", status: "Одобрена", date: "15.07.2025" },
+    { id: "EINV-002", to: "НетУоркс АД", amount: "450,00", vat: "90,00", status: "Изпратена", date: "16.07.2025" },
+    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "Грешка", date: "17.07.2025" },
+    { id: "EINV-004", to: "ГрийнТек ЕООД", amount: "890,00", vat: "178,00", status: "Одобрена", date: "18.07.2025" },
+  ];
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0a0a12] p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600">
+            <FileCheck className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h5 className="text-[11px] font-semibold text-white">Е-фактури</h5>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              НАП
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <span className="rounded bg-blue-600/20 px-2 py-0.5 text-[8px] font-semibold text-blue-400">UBL XML</span>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="mb-2.5 flex items-center justify-between">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-500">Изходящи фактури</span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-blue-600/15 px-2 py-0.5 text-[8px] font-medium text-blue-400">4 активни</span>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          {invoices.map((inv) => (
+            <div key={inv.id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-800/60">
+                  <FileText className="h-3 w-3 text-zinc-500" />
+                </div>
+                <div>
+                  <span className="block text-[9px] font-medium text-zinc-200">{inv.to}</span>
+                  <span className="text-[7px] text-zinc-500">{inv.id} · {inv.date}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <span className="block text-[9px] font-semibold text-white">{inv.amount} лв</span>
+                  <span className="text-[7px] text-zinc-500">ДДС {inv.vat} лв</span>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-[7px] font-semibold ${
+                  inv.status === "Одобрена" ? "bg-emerald-500/15 text-emerald-400" :
+                  inv.status === "Изпратена" ? "bg-blue-500/15 text-blue-400" :
+                  "bg-red-500/15 text-red-400"
+                }`}>
+                  {inv.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-center">
+            <span className="block text-[9px] font-bold text-emerald-400">6 140,00 лв</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Изпратени</span>
+          </div>
+          <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-2.5 text-center">
+            <span className="block text-[9px] font-bold text-blue-400">1 228,00 лв</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">ДДС</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InventoryMockup() {
+  const items = [
+    { name: "Канцеларски материали", qty: 124, unit: "бр", category: "Консумативи", value: "248,00" },
+    { name: "Тонер HP 26X", qty: 12, unit: "бр", category: "Консумативи", value: "720,00" },
+    { name: "Офис столове", qty: 8, unit: "бр", category: "Обзавеждане", value: "2 400,00" },
+    { name: "Пакет вода 1.5L", qty: 48, unit: "бр", category: "Консумативи", value: "96,00" },
+  ];
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0a0a12] p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-600 to-yellow-600">
+            <Package className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h5 className="text-[11px] font-semibold text-white">Склад</h5>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              4 артикула
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="flex gap-2">
+          <div className="flex-1 rounded-lg border border-white/[0.05] bg-white/[0.03] p-2 text-center">
+            <span className="block text-[10px] font-bold text-white">192</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Общо бр.</span>
+          </div>
+          <div className="flex-1 rounded-lg border border-white/[0.05] bg-white/[0.03] p-2 text-center">
+            <span className="block text-[10px] font-bold text-white">3 464</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Стойност</span>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-1.5">
+          {items.map((item) => (
+            <div key={item.name} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2">
+              <div className="flex items-start gap-2.5">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-zinc-800/60">
+                  <span className="text-[9px] font-bold text-zinc-500">{item.qty}</span>
+                </div>
+                <div>
+                  <span className="block text-[9px] font-medium text-zinc-200">{item.name}</span>
+                  <span className="text-[7px] text-zinc-500">{item.category} · {item.qty} {item.unit}</span>
+                </div>
+              </div>
+              <span className="text-[9px] font-semibold text-white">{item.value} лв</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-lg border border-dashed border-white/[0.06] bg-white/[0.02] p-2.5 text-center">
+          <span className="flex items-center justify-center gap-1 text-[8px] text-zinc-500">
+            <Plus className="h-2.5 w-2.5" />
+            Добави артикул
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReportsMockup() {
+  const monthlyData = [
+    { month: "Фев", revenue: 18400, expenses: 5200 },
+    { month: "Мар", revenue: 22100, expenses: 4850 },
+    { month: "Апр", revenue: 19800, expenses: 5100 },
+    { month: "Май", revenue: 25600, expenses: 5400 },
+    { month: "Юни", revenue: 23700, expenses: 4950 },
+    { month: "Юли", revenue: 28300, expenses: 5600 },
+  ];
+
+  const maxVal = 30000;
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0a0a12] p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-purple-600">
+            <BarChart3 className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h5 className="text-[11px] font-semibold text-white">Финансови справки</h5>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-purple-400">
+              Януари – Юли 2025
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="mb-3 grid grid-cols-3 gap-2">
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-2 text-center">
+            <span className="block text-[9px] font-bold text-emerald-400">+18 340</span>
+            <span className="text-[6px] uppercase tracking-[0.08em] text-zinc-500">Приходи</span>
+          </div>
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-center">
+            <span className="block text-[9px] font-bold text-red-400">-5 600</span>
+            <span className="text-[6px] uppercase tracking-[0.08em] text-zinc-500">Разходи</span>
+          </div>
+          <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-2 text-center">
+            <span className="block text-[9px] font-bold text-blue-400">12 740</span>
+            <span className="text-[6px] uppercase tracking-[0.08em] text-zinc-500">Печалба</span>
+          </div>
+        </div>
+
+        <div className="flex flex-1 items-end gap-1.5">
+          {monthlyData.map((d) => (
+            <div key={d.month} className="flex flex-1 flex-col items-center gap-1">
+              <div className="flex w-full flex-col items-center gap-[2px]">
+                <div
+                  className="w-full rounded-t-sm bg-emerald-500/40"
+                  style={{ height: `${(d.revenue / maxVal) * 100}%` }}
+                />
+                <div
+                  className="w-full rounded-t-sm bg-red-500/40"
+                  style={{ height: `${(d.expenses / maxVal) * 100}%` }}
+                />
+              </div>
+              <span className="text-[7px] font-medium text-zinc-500">{d.month}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <div className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-sm bg-emerald-500/60" />
+            <span className="text-[7px] text-zinc-500">Приходи</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-sm bg-red-500/60" />
+            <span className="text-[7px] text-zinc-500">Разходи</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const featureCards: FeatureCardData[] = [
   {
     id: "accounting",
@@ -557,6 +782,33 @@ const featureCards: FeatureCardData[] = [
     mockup: <HRMockup />,
     tags: ["Отпуски", "Заявки", "Персонал"],
     delay: 0.5,
+  },
+  {
+    id: "e-invoice",
+    tag: "Е-фактури",
+    title: "Е-фактури към НАП с UBL XML",
+    description: "Изпращане и получаване на електронни фактури чрез НАП. UBL XML формат, автоматична валидация и проследяване на статус.",
+    mockup: <EInvoiceMockup />,
+    tags: ["НАП", "UBL XML", "Автоматично"],
+    delay: 0.55,
+  },
+  {
+    id: "inventory",
+    tag: "Склад",
+    title: "Складова наличност и артикули",
+    description: "Проследяване на наличности, движения на артикули и категоризация. Връзка с фактури и доставчици.",
+    mockup: <InventoryMockup />,
+    tags: ["Наличности", "Артикули", "Движения"],
+    delay: 0.6,
+  },
+  {
+    id: "reports",
+    tag: "Анализи",
+    title: "Финансови справки и анализи",
+    description: "Интерактивни графики за приходи, разходи и печалба. Сравнение по месеци и години с експорт към Excel.",
+    mockup: <ReportsMockup />,
+    tags: ["Приходи", "Разходи", "Graphs"],
+    delay: 0.65,
   },
 ];
 
