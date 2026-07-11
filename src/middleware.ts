@@ -1,6 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
+console.log('Middleware - CLERK_SECRET_KEY:', process.env.CLERK_SECRET_KEY);
+
 const locales = ['bg'];
 
 const isProtectedRoute = createRouteMatcher([
@@ -9,6 +12,8 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  console.log('Middleware request URL:', req.nextUrl.pathname);
+  console.log('Secret key during request:', process.env.CLERK_SECRET_KEY);
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
