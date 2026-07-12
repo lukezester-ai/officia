@@ -41,7 +41,13 @@ export async function uploadAndAnalyzeDocument(formData: FormData) {
 }
 
 export async function getDocuments() {
-  return await db.select().from(documents).orderBy(desc(documents.createdAt));
+  try {
+    const data = await db.select().from(documents).orderBy(desc(documents.createdAt));
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('[getDocuments]', err);
+    return { success: false, data: [] };
+  }
 }
 
 export async function getSuggestedTasks() {
