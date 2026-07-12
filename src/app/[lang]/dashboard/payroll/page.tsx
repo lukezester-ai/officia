@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calculator, Download, CheckCircle, Wallet, Landmark, TrendingDown, Users } from 'lucide-react';
 import { PayrollForecast } from '@/components/payroll/PayrollForecast';
 import { PayrollCalculator, AnomalyDetector } from '@/components/payroll/PayrollTools';
+import { BatchPaymentExport } from '@/components/payroll/BatchPaymentExport';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -88,6 +89,8 @@ export default async function PayrollPage() {
         <PayrollCalculator />
         <AnomalyDetector employees={data.list} />
       </div>
+
+      <BatchPaymentExport employees={data.list} totalNet={data.totals.net} />
 
       <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
         <div className="bg-black/20 px-6 py-4 border-b border-white/5 flex items-center gap-2">

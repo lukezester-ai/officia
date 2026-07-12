@@ -5,6 +5,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, Mail, Briefcase, Building2, CreditCard, Save } from "lucide-react";
 import { createEmployee } from "../actions";
+import { AIOnboardingWidget } from "@/components/hr/AIOnboardingWidget";
+
 
 export default function NewEmployeePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = React.use(params);
@@ -29,6 +31,16 @@ export default function NewEmployeePage({ params }: { params: Promise<{ lang: st
     }
   };
 
+  const handleParsed = (data: { name?: string; position?: string; department?: string; salary?: string }) => {
+    setForm(prev => ({
+      ...prev,
+      ...(data.name && { name: data.name }),
+      ...(data.position && { position: data.position }),
+      ...(data.department && { department: data.department }),
+      ...(data.salary && { salary: data.salary }),
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6 lg:p-8">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -46,6 +58,8 @@ export default function NewEmployeePage({ params }: { params: Promise<{ lang: st
             </div>
           </div>
         </div>
+
+        <AIOnboardingWidget onParsed={handleParsed} />
 
         <form onSubmit={handleSubmit} className="bg-white/3 border border-white/8 rounded-2xl p-6 lg:p-8 space-y-6 shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
