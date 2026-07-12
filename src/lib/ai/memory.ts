@@ -52,7 +52,7 @@ export async function getRelevantMemories(
       memories.access_count as "accessCount"
   `);
 
-  return results.rows as Memory[];
+  return results as unknown as Memory[];
 }
 
 /**
