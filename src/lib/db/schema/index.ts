@@ -32,5 +32,4 @@ export * from './approvals';
 export * from './purchase-invoices';
 export * from './reports';
 export * from './tasks';
-export * from './memories';
-export * from './nap-integrations';
+// Note: memories and nap-integrations are imported directly where needed
