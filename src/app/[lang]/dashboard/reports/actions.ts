@@ -2,13 +2,13 @@
 
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
-import { bankTransactions } from '@/lib/db/schema/bank_transactions';
-import { desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { getCurrentTenant } from '@/lib/tenant';
 
 export async function getReportsData() {
   try {
-    const allInvoices = await db.select().from(invoices);
-    const tx = await db.select().from(bankTransactions);
+    const tenantId = await getCurrentTenant();
+    const allInvoices = await db.select().from(invoices).where(eq(invoices.tenantId, tenantId));
 
     const revenue = allInvoices.filter(i => i.type === 'sale').reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
     const expenses = allInvoices.filter(i => i.type === 'purchase').reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
