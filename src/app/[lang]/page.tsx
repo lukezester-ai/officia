@@ -64,7 +64,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         </div>
       </section>
 
-      <PricingSection lang={lang} />
+      <PricingSection />
 
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
