@@ -152,11 +152,95 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
         </TabsContent>
 
         <TabsContent value="drafts" className="space-y-4 m-0">
-          <Card className="shadow-sm border-0"><CardContent className="p-8 text-center text-muted-foreground">Няма чернови.</CardContent></Card>
+          <Card className="shadow-sm border-0">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock size={18} className="text-amber-500" /> Чернови ({drafts.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Дата</TableHead>
+                    <TableHead>Номер</TableHead>
+                    <TableHead>Описание</TableHead>
+                    <TableHead className="text-right">Действие</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {drafts.map(h => (
+                    <TableRow key={h.id}>
+                      <TableCell className="pl-6 text-muted-foreground">{new Date(h.entryDate).toLocaleDateString('bg-BG')}</TableCell>
+                      <TableCell className="font-mono text-sm">{h.journalNumber}</TableCell>
+                      <TableCell>{h.description || '—'}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" className="h-8 text-emerald-600 hover:bg-emerald-50">Публикувай</Button>
+                          <Button variant="ghost" size="sm" className="h-8">Редактирай</Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {drafts.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                        <CheckCircle size={32} className="mx-auto text-emerald-500 mb-2" />
+                        Няма чернови за публикуване.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="problems" className="space-y-4 m-0">
-          <Card className="shadow-sm border-0"><CardContent className="p-8 text-center text-muted-foreground">Няма открити проблеми от AI.</CardContent></Card>
+          <Card className="shadow-sm border-0">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <AlertCircle size={18} className="text-rose-500" /> AI Одит – Проблеми ({problems.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Дата</TableHead>
+                    <TableHead>Номер</TableHead>
+                    <TableHead>Описание</TableHead>
+                    <TableHead className="text-right">Действие</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {problems.map(h => (
+                    <TableRow key={h.id} className="border-l-2 border-l-rose-400">
+                      <TableCell className="pl-6 text-muted-foreground">{new Date(h.entryDate).toLocaleDateString('bg-BG')}</TableCell>
+                      <TableCell className="font-mono text-sm">{h.journalNumber}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{h.description || '—'}</p>
+                          <Badge variant="destructive" className="mt-1 text-xs">AI: Открит проблем</Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" className="h-8 text-rose-600 hover:bg-rose-50 border-rose-200">Прегледай</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {problems.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                        <CheckCircle size={32} className="mx-auto text-emerald-500 mb-2" />
+                        AI не е открил проблеми в счетоводните записи.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
