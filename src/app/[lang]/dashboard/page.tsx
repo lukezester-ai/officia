@@ -150,7 +150,7 @@ export default async function DashboardPage() {
             </CardTitle>
             {data?.overviewStats?.inboxOpenItems > 0 && (
               <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                {data.overviewStats.inboxOpenItems} нови
+                {data?.overviewStats?.inboxOpenItems} нови
               </span>
             )}
           </CardHeader>
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
               <p className="text-sm text-muted-foreground py-4 text-center">Нямате задачи за одобрение.</p>
             ) : (
               <div className="flex justify-between items-center text-sm py-2">
-                <span className="text-muted-foreground">Имате {data.overviewStats.approvalsPending} заявки за преглед.</span>
+                <span className="text-muted-foreground">Имате {data?.overviewStats?.approvalsPending ?? 0} заявки за преглед.</span>
                 <Link href="/dashboard/approvals" className="text-emerald-600 hover:underline font-medium">
                   Преглед
                 </Link>
