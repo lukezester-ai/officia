@@ -8,6 +8,7 @@ import { PayrollForecast } from '@/components/payroll/PayrollForecast';
 import { PayrollCalculator, AnomalyDetector } from '@/components/payroll/PayrollTools';
 import { BatchPaymentExport } from '@/components/payroll/BatchPaymentExport';
 import { LegislativeTracker } from '@/components/payroll/LegislativeTracker';
+import { SendPayslipButton } from './SendPayslipButton';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -111,6 +112,7 @@ export default async function PayrollPage() {
                 <TableHead className="text-right text-zinc-400 text-xs">ЗЗО (3.2%)</TableHead>
                 <TableHead className="text-right text-zinc-400 text-xs text-rose-400/80">ДОД (10%)</TableHead>
                 <TableHead className="text-right pr-6 text-emerald-400 font-bold">НЕТО</TableHead>
+                <TableHead className="text-right pr-6"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,6 +128,9 @@ export default async function PayrollPage() {
                   <TableCell className="text-right tabular-nums text-zinc-400">{fmt(emp.zzo)}</TableCell>
                   <TableCell className="text-right tabular-nums text-rose-300">{fmt(emp.tax)}</TableCell>
                   <TableCell className="text-right pr-6 tabular-nums text-emerald-400 font-bold bg-emerald-500/5">{fmt(emp.net)}</TableCell>
+                  <TableCell className="text-right pr-2">
+                    <SendPayslipButton employee={emp} />
+                  </TableCell>
                 </TableRow>
               ))}
               
