@@ -9,7 +9,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Tags, Box, ArrowDownToLine, ArrowUpFromLine, Camera, Scan, Zap, Search, CheckCircle, AlertTriangle, Wifi } from 'lucide-react';
+import { Package, Plus, Tags, Box, ArrowDownToLine, ArrowUpFromLine, Scan, Zap, Search, CheckCircle } from 'lucide-react';
+
+// Inline SVG icons (Camera and Wifi not available in this lucide-react build)
+const CameraIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+  </svg>
+);
+const WifiIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+    <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+    <line x1="12" y1="20" x2="12.01" y2="20"/>
+  </svg>
+);
 import { toast } from 'sonner';
 
 function fmt(n: number) {
@@ -246,7 +262,7 @@ export default function InventoryPage() {
             <Zap size={16} className="text-emerald-400" />
             <span className="text-sm font-semibold text-emerald-400">Бърз вход/изход чрез баркод</span>
             <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
-              <Wifi size={10} className="mr-1" /> USB/BT скенерът работи автоматично
+              <WifiIcon size={10} className="mr-1" /> USB/BT скенерът работи автоматично
             </Badge>
           </div>
 
@@ -281,7 +297,7 @@ export default function InventoryPage() {
                 </div>
               ) : (
                 <Button onClick={startCamera} variant="outline" className="w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 gap-2">
-                  <Camera size={16} /> Отвори камера
+                  <CameraIcon size={16} /> Отвори камера
                 </Button>
               )}
             </div>
