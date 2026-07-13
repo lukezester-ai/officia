@@ -54,6 +54,31 @@ export default function TaxesPage() {
     setGeneratingProfitTax(false);
   };
 
+  const handleExportDeclaration = (d: any) => {
+    const isProfit = d.type === 'profit_tax';
+    const headers = ['ID Декларация', 'Тип', 'Период От', 'Период До', 'Сума (EUR)', 'Статус', 'Дата на създаване'];
+    const row = [
+      d.id || '',
+      isProfit ? 'Корпоративен данък печалба (10%)' : 'ДДС Справка-декларация',
+      d.periodStart || '',
+      d.periodEnd || '',
+      parseFloat(d.totalAmount || '0').toFixed(2),
+      d.status === 'draft' ? 'Чернова' : 'Подадена',
+      d.createdAt ? new Date(d.createdAt).toLocaleDateString('bg-BG') : ''
+    ];
+
+    const csvContent = '\uFEFF' + [headers.join(','), row.join(',')].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Declaration_${d.type}_${d.periodStart || 'export'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Декларацията е изтеглена успешно като CSV справка!');
+  };
+
   const ddsDeclarations = declarations.filter(d => d.type === 'dds');
   const profitDeclarations = declarations.filter(d => d.type === 'profit_tax');
 
@@ -181,13 +206,12 @@ export default function TaxesPage() {
                        </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                       <a 
-                         href="#" 
-                         onClick={(e) => { e.preventDefault(); toast('PDF експортът изисква извикване към сървъра (TBD)'); }}
+                       <button 
+                         onClick={() => handleExportDeclaration(d)}
                          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100"
                        >
-                         <Download size={14} className="mr-1.5"/> PDF Справка
-                       </a>
+                         <Download size={14} className="mr-1.5"/> Експорт Справка (CSV)
+                       </button>
                     </TableCell>
                   </TableRow>
                 );

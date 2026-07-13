@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { auth } from '@clerk/nextjs/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2026-05-27.dahlia' as any,
@@ -20,6 +21,7 @@ const PRICE_IDS: Record<string, { monthly: string; annual: string }> = {
 
 export async function GET(req: NextRequest) {
   try {
+    const { userId, orgId } = await auth().catch(() => ({ userId: null, orgId: null }));
     const { searchParams } = new URL(req.url);
     const plan = searchParams.get('plan') || 'business';
     const billing = searchParams.get('billing') || 'annual';
@@ -49,6 +51,8 @@ export async function GET(req: NextRequest) {
       metadata: {
         plan,
         billing,
+        userId: userId || '',
+        tenantId: orgId || '',
       },
     });
 

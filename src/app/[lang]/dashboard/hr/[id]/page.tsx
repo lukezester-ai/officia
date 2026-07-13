@@ -2,8 +2,11 @@
 import React from 'react';
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
+import { activityLogs } from '@/lib/db/schema/activity_logs';
+import { documents } from '@/lib/db/schema/documents';
+import { requireTenant } from '@/lib/auth/get-tenant';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +38,9 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default async function HrProfilePage(props: { params: Promise<{ lang: string, id: string }> }) {
   const params = await props.params;
-  const result = await db.select().from(employees).where(eq(employees.id, params.id));
+  const { tenantId } = await requireTenant();
+
+  const result = await db.select().from(employees).where(and(eq(employees.id, params.id), eq(employees.tenantId, tenantId)));
   const emp = result[0];
 
   if (!emp) {
@@ -45,8 +50,22 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
   const empLeaves = await db
     .select()
     .from(leaveRequests)
-    .where(eq(leaveRequests.employeeId, params.id))
+    .where(and(eq(leaveRequests.employeeId, params.id), eq(leaveRequests.tenantId, tenantId)))
     .orderBy(desc(leaveRequests.createdAt));
+
+  const empLogs = await db
+    .select()
+    .from(activityLogs)
+    .where(and(eq(activityLogs.tenantId, tenantId), eq(activityLogs.entityId, params.id)))
+    .orderBy(desc(activityLogs.createdAt))
+    .limit(20);
+
+  const empDocs = await db
+    .select()
+    .from(documents)
+    .where(eq(documents.tenantId, tenantId))
+    .orderBy(desc(documents.createdAt))
+    .limit(10);
 
   function countDays(start: string, end: string) {
     return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
@@ -121,10 +140,51 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
 
         <TabsContent value="documents" className="m-0 space-y-4">
           <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <Upload size={32} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground mb-4">Няма качени документи (напр. подписан договор, анекси).</p>
-              <Button variant="outline">Качи документ</Button>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2"><FileText size={18}/> Документи и досие на служителя</CardTitle>
+              <Link href={`/${params.lang}/dashboard/documents`}>
+                <Button size="sm" variant="outline" className="gap-1.5"><Upload size={14}/> Към Документи</Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {empDocs.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground text-sm">
+                  <Upload size={32} className="mx-auto mb-3 text-muted-foreground opacity-50" />
+                  Няма прикачени документи към това трудово досие.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="pb-3 font-medium">Наименование</th>
+                        <th className="pb-3 font-medium">Тип</th>
+                        <th className="pb-3 font-medium">Статус</th>
+                        <th className="pb-3 font-medium text-right">Дата</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {empDocs.map((doc: any) => (
+                        <tr key={doc.id} className="hover:bg-muted/30">
+                          <td className="py-3 font-medium flex items-center gap-2">
+                            <FileText size={15} className="text-indigo-400 shrink-0" />
+                            {doc.title || 'Документ'}
+                          </td>
+                          <td className="py-3 text-muted-foreground">{doc.type || 'contract'}</td>
+                          <td className="py-3">
+                            <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-normal">
+                              {doc.status || 'Активен'}
+                            </Badge>
+                          </td>
+                          <td className="py-3 text-right tabular-nums text-muted-foreground">
+                            {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('bg-BG') : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -222,9 +282,41 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
 
         <TabsContent value="history" className="m-0 space-y-4">
           <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <History size={32} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground mb-4">История на промените по този профил ще се покаже тук.</p>
+            <CardHeader className="pb-2"><CardTitle className="text-lg flex items-center gap-2"><History size={18}/> Одит и история на промените</CardTitle></CardHeader>
+            <CardContent>
+              {empLogs.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground text-sm">
+                  <History size={32} className="mx-auto mb-3 text-muted-foreground opacity-50" />
+                  Няма регистрирани скорошни промени за този профил.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="pb-3 font-medium">Действие / Събитие</th>
+                        <th className="pb-3 font-medium">Обект</th>
+                        <th className="pb-3 font-medium text-right">Дата и час</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {empLogs.map((log: any) => (
+                        <tr key={log.id} className="hover:bg-muted/30">
+                          <td className="py-3 font-medium text-slate-800 dark:text-slate-200">
+                            {log.action}
+                          </td>
+                          <td className="py-3 text-muted-foreground">
+                            <Badge variant="secondary" className="font-mono text-xs">{log.entityType}</Badge>
+                          </td>
+                          <td className="py-3 text-right tabular-nums text-muted-foreground">
+                            {log.createdAt ? new Date(log.createdAt).toLocaleString('bg-BG') : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

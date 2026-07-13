@@ -29,6 +29,12 @@ export const getStripeSessionUrl = async (invoiceId: number, amount: number, cur
       },
     ],
     mode: 'payment',
+    invoice_creation: {
+      enabled: true,
+      invoice_data: {
+        description: `Фактура № ${invoiceNumber || invoiceId} от Officia ERP`,
+      }
+    },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/public/invoice/${invoiceId}?success=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/public/invoice/${invoiceId}?canceled=true`,
     metadata: {
