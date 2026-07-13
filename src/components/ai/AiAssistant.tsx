@@ -89,9 +89,12 @@ export default function AiAssistant() {
         body: JSON.stringify({ messages: apiMessages }),
       });
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json().catch(() => ({}));
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+
       const replyText = data.response || 'Не успях да обработя заявката.';
 
       setMessages(prev => [...prev, {
@@ -101,12 +104,12 @@ export default function AiAssistant() {
         timestamp: new Date(),
       }]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error);
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "Възникна грешка при комуникацията. Моля, опитай отново.",
+        content: `⚠️ ${error?.message || 'Грешка при комуникацията. Моля, опитай отново.'}`,
         timestamp: new Date(),
       }]);
     } finally {

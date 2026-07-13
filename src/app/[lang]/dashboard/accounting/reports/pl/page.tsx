@@ -28,7 +28,17 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
 
   const start = new Date(new Date().getFullYear(), 0, 1);
   const end = new Date();
-  const report = await ReportEngine.generatePnL(tenantId, start, end);
+
+  let report: any = null;
+  try {
+    report = await ReportEngine.generatePnL(tenantId, start, end);
+  } catch (e: any) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white p-8">
+        <p className="text-rose-400">⚠️ Грешка при генериране на ОПР: {e?.message}</p>
+      </div>
+    );
+  }
 
   const revenue: Record<string, number> = {};
   report.revenue.breakdown.forEach((b: any) => {
