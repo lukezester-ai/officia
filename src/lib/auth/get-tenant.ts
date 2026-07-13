@@ -19,7 +19,7 @@ export async function requireTenant() {
     const result = await db.execute(
       sql`SELECT id, tenant_id, clerk_id, email, name FROM users WHERE clerk_id = ${userId} LIMIT 1`
     );
-    userRows = result.rows ?? (result as any) ?? [];
+    userRows = Array.isArray(result) ? result : (result as any)?.rows ?? [];
   } catch (e: any) {
     throw new Error(`DB грешка при търсене на потребител: ${e?.message}`);
   }
@@ -40,7 +40,7 @@ export async function requireTenant() {
     const tenantResult = await db.execute(
       sql`SELECT id, name FROM tenants WHERE id = ${tenantId} LIMIT 1`
     );
-    tenantRows = tenantResult.rows ?? (tenantResult as any) ?? [];
+    tenantRows = Array.isArray(tenantResult) ? tenantResult : (tenantResult as any)?.rows ?? [];
   } catch {
     // tenant query е необезопасена – продължаваме без tenant данни
   }
