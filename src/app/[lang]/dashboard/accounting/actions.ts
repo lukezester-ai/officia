@@ -36,3 +36,29 @@ export async function confirmJournalEntry(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function postInvoiceToJournal(invoiceId: string, accountCode: string = '411') {
+  try {
+    const { requireTenant } = await import('@/lib/auth/get-tenant');
+    const { tenantId } = await requireTenant();
+    const [inv] = await db.select().from(invoices).where(eq(invoices.id, invoiceId as any)).limit(1);
+    if (!inv) return { success: false, error: 'Фактурата не е намерена' };
+
+    const [header] = await db.insert(journalHeaders).values({
+      tenantId,
+      entryNumber: `J-${inv.invoiceNumber || Date.now()}`,
+      entryDate: inv.issueDate || new Date().toISOString().split('T')[0],
+      documentReference: `Фактура № ${inv.invoiceNumber}`,
+      counterpartyName: inv.clientName || 'Неизвестен клиент',
+      description: `Продажба по фактура № ${inv.invoiceNumber}`,
+      status: 'posted',
+      aiStatus: 'verified',
+    } as any).returning();
+
+    await db.update(invoices).set({ status: 'accounted' } as any).where(eq(invoices.id, invoiceId as any));
+    revalidatePath('/', 'layout');
+    return { success: true, data: header };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { getTransactionsForReview, acceptMatch, rejectMatch } from '../actions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { getTransactionsForReview, acceptMatch, rejectMatch, getAICandidates, manualMatch } from '../actions';
 import { ArrowLeft, CheckCircle, XCircle, Search, Link as LinkIcon, DollarSign, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -19,6 +20,33 @@ export default function ReconciliationPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+
+  const [manualModalTx, setManualModalTx] = useState<any | null>(null);
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string>('');
+  const [manualSaving, setManualSaving] = useState(false);
+
+  const openManualModal = async (tx: any) => {
+    setManualModalTx(tx);
+    setSelectedCandidateId('');
+    const res = await getAICandidates();
+    if (res.success) setCandidates(res.data);
+  };
+
+  const handleManualSubmit = async () => {
+    if (!manualModalTx || !selectedCandidateId) return;
+    setManualSaving(true);
+    const cand = candidates.find(c => c.id === selectedCandidateId);
+    const res = await manualMatch(manualModalTx.id, selectedCandidateId, cand?.type || 'invoice');
+    if (res.success) {
+      toast.success('Успешно ръчно свързване!');
+      setManualModalTx(null);
+      await load();
+    } else {
+      toast.error('Грешка: ' + res.error);
+    }
+    setManualSaving(false);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -150,6 +178,7 @@ export default function ReconciliationPage() {
                           variant="ghost" size="icon" 
                           className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-white/10"
                           title="Ръчно свързване"
+                          onClick={() => openManualModal(tx)}
                         >
                           <LinkIcon size={14} />
                         </Button>
@@ -162,6 +191,51 @@ export default function ReconciliationPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!manualModalTx} onOpenChange={open => !open && setManualModalTx(null)}>
+        <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ръчно свързване с документ</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-sm">
+              <p className="text-zinc-400 text-xs">Транзакция:</p>
+              <p className="font-medium mt-0.5">{manualModalTx?.counterpartyName || 'Неизвестен'}</p>
+              <p className="text-emerald-400 font-bold mt-1">
+                {manualModalTx && fmt(parseFloat(manualModalTx.amount || '0'))} {manualModalTx?.currency || 'EUR'}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-xs text-zinc-400 mb-1.5 block">Изберете неплатена фактура / разход *</label>
+              <select
+                value={selectedCandidateId}
+                onChange={e => setSelectedCandidateId(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+                <option value="" className="bg-zinc-900 text-zinc-500">Изберете документ...</option>
+                {candidates.map(c => (
+                  <option key={c.id} value={c.id} className="bg-zinc-900 text-zinc-200">
+                    [{c.type === 'invoice' ? 'Фактура' : 'Разход'}] #{c.documentNumber} — {c.counterpartyName} ({fmt(c.totalAmount)} {c.currency})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManualModalTx(null)} className="border-white/10 text-zinc-400">
+              Отказ
+            </Button>
+            <Button 
+              onClick={handleManualSubmit} 
+              disabled={!selectedCandidateId || manualSaving} 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {manualSaving ? 'Свързване...' : 'Свържи'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2,16 +2,36 @@
 import React from 'react';
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
+import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History } from 'lucide-react';
+import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { StatusUpdater } from './_status-updater';
+
+const TYPE_LABELS: Record<string, string> = {
+  annual:  '🏖️ Платен отпуск',
+  sick:    '🏥 Болничен',
+  unpaid:  '📋 Неплатен отпуск',
+  other:   '📌 Друг',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  pending:  '⏳ Чака одобрение',
+  approved: '✅ Одобрен',
+  rejected: '❌ Отхвърлен',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending:  'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  approved: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+  rejected: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
+};
 
 export default async function HrProfilePage(props: { params: Promise<{ lang: string, id: string }> }) {
   const params = await props.params;
@@ -21,6 +41,28 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
   if (!emp) {
     notFound();
   }
+
+  const empLeaves = await db
+    .select()
+    .from(leaveRequests)
+    .where(eq(leaveRequests.employeeId, params.id))
+    .orderBy(desc(leaveRequests.createdAt));
+
+  function countDays(start: string, end: string) {
+    return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
+  }
+
+  const ANNUAL_LIMIT = 20;
+  const approvedAnnual = empLeaves
+    .filter(l => l.status === 'approved' && l.type === 'annual')
+    .reduce((s, l) => s + countDays(l.startDate, l.endDate), 0);
+  const approvedSick = empLeaves
+    .filter(l => l.status === 'approved' && l.type === 'sick')
+    .reduce((s, l) => s + countDays(l.startDate, l.endDate), 0);
+  const approvedUnpaid = empLeaves
+    .filter(l => l.status === 'approved' && l.type === 'unpaid')
+    .reduce((s, l) => s + countDays(l.startDate, l.endDate), 0);
+  const annualLeft = Math.max(0, ANNUAL_LIMIT - approvedAnnual);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -87,12 +129,93 @@ export default async function HrProfilePage(props: { params: Promise<{ lang: str
           </Card>
         </TabsContent>
 
-        <TabsContent value="leaves" className="m-0 space-y-4">
+        <TabsContent value="leaves" className="m-0 space-y-6">
+          {/* Balance Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="shadow-sm border-0 bg-indigo-500/10 border border-indigo-500/20">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Calendar className="h-8 w-8 text-indigo-500 shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Платен отпуск (Оставащ)</p>
+                  <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">{annualLeft} от {ANNUAL_LIMIT} дни</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-0 bg-rose-500/10 border border-rose-500/20">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Clock className="h-8 w-8 text-rose-500 shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Използвани болнични</p>
+                  <p className="text-xl font-bold text-rose-600 dark:text-rose-400">{approvedSick} дни</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-0 bg-slate-500/10 border border-slate-500/20">
+              <CardContent className="p-4 flex items-center gap-3">
+                <FileText className="h-8 w-8 text-slate-500 shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Неплатен отпуск</p>
+                  <p className="text-xl font-bold text-slate-600 dark:text-slate-400">{approvedUnpaid} дни</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Leaves Table */}
           <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <Calendar size={32} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground mb-4">Няма регистрирани отсъствия през тази година.</p>
-              <Button variant="outline">Регистрирай отсъствие</Button>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar size={18}/> История на отсъствията
+              </CardTitle>
+              <Link href={`/${params.lang}/dashboard/hr`}>
+                <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                  ➕ Нова заявка / Управление
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {empLeaves.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Няма регистрирани отсъствия за този служител.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="pb-3">Вид</th>
+                        <th className="pb-3">Период</th>
+                        <th className="pb-3 text-center">Дни</th>
+                        <th className="pb-3">Статус</th>
+                        <th className="pb-3">Причина</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {empLeaves.map((req: any) => (
+                        <tr key={req.id} className="hover:bg-muted/30">
+                          <td className="py-3 font-medium">
+                            {TYPE_LABELS[req.type] || req.type}
+                          </td>
+                          <td className="py-3 tabular-nums text-muted-foreground">
+                            {new Date(req.startDate).toLocaleDateString('bg-BG')} — {new Date(req.endDate).toLocaleDateString('bg-BG')}
+                          </td>
+                          <td className="py-3 text-center font-semibold">
+                            {countDays(req.startDate, req.endDate)}
+                          </td>
+                          <td className="py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_COLORS[req.status] || 'bg-slate-500/10 text-slate-500'}`}>
+                              {STATUS_LABELS[req.status] || req.status}
+                            </span>
+                          </td>
+                          <td className="py-3 text-muted-foreground truncate max-w-[200px]">
+                            {req.reason || '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

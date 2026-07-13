@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CheckCircle, AlertCircle, Clock, Plus, Zap, FileText } from 'lucide-react';
 
 import { AccountingActionButtons } from './_action-buttons';
+import { EntryActionButtons } from './_entry-actions';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -130,10 +131,7 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" className="h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">Приеми</Button>
-                          <Button variant="ghost" size="sm" className="h-8">Детайли</Button>
-                        </div>
+                        <EntryActionButtons id={inv.id.toString()} type="invoice" />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -175,10 +173,7 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
                       <TableCell className="font-mono text-sm">{h.journalNumber}</TableCell>
                       <TableCell>{h.description || '—'}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" className="h-8 text-emerald-600 hover:bg-emerald-50">Публикувай</Button>
-                          <Button variant="ghost" size="sm" className="h-8">Редактирай</Button>
-                        </div>
+                        <EntryActionButtons id={h.id.toString()} type="journal" />
                       </TableCell>
                     </TableRow>
                   ))}

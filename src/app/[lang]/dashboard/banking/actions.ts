@@ -99,6 +99,23 @@ export async function rejectMatch(id: string) {
   }
 }
 
+export async function manualMatch(txId: string, documentId: string, documentType: 'invoice' | 'expense') {
+  try {
+    await db.update(bankTransactions).set({
+      matchStatus: 'confirmed',
+      isReconciled: true,
+      reviewRequired: false,
+      matchedInvoiceId: documentType === 'invoice' ? documentId : null,
+      matchedExpenseId: documentType === 'expense' ? documentId : null,
+    }).where(eq(bankTransactions.id, txId));
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+
 export async function getAICandidates() {
   try {
     const { invoices } = await import('@/lib/db/schema/invoices');

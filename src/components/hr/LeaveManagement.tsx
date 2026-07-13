@@ -4,10 +4,9 @@ import { useState, useEffect, useTransition } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Check, X, Plus, CalendarDays, Stethoscope, Umbrella, Clock, AlertCircle } from 'lucide-react';
+import { Check, X, Plus, Calendar, Clock, AlertCircle, FileText } from 'lucide-react';
 import { getLeaveRequests, createLeaveRequest, approveLeaveRequest, rejectLeaveRequest, getEmployeesForSelect, getLeaveBalance } from '@/app/[lang]/dashboard/hr/leave-actions';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -17,10 +16,10 @@ const TYPE_COLORS: Record<string, string> = {
   other:  'border-violet-500/30 text-violet-400 bg-violet-500/10',
 };
 const TYPE_ICONS: Record<string, any> = {
-  annual: Umbrella,
-  sick:   Stethoscope,
-  unpaid: CalendarDays,
-  other:  CalendarDays,
+  annual: Calendar,
+  sick:   Clock,
+  unpaid: FileText,
+  other:  FileText,
 };
 const STATUS_COLORS: Record<string, string> = {
   pending:  'border-amber-500/30 text-amber-400 bg-amber-500/10',
@@ -113,8 +112,8 @@ export function LeaveManagement() {
         {[
           { label: 'Чакат одобрение', value: stats.pending,  icon: Clock,        color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
           { label: 'Одобрени',        value: stats.approved, icon: Check,         color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-          { label: 'В болничен',       value: stats.sick,     icon: Stethoscope,   color: 'text-rose-400',    bg: 'bg-rose-500/10 border-rose-500/20' },
-          { label: 'В отпуск',         value: stats.annual,   icon: Umbrella,      color: 'text-violet-400',  bg: 'bg-violet-500/10 border-violet-500/20' },
+          { label: 'В болничен',       value: stats.sick,     icon: Clock,         color: 'text-rose-400',    bg: 'bg-rose-500/10 border-rose-500/20' },
+          { label: 'В отпуск',         value: stats.annual,   icon: Calendar,      color: 'text-violet-400',  bg: 'bg-violet-500/10 border-violet-500/20' },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border ${s.bg} p-5 flex items-center gap-4`}>
             <div className={`p-2.5 rounded-xl ${s.bg}`}>
@@ -228,11 +227,11 @@ export function LeaveManagement() {
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="bg-white/3 border border-white/8 rounded-2xl p-12 text-center">
-            <CalendarDays size={36} className="text-zinc-600 mx-auto mb-3" />
+            <Calendar size={36} className="text-zinc-600 mx-auto mb-3" />
             <p className="text-zinc-500">Няма заявки за отпуск / болничен.</p>
           </div>
         ) : filtered.map(leave => {
-          const TypeIcon = TYPE_ICONS[leave.type] ?? CalendarDays;
+          const TypeIcon = TYPE_ICONS[leave.type] ?? Calendar;
           const days = daysBetween(leave.startDate, leave.endDate);
           return (
             <div key={leave.id} className="bg-white/3 border border-white/8 rounded-2xl p-5 flex flex-wrap items-center gap-4">
@@ -306,34 +305,33 @@ export function LeaveManagement() {
             {/* Employee */}
             <div>
               <label className="text-xs text-zinc-400 mb-1.5 block">Служител *</label>
-              <Select value={form.employeeId} onValueChange={v => setForm(f => ({ ...f, employeeId: v }))}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Изберете служител..." />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/10">
-                  {emps.map(e => (
-                    <SelectItem key={e.id} value={e.id} className="text-zinc-200 focus:bg-white/10">
-                      {e.firstName} {e.lastName} {e.position ? `— ${e.position}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                value={form.employeeId}
+                onChange={e => setForm(f => ({ ...f, employeeId: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+                <option value="" className="bg-zinc-900 text-zinc-500">Изберете служител...</option>
+                {emps.map(e => (
+                  <option key={e.id} value={e.id} className="bg-zinc-900 text-zinc-200">
+                    {e.firstName} {e.lastName} {e.position ? `— ${e.position}` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Type */}
             <div>
               <label className="text-xs text-zinc-400 mb-1.5 block">Вид *</label>
-              <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v }))}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/10">
-                  <SelectItem value="annual"  className="text-zinc-200 focus:bg-white/10">🏖️ Платен отпуск</SelectItem>
-                  <SelectItem value="sick"    className="text-zinc-200 focus:bg-white/10">🏥 Болничен</SelectItem>
-                  <SelectItem value="unpaid"  className="text-zinc-200 focus:bg-white/10">📋 Неплатен отпуск</SelectItem>
-                  <SelectItem value="other"   className="text-zinc-200 focus:bg-white/10">📌 Друг</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={form.type}
+                onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+                <option value="annual" className="bg-zinc-900 text-zinc-200">🏖️ Платен отпуск</option>
+                <option value="sick"   className="bg-zinc-900 text-zinc-200">🏥 Болничен</option>
+                <option value="unpaid" className="bg-zinc-900 text-zinc-200">📋 Неплатен отпуск</option>
+                <option value="other"  className="bg-zinc-900 text-zinc-200">📌 Друг</option>
+              </select>
             </div>
 
             {/* Dates */}
@@ -361,7 +359,7 @@ export function LeaveManagement() {
             {/* Days preview */}
             {form.startDate && form.endDate && new Date(form.endDate) >= new Date(form.startDate) && (
               <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-4 py-2.5 text-sm text-indigo-300 flex items-center gap-2">
-                <CalendarDays size={14} />
+                <Calendar size={14} />
                 {daysBetween(form.startDate, form.endDate)} работни {daysBetween(form.startDate, form.endDate) === 1 ? 'ден' : 'дни'}
               </div>
             )}

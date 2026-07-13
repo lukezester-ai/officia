@@ -3,11 +3,11 @@
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
 import { eq } from 'drizzle-orm';
-import { getCurrentTenant } from '@/lib/tenant';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function getReportsData() {
   try {
-    const tenantId = await getCurrentTenant();
+    const { tenantId } = await requireTenant();
     const allInvoices = await db.select().from(invoices).where(eq(invoices.tenantId, tenantId));
 
     const revenue = allInvoices.filter(i => i.type === 'sale').reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
