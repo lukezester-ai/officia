@@ -3,8 +3,8 @@ import { db } from '@/lib/db/db';
 import { sql } from 'drizzle-orm';
 
 /**
- * Взима текущия tenant (работно пространство) за логнатия потребител.
- * Използва raw SQL за максимална съвместимост с production DB schema.
+ * Взима текущия tenant за логнатия потребител.
+ * Използва raw SQL с минимални колони за максимална съвместимост.
  */
 export async function requireTenant() {
   const { userId } = await auth();
@@ -13,42 +13,45 @@ export async function requireTenant() {
     throw new Error('Not authenticated');
   }
 
-  // Raw SQL – заобикаля Drizzle schema mapping, работи с всяка версия на DB
-  let userRows: any[];
+  // Минимален raw SQL – само колоните, които задължително съществуват
+  let tenantId: string | null = null;
+  let userRow: any = null;
+
   try {
-    const result = await db.execute(
-      sql`SELECT id, tenant_id, clerk_id, email, name FROM users WHERE clerk_id = ${userId} LIMIT 1`
+    // Пробваме само id и tenant_id
+    const rows: any = await db.execute(
+      sql`SELECT id, tenant_id FROM users WHERE clerk_id = ${userId} LIMIT 1`
     );
-    userRows = Array.isArray(result) ? result : (result as any)?.rows ?? [];
+
+    const row = Array.isArray(rows) ? rows[0] : rows?.rows?.[0];
+    if (row) {
+      tenantId = row.tenant_id ?? row.tenantId ?? null;
+      userRow  = row;
+    }
   } catch (e: any) {
-    throw new Error(`DB грешка при търсене на потребител: ${e?.message}`);
+    // Показваме пълния error за диагностика
+    const fullMsg = [e?.message, e?.cause?.message, e?.detail].filter(Boolean).join(' | ');
+    throw new Error(`DB Error: ${fullMsg}`);
   }
 
-  if (!userRows || userRows.length === 0) {
-    throw new Error('Потребителят не е намерен в базата данни');
+  if (!userRow) {
+    throw new Error(`Потребителят не е намерен (clerk_id=${userId})`);
   }
-
-  const tenantId: string = userRows[0].tenant_id;
 
   if (!tenantId) {
-    throw new Error('Потребителят не принадлежи към никой tenant');
+    throw new Error('Потребителят не принадлежи към tenant');
   }
 
-  // Взимаме данните за tenant-а
-  let tenantRows: any[] = [];
+  // Tenant данни (optional)
+  let tenant: any = null;
   try {
-    const tenantResult = await db.execute(
+    const tRows: any = await db.execute(
       sql`SELECT id, name FROM tenants WHERE id = ${tenantId} LIMIT 1`
     );
-    tenantRows = Array.isArray(tenantResult) ? tenantResult : (tenantResult as any)?.rows ?? [];
+    tenant = Array.isArray(tRows) ? tRows[0] : tRows?.rows?.[0] ?? null;
   } catch {
-    // tenant query е необезопасена – продължаваме без tenant данни
+    // Продължаваме без tenant данни
   }
 
-  return {
-    tenantId,
-    tenant: tenantRows[0] || null,
-    userId,
-    user: userRows[0],
-  };
+  return { tenantId, tenant, userId, user: userRow };
 }
