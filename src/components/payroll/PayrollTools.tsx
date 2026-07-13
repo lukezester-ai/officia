@@ -58,7 +58,7 @@ export function PayrollCalculator() {
     <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-950/30 to-indigo-950/30 overflow-hidden">
       <div className="bg-black/20 px-6 py-4 border-b border-white/5 flex items-center gap-2">
         <Calculator size={18} className="text-violet-400" />
-        <h2 className="text-lg font-semibold text-white">Калкулатор "Колко ме струва служител?"</h2>
+        <h2 className="text-lg font-semibold text-white">Калкулатор „Колко ми струва служителят?"</h2>
       </div>
 
       <div className="p-6 space-y-5">
