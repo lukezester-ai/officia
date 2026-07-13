@@ -66,32 +66,58 @@ export default function AiAssistant() {
       attachments: attachments.map(f => f.name),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     const currentInput = input;
     setInput('');
     setAttachments([]);
     setIsLoading(true);
 
-    const formData = new FormData();
-    formData.append('message', currentInput);
-    attachments.forEach(file => formData.append('files', file));
-
     try {
+      // Строим messages array за AI SDK формат
+      const apiMessages = updatedMessages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => ({
+          role: m.role,
+          content: m.content,
+          parts: [{ type: 'text', text: m.content }],
+        }));
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages }),
       });
 
-      const data = await response.json();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      // Четем streaming отговора от AI SDK
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            // AI SDK stream format: "0:\"text\"\n"
+            if (line.startsWith('0:')) {
+              try { fullText += JSON.parse(line.slice(2)); } catch {}
+            }
+          }
+        }
+      }
 
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || "Не успях да обработя заявката.",
+        content: fullText || "Не успях да обработя заявката.",
         timestamp: new Date(),
-        toolCalls: data.toolCalls,
       }]);
     } catch (error) {
+      console.error('Chat error:', error);
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -102,6 +128,7 @@ export default function AiAssistant() {
       setIsLoading(false);
     }
   };
+
 
   const transcribeAudio = async (audioBlob: Blob) => {
     setIsLoading(true);
