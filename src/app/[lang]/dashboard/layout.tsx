@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { getDictionary, Locale } from '@/lib/get-dictionary';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { UserButton } from '@clerk/nextjs';
 import { Bell, Search } from 'lucide-react';
 import AiAssistant from '@/components/ai/AiAssistant';
@@ -33,7 +32,6 @@ export default async function DashboardLayout({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher currentLang={lang} />
             <button className="relative h-9 w-9 rounded-lg hover:bg-muted flex items-center justify-center transition-colors">
               <Bell size={16} className="text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
