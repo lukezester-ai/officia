@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
+import { NextRequest, NextResponse } from 'next/server';
+import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { buildBankMatchTool } from '@/lib/ai/tools/bank-match';
 import { requireTenant } from '@/lib/auth/get-tenant';
@@ -87,30 +87,15 @@ export async function POST(req: NextRequest) {
       content: typeof m.content === 'string' ? m.content : (m.parts?.[0]?.text ?? ''),
     }));
 
-    const result = streamText({
+    const { text } = await generateText({
       model: anthropic('claude-3-5-sonnet-latest'),
-      system: buildSystemPrompt(tenantId),
+      system: 'Ти си Officia AI - интелигентен офис асистент за български фирми. Отговаряй на български език, ясно и професионално.',
       messages: coreMessages,
-      tools: {
-        createInvoice: buildCreateInvoiceTool(tenantId, userId),
-        getFinancialSummary: buildGetFinancialSummaryTool(tenantId),
-        searchDocuments: buildSearchDocumentsTool(tenantId),
-        bankMatch: buildBankMatchTool(tenantId),
-        createExpense: buildCreateExpenseTool(tenantId, userId),
-        createJournalEntry: buildCreateJournalEntryTool(tenantId, userId),
-        manageHR: buildManageHRTool(tenantId),
-        manageInventory: buildManageInventoryTool(tenantId),
-        generateVat: buildGenerateVatTool(tenantId, userId),
-        depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
-        autoApprove: buildAutoApproveTool(tenantId, userId),
-        processInbox: buildProcessInboxTool(tenantId),
-        generateChart: buildGenerateChartTool(),
-        checkNraStatus: buildCheckNraStatusTool(),
-        checkNraLiabilities: buildCheckNraLiabilitiesTool(),
-      },
+      maxTokens: 2048,
     });
 
-    return result.toTextStreamResponse();
+    return NextResponse.json({ response: text });
+
   } catch (error: any) {
     console.error('Chat API error:', error);
     if (error.message === 'Not authenticated' || error.message === 'User not found in local database' || error.message === 'User does not belong to any tenant') {

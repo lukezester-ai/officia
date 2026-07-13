@@ -213,7 +213,7 @@ export default function AIAssistantPage() {
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-gray-100 bg-white">
+          <div className="p-4 border-t border-white/10 bg-[#0A0F1C]">
             {/* Файлови визуализации преди изпращане */}
             {files && files.length > 0 && (
               <div className="flex gap-3 mb-3 px-2 overflow-x-auto">

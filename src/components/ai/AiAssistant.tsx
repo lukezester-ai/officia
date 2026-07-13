@@ -91,31 +91,16 @@ export default function AiAssistant() {
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      // Четем streaming отговора от AI SDK
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split('\n')) {
-            // AI SDK stream format: "0:\"text\"\n"
-            if (line.startsWith('0:')) {
-              try { fullText += JSON.parse(line.slice(2)); } catch {}
-            }
-          }
-        }
-      }
+      const data = await response.json();
+      const replyText = data.response || 'Не успях да обработя заявката.';
 
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: fullText || "Не успях да обработя заявката.",
+        content: replyText,
         timestamp: new Date(),
       }]);
+
     } catch (error) {
       console.error('Chat error:', error);
       setMessages(prev => [...prev, {
