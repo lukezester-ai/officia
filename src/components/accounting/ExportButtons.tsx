@@ -6,7 +6,7 @@ import { Download } from "lucide-react";
 
 interface ExportButtonsProps {
   data: any;
-  reportType: "balance" | "pnl";
+  reportType: "balance" | "pnl" | "cashflow";
   period: string;
 }
 
