@@ -1,7 +1,8 @@
 "use client";
 // @ts-nocheck
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
+import { getBudgets, createBudget, deleteBudget } from "./budget-actions";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -113,27 +114,36 @@ export default function BudgetsClient({
   const [lines, setLines] = useState<BudgetLine[]>([]);
   const [newAccount, setNewAccount] = useState(ACCOUNT_OPTIONS[0]?.value ?? "");
   const [newPlanned, setNewPlanned] = useState("");
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const storageKey = `officia_budget_${monthKey}`;
-
+  // Load budgets from DB whenever the month changes
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) setLines(JSON.parse(raw));
-      else setLines([]);
-    } catch {
-      setLines([]);
-    }
-    setLoaded(true);
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(lines));
-    } catch {}
-  }, [lines, storageKey, loaded]);
+    const { year, month } = parseMonth(monthKey);
+    setLoading(true);
+    getBudgets()
+      .then((rows) => {
+        const filtered = rows
+          .filter(
+            (r) =>
+              Number(r.year) === year &&
+              (r.month == null ? false : Number(r.month) === month)
+          )
+          .map((r) => {
+            const opt = ACCOUNT_OPTIONS.find((o) => o.value === r.name);
+            return {
+              id: r.id,
+              account: r.name,
+              label: opt?.label ?? r.name,
+              planned: Number(r.plannedAmount),
+              type: opt?.type ?? "expense",
+            } as BudgetLine;
+          });
+        setLines(filtered);
+      })
+      .catch(() => setLines([]))
+      .finally(() => setLoading(false));
+  }, [monthKey]);
 
   const addLine = useCallback(() => {
     const amt = parseFloat(newPlanned);
@@ -141,22 +151,66 @@ export default function BudgetsClient({
     const opt = ACCOUNT_OPTIONS.find((o) => o.value === newAccount);
     if (!opt) return;
     if (lines.some((l) => l.account === newAccount)) return;
-    setLines((prev) => [
-      ...prev,
-      {
-        id: `${newAccount}-${Date.now()}`,
-        account: opt.value,
-        label: opt.label,
-        planned: amt,
-        type: opt.type,
-      },
-    ]);
+    const { year, month } = parseMonth(monthKey);
     setNewPlanned("");
-  }, [newAccount, newPlanned, lines]);
+    startTransition(async () => {
+      await createBudget({ name: newAccount, year, month, plannedAmount: amt });
+      // Refresh lines from DB
+      setLoading(true);
+      getBudgets()
+        .then((rows) => {
+          const filtered = rows
+            .filter(
+              (r) =>
+                Number(r.year) === year &&
+                (r.month == null ? false : Number(r.month) === month)
+            )
+            .map((r) => {
+              const o = ACCOUNT_OPTIONS.find((x) => x.value === r.name);
+              return {
+                id: r.id,
+                account: r.name,
+                label: o?.label ?? r.name,
+                planned: Number(r.plannedAmount),
+                type: o?.type ?? "expense",
+              } as BudgetLine;
+            });
+          setLines(filtered);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    });
+  }, [newAccount, newPlanned, lines, monthKey]);
 
   const removeLine = useCallback((id: string) => {
-    setLines((prev) => prev.filter((l) => l.id !== id));
-  }, []);
+    const { year, month } = parseMonth(monthKey);
+    startTransition(async () => {
+      await deleteBudget(id);
+      setLoading(true);
+      getBudgets()
+        .then((rows) => {
+          const filtered = rows
+            .filter(
+              (r) =>
+                Number(r.year) === year &&
+                (r.month == null ? false : Number(r.month) === month)
+            )
+            .map((r) => {
+              const o = ACCOUNT_OPTIONS.find((x) => x.value === r.name);
+              return {
+                id: r.id,
+                account: r.name,
+                label: o?.label ?? r.name,
+                planned: Number(r.plannedAmount),
+                type: o?.type ?? "expense",
+              } as BudgetLine;
+            });
+          setLines(filtered);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    });
+  }, [monthKey]);
 
   const actuals = computeActuals(journalEntries, monthKey);
 
@@ -322,6 +376,20 @@ export default function BudgetsClient({
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-zinc-400">
+          <svg className="animate-spin h-8 w-8 text-violet-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          <span className="text-sm">Зареждане...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6 lg:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -456,7 +524,7 @@ export default function BudgetsClient({
             </button>
           </div>
           <p className="text-xs text-zinc-600">
-            Byudzhetite se sahranyavat lokalno v brauzara za vseki mesec.
+            Byudzhetite se sahranyavat v baza danni za vseki mesec.
           </p>
         </div>
 
