@@ -12,7 +12,10 @@ export default async function BudgetsPage({
 
   let entries: any[] = [];
   try {
-    entries = await db.select().from(journalHeaders as any).limit(2000);
+    const { requireTenant } = await import('@/lib/auth/get-tenant');
+    const { eq } = await import('drizzle-orm');
+    const { tenantId } = await requireTenant();
+    entries = await db.select().from(journalHeaders as any).where(eq((journalHeaders as any).tenantId, tenantId)).limit(2000);
   } catch {}
 
   const serialized = entries.map((e) => ({

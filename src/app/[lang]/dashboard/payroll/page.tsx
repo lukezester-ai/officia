@@ -12,6 +12,7 @@ import { BatchPaymentExport } from '@/components/payroll/BatchPaymentExport';
 import { LegislativeTracker } from '@/components/payroll/LegislativeTracker';
 import { SendPayslipButton } from './SendPayslipButton';
 import { SlipGenerator } from '@/components/payroll/SlipGenerator';
+import { PayrollActionButtons } from './PayrollActionButtons';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -37,14 +38,7 @@ export default async function PayrollPage() {
           </h1>
           <p className="text-sm text-zinc-400 mt-1">Калкулиране на възнаграждения, осигуровки и данъци (ДОД).</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white">
-            <Download size={16} /> Експорт CSV
-          </Button>
-          <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500/50">
-            <CheckCircle size={16} /> Потвърди и Осчетоводи
-          </Button>
-        </div>
+        <PayrollActionButtons payrollList={data.list} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

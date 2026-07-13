@@ -23,11 +23,12 @@ function fmt(n: number) {
 
 function normalizeAsset(asset: any) {
   return {
-    acquisitionDate: String(asset.acquisitionDate || new Date().toISOString()),
-    acquisitionCost: Number(asset.acquisitionCost || 0),
-    salvageValue: Number(asset.salvageValue ?? asset.residualValue ?? 0),
-    usefulLifeMonths: Number(asset.usefulLifeMonths ?? ((asset.usefulLifeYears || 5) * 12)),
-    amortizationMethod: String(asset.amortizationMethod ?? asset.depreciationMethod ?? 'straight_line'),
+    acquisitionDate: String(asset.acquisitionDate ?? asset.acquisition_date ?? new Date().toISOString()),
+    acquisitionCost: parseFloat(asset.acquisitionCost ?? asset.acquisition_cost ?? '0') || 0,
+    salvageValue: parseFloat(asset.salvageValue ?? asset.residualValue ?? asset.salvage_value ?? asset.residual_value ?? '0') || 0,
+    usefulLifeMonths: parseFloat(asset.usefulLifeMonths ?? asset.useful_life_months ?? '0') ||
+                      (parseFloat(asset.usefulLifeYears ?? asset.useful_life_years ?? '5') * 12),
+    amortizationMethod: String(asset.amortizationMethod ?? asset.depreciationMethod ?? asset.depreciation_method ?? 'straight_line'),
   };
 }
 
@@ -111,23 +112,8 @@ export default function FixedAssetsPage() {
   const totalCost = active.reduce((s, a) => s + parseFloat(a.acquisitionCost || a.acquisition_cost || '0'), 0);
 
   // Нормализираме полетата преди изчисление (DB може да използва различни имена)
-  function normalizeForCalc(a: any) {
-    return {
-      acquisitionDate:   a.acquisitionDate   ?? a.acquisition_date   ?? new Date().toISOString(),
-      acquisitionCost:   parseFloat(a.acquisitionCost   ?? a.acquisition_cost   ?? '0'),
-      salvageValue:      parseFloat(a.residualValue     ?? a.salvage_value      ?? a.residual_value ?? '0'),
-      usefulLifeMonths:  parseFloat(a.usefulLifeMonths  ?? a.useful_life_months ?? '0') ||
-                         (parseFloat(a.usefulLifeYears ?? a.useful_life_years ?? '1') * 12),
-      amortizationMethod: a.amortizationMethod ?? a.depreciation_method ?? 'straight_line',
-    };
-  }
-
-  const totalBookValue = active.reduce((s, a) => s + calcCurrentBookValue(normalizeForCalc(a)), 0);
-  const monthlyDepr = active.reduce((s, a) => {
-    const n = normalizeForCalc(a);
-    const annual = (n.acquisitionCost - n.salvageValue) / Math.max(n.usefulLifeMonths / 12, 1);
-    return s + annual / 12;
-  }, 0);
+  const totalBookValue = active.reduce((s, a) => s + (calcCurrentBookValue(normalizeAsset(a)).bookValue || 0), 0);
+  const monthlyDepr = active.reduce((s, a) => s + (calcCurrentBookValue(normalizeAsset(a)).monthlyDepreciation || 0), 0);
 
   return (
     <div className="space-y-6">

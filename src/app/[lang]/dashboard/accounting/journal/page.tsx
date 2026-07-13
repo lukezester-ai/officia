@@ -54,15 +54,15 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
               <BookOpen size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Schetovoден журнал</h1>
-              <p className="text-zinc-400 text-sm">Dvojno schetovodstvo &middot; Debit = Kredit</p>
+              <h1 className="text-2xl font-bold">Счетоводен журнал</h1>
+              <p className="text-zinc-400 text-sm">Двойно счетоводство &middot; Дебит = Кредит</p>
             </div>
           </div>
           <Link
             href={`/${lang}/dashboard/accounting/journal/new`}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 transition-all px-5 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-violet-500/25"
           >
-            <Plus size={16} /> Novo zapisvane
+            <Plus size={16} /> Ново записване
           </Link>
         </div>
 
@@ -84,20 +84,20 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
           <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
             <h2 className="font-semibold text-sm flex items-center gap-2">
               <ArrowUpDown size={14} className="text-violet-400" />
-              Vsichki zapisvaniya
+              Всички записвания
             </h2>
-            <span className="text-xs text-zinc-500">{entries.length} zapisa</span>
+            <span className="text-xs text-zinc-500">{entries.length} записа</span>
           </div>
 
           {entries.length === 0 ? (
             <div className="py-16 text-center">
               <BookOpen size={36} className="text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500 text-sm mb-4">Nyama schetovodne zapisvaniya</p>
+              <p className="text-zinc-500 text-sm mb-4">Няма счетоводни записвания</p>
               <Link
                 href={`/${lang}/dashboard/accounting/journal/new`}
                 className="inline-flex items-center gap-2 text-xs px-4 py-2 rounded-xl border border-white/10 hover:border-violet-500/30 text-zinc-400 hover:text-white transition-all"
               >
-                <Plus size={13} /> Suzdaj purvoto zapisvane
+                <Plus size={13} /> Създай първото записване
               </Link>
             </div>
           ) : (
@@ -105,13 +105,13 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/5 bg-white/2">
-                    <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">Data</th>
-                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Referentsiya</th>
-                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Opisanie</th>
-                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Dt smetka</th>
-                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Kt smetka</th>
-                    <th className="text-right px-4 py-3 text-xs text-zinc-500 font-medium">Debit</th>
-                    <th className="text-right px-6 py-3 text-xs text-zinc-500 font-medium">Kredit</th>
+                    <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">Дата</th>
+                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Референция</th>
+                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Описание</th>
+                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Дт сметка</th>
+                    <th className="text-left px-4 py-3 text-xs text-zinc-500 font-medium">Кт сметка</th>
+                    <th className="text-right px-4 py-3 text-xs text-zinc-500 font-medium">Дебит</th>
+                    <th className="text-right px-6 py-3 text-xs text-zinc-500 font-medium">Кредит</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -156,19 +156,19 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
         <div className="bg-gradient-to-r from-violet-600/10 to-purple-600/10 border border-violet-500/20 rounded-2xl p-6">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
             <Zap size={16} className="text-violet-400" />
-            Avtomatichni zapisvaniya
+            Автоматични записвания
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {[
-              { trigger: "Izdadena faktura", dt: "411 Klienti", ct: "701 Prihodi + 4532 DDS" },
-              { trigger: "Poluchena faktura", dt: "601 Razhodi + 4531 DDS", ct: "401 Dostavchitsi" },
-              { trigger: "Bankova transaktsiya", dt: "503 Razplashtatelna", ct: "411/401" },
-              { trigger: "Amortizatsiya (mesechna)", dt: "603 Amortizatsii", ct: "241 Amortizatsiya DA" },
+              { trigger: "Издадена фактура", dt: "411 Клиенти", ct: "701 Приходи + 4532 ДДС" },
+              { trigger: "Получена фактура", dt: "601 Разходи + 4531 ДДС", ct: "401 Доставчици" },
+              { trigger: "Банкова транзакция", dt: "503 Разплащателна сметка", ct: "411/401" },
+              { trigger: "Амортизация (месечна)", dt: "603 Амортизации", ct: "241 Амортизация ДА" },
             ].map((r) => (
               <div key={r.trigger} className="bg-white/5 rounded-xl p-4 text-xs">
                 <div className="font-medium text-white mb-2">{r.trigger}</div>
-                <div className="text-blue-400">DT {r.dt}</div>
-                <div className="text-emerald-400">KT {r.ct}</div>
+                <div className="text-blue-400">Дт {r.dt}</div>
+                <div className="text-emerald-400">Кт {r.ct}</div>
               </div>
             ))}
           </div>

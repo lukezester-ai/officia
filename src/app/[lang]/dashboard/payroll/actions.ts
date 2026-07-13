@@ -90,3 +90,30 @@ export async function getPayrollData() {
     return { success: false, error: error.message };
   }
 }
+
+export async function postPayrollToJournal() {
+  try {
+    const { tenantId } = await requireTenant();
+    const payroll = await getPayrollData();
+    if (!payroll.success || !payroll.data) {
+      return { success: false, error: 'Грешка при изчисление на ведомостта' };
+    }
+
+    const { gross, net, totalDeductions } = payroll.data.totals;
+    const { journalHeaders } = await import('@/lib/db/schema/journal_entries');
+
+    const [entry] = await db.insert(journalHeaders).values({
+      tenantId,
+      journalNumber: `PAY-${Date.now().toString().slice(-6)}`,
+      entryDate: new Date(),
+      description: `Начислени заплати за ${new Date().toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' })}`,
+      totalAmount: gross.toFixed(2),
+      status: 'posted',
+      sourceType: 'payroll',
+    } as any).returning();
+
+    return { success: true, journalNumber: entry?.journalNumber || `PAY-${Date.now().toString().slice(-6)}` };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

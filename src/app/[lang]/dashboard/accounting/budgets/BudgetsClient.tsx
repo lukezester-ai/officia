@@ -35,14 +35,14 @@ interface BudgetLine {
 }
 
 const ACCOUNT_OPTIONS = [
-  { value: "601", label: "601 - Razkh. materiali", type: "expense" as const },
-  { value: "602", label: "602 - Razkh. uslugi", type: "expense" as const },
-  { value: "603", label: "603 - Amortizatsii", type: "expense" as const },
-  { value: "604", label: "604 - Razkh. zaplati", type: "expense" as const },
-  { value: "609", label: "609 - Drugi razkh.", type: "expense" as const },
-  { value: "701", label: "701 - Prikodi prodajbi", type: "revenue" as const },
-  { value: "702", label: "702 - Prikodi uslugi", type: "revenue" as const },
-  { value: "709", label: "709 - Drugi prikodi", type: "revenue" as const },
+  { value: "601", label: "601 - Разходи за материали", type: "expense" as const },
+  { value: "602", label: "602 - Разходи за външни услуги", type: "expense" as const },
+  { value: "603", label: "603 - Разходи за амортизации", type: "expense" as const },
+  { value: "604", label: "604 - Разходи за заплати", type: "expense" as const },
+  { value: "609", label: "609 - Други разходи", type: "expense" as const },
+  { value: "701", label: "701 - Приходи от продажба на продукция", type: "revenue" as const },
+  { value: "702", label: "702 - Приходи от продажба на услуги", type: "revenue" as const },
+  { value: "709", label: "709 - Други приходи", type: "revenue" as const },
 ];
 
 function getMonthKey(year: number, month: number) {
@@ -57,8 +57,8 @@ function parseMonth(key: string): { year: number; month: number } {
 function monthLabel(key: string) {
   const { year, month } = parseMonth(key);
   const names = [
-    "Januari", "Februari", "Mart", "April", "Mai", "Yuni",
-    "Yuli", "Avgust", "Septemvri", "Oktomvri", "Noemvri", "Dekemvri",
+    "Януари", "Февруари", "Март", "Април", "Май", "Юни",
+    "Юли", "Август", "Септември", "Октомври", "Ноември", "Декември",
   ];
   return `${names[month - 1]} ${year}`;
 }

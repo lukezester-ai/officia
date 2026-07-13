@@ -7,16 +7,25 @@ import { tenants } from '@/lib/db/schema/tenants';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
-async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
-  return tenant;
-}
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function getFixedAssets() {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Липсва Tenant', data: [] };
-    const data = await db.select().from(fixedAssets).where(eq(fixedAssets.tenantId, tenant.id)).orderBy(desc(fixedAssets.createdAt));
+    const { tenantId } = await requireTenant();
+    const data = await db.select({
+      id: fixedAssets.id,
+      tenantId: fixedAssets.tenantId,
+      inventoryNumber: fixedAssets.inventoryNumber,
+      name: fixedAssets.name,
+      acquisitionDate: fixedAssets.acquisitionDate,
+      acquisitionCost: fixedAssets.acquisitionCost,
+      salvageValue: fixedAssets.salvageValue,
+      usefulLifeMonths: fixedAssets.usefulLifeMonths,
+      amortizationMethod: fixedAssets.amortizationMethod,
+      isActive: fixedAssets.isActive,
+      writtenOffAt: fixedAssets.writtenOffAt,
+      createdAt: fixedAssets.createdAt,
+    }).from(fixedAssets).where(eq(fixedAssets.tenantId, tenantId)).orderBy(desc(fixedAssets.createdAt));
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message, data: [] };
@@ -28,10 +37,9 @@ export async function createFixedAsset(input: {
   acquisitionCost: number; salvageValue: number; usefulLifeMonths: number; amortizationMethod: string;
 }) {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Липсва Tenant' };
+    const { tenantId } = await requireTenant();
     const [asset] = await db.insert(fixedAssets).values({
-      tenantId: tenant.id,
+      tenantId: tenantId,
       inventoryNumber: input.inventoryNumber,
       name: input.name,
       acquisitionDate: input.acquisitionDate,
@@ -50,6 +58,7 @@ export async function createFixedAsset(input: {
 
 export async function writeOffAsset(id: string) {
   try {
+    const { tenantId } = await requireTenant();
     await db.update(fixedAssets).set({ isActive: false, writtenOffAt: new Date() }).where(eq(fixedAssets.id, id));
     revalidatePath('/', 'layout');
     return { success: true };
