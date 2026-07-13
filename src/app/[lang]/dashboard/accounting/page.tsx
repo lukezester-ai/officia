@@ -90,7 +90,7 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
         <TabsContent value="pending" className="space-y-4 m-0">
           <Card className="shadow-sm border-0">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Accounting Review Queue</CardTitle>
+              <CardTitle className="text-lg">Очакват осчетоводяване</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
