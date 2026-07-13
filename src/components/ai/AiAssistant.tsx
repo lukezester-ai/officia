@@ -322,10 +322,11 @@ export default function AiAssistant() {
                         }
                       }}
                       placeholder="Напишете съобщение..."
-                      className="flex-1 max-h-[120px] min-h-[40px] bg-transparent resize-none px-3 py-2.5 text-sm focus:outline-none"
+                      className="flex-1 max-h-[120px] min-h-[40px] bg-transparent resize-none px-3 py-2.5 text-sm focus:outline-none text-white placeholder:text-zinc-500"
                       rows={1}
                       style={{ fieldSizing: 'content' } as any}
                     />
+
                     <button 
                       onClick={sendMessage} 
                       disabled={(!input.trim() && attachments.length === 0) || isLoading} 
