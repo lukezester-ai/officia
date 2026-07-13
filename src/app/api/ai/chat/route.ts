@@ -1,5 +1,5 @@
-﻿import { NextRequest } from 'next/server';
-import { convertToModelMessages, streamText } from 'ai';
+import { NextRequest } from 'next/server';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { buildBankMatchTool } from '@/lib/ai/tools/bank-match';
 import { requireTenant } from '@/lib/auth/get-tenant';
@@ -81,10 +81,16 @@ export async function POST(req: NextRequest) {
       return new Response(`Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters.`, { status: 413 });
     }
 
+    // Normalize messages to CoreMessage format
+    const coreMessages = messages.map((m: any) => ({
+      role: m.role as 'user' | 'assistant',
+      content: typeof m.content === 'string' ? m.content : (m.parts?.[0]?.text ?? ''),
+    }));
+
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-latest'),
       system: buildSystemPrompt(tenantId),
-      messages: await convertToModelMessages(messages),
+      messages: coreMessages,
       tools: {
         createInvoice: buildCreateInvoiceTool(tenantId, userId),
         getFinancialSummary: buildGetFinancialSummaryTool(tenantId),
