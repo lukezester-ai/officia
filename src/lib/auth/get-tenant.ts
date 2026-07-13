@@ -1,50 +1,54 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/db';
-import { users } from '@/lib/db/schema/users';
-import { tenants } from '@/lib/db/schema/tenants';
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 /**
  * Взима текущия tenant (работно пространство) за логнатия потребител.
- * Хвърля грешка, ако потребителят не е логнат или няма достъп.
+ * Използва raw SQL за максимална съвместимост с production DB schema.
  */
 export async function requireTenant() {
   const { userId } = await auth();
-  
+
   if (!userId) {
     throw new Error('Not authenticated');
   }
 
-  // Намираме потребителя по Clerk ID - само необходимите колони
-  const userRecords = await db
-    .select({
-      id: users.id,
-      clerkId: users.clerkId,
-      tenantId: users.tenantId,
-      email: users.email,
-      name: users.name,
-    })
-    .from(users)
-    .where(eq(users.clerkId, userId))
-    .limit(1);
-  
-  if (userRecords.length === 0) {
-    throw new Error('User not found in local database');
+  // Raw SQL – заобикаля Drizzle schema mapping, работи с всяка версия на DB
+  let userRows: any[];
+  try {
+    const result = await db.execute(
+      sql`SELECT id, tenant_id, clerk_id, email, name FROM users WHERE clerk_id = ${userId} LIMIT 1`
+    );
+    userRows = result.rows ?? (result as any) ?? [];
+  } catch (e: any) {
+    throw new Error(`DB грешка при търсене на потребител: ${e?.message}`);
   }
 
-  const tenantId = userRecords[0].tenantId;
-  
+  if (!userRows || userRows.length === 0) {
+    throw new Error('Потребителят не е намерен в базата данни');
+  }
+
+  const tenantId: string = userRows[0].tenant_id;
+
   if (!tenantId) {
-    throw new Error('User does not belong to any tenant');
+    throw new Error('Потребителят не принадлежи към никой tenant');
   }
 
-  // Извличаме и данните за самия tenant (ако трябват)
-  const tenantRecords = await db.select().from(tenants).where(eq(tenants.id, tenantId));
-  
+  // Взимаме данните за tenant-а
+  let tenantRows: any[] = [];
+  try {
+    const tenantResult = await db.execute(
+      sql`SELECT id, name FROM tenants WHERE id = ${tenantId} LIMIT 1`
+    );
+    tenantRows = tenantResult.rows ?? (tenantResult as any) ?? [];
+  } catch {
+    // tenant query е необезопасена – продължаваме без tenant данни
+  }
+
   return {
     tenantId,
-    tenant: tenantRecords[0] || null,
+    tenant: tenantRows[0] || null,
     userId,
-    user: userRecords[0],
+    user: userRows[0],
   };
 }
