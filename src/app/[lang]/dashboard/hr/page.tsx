@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Users, Plus, ChevronRight, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { LeaveManagement } from '@/components/hr/LeaveManagement';
 
 export default async function HrPage() {
   const res = await getHrData();
@@ -17,13 +18,23 @@ export default async function HrPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Кадри (HR)</h1>
-          <p className="text-sm text-zinc-400 mt-1">Управление на служители, документи и договори.</p>
+          <p className="text-sm text-zinc-400 mt-1">Управление на служители, болнични и отпуски.</p>
         </div>
         <Link href={`/bg/dashboard/hr/new`}>
           <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-indigo-500/50">
             <Plus size={16} /> Добави служител
           </Button>
         </Link>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 w-fit">
+        <a href="#employees" className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-all">
+          👥 Служители
+        </a>
+        <a href="#leaves" className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-all">
+          🏖️ Болнични и Отпуски
+        </a>
       </div>
 
       {data.alerts.length > 0 && (
@@ -39,72 +50,82 @@ export default async function HrPage() {
         </div>
       )}
 
-      <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-white/10">
-                <TableHead className="pl-6 text-zinc-400">Служител</TableHead>
-                <TableHead className="text-zinc-400">Длъжност</TableHead>
-                <TableHead className="text-zinc-400">Отдел</TableHead>
-                <TableHead className="text-zinc-400">Тип договор</TableHead>
-                <TableHead className="text-zinc-400">Статус</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.employees.map(emp => (
-                <TableRow key={emp.id} className="hover:bg-white/5 border-white/10 transition-colors group">
-                  <TableCell className="pl-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs">
-                        {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-zinc-200">{emp.firstName} {emp.lastName}</div>
-                        <div className="text-xs text-zinc-500">{emp.email}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-zinc-300">{emp.position || '—'}</TableCell>
-                  <TableCell className="text-zinc-300">{emp.department || '—'}</TableCell>
-                  <TableCell className="text-zinc-300">
-                    {emp.contractType === 'full_time' ? 'Трудов договор' : emp.contractType === 'part_time' ? 'Непълно работно време' : 'Граждански / Изпълнител'}
-                  </TableCell>
-                  <TableCell>
-                    {!emp.isActive ? (
-                      <Badge variant="outline" className="text-zinc-400 border-zinc-600 bg-white/5">Бивш служител</Badge>
-                    ) : emp.workStatus === 'on_leave' ? (
-                      <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 gap-1.5 px-2">В отпуск</Badge>
-                    ) : emp.workStatus === 'sick_leave' ? (
-                      <Badge variant="outline" className="border-rose-500/30 text-rose-400 bg-rose-500/10 gap-1.5 px-2">В болничен</Badge>
-                    ) : emp.workStatus === 'unpaid_leave' ? (
-                      <Badge variant="outline" className="border-slate-500/30 text-slate-400 bg-slate-500/10 gap-1.5 px-2">Неплатен отпуск</Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 gap-1.5 px-2"><CheckCircle size={12}/> На работа</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right pr-6">
-                    <Link href={`/bg/dashboard/hr/${emp.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-white hover:bg-white/10">
-                        Профил <ChevronRight size={14} />
-                      </Button>
-                    </Link>
-                  </TableCell>
+      {/* Employee list */}
+      <div id="employees">
+        <h2 className="text-lg font-semibold text-white mb-4">Списък служители</h2>
+        <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-white/10">
+                  <TableHead className="pl-6 text-zinc-400">Служител</TableHead>
+                  <TableHead className="text-zinc-400">Длъжност</TableHead>
+                  <TableHead className="text-zinc-400">Отдел</TableHead>
+                  <TableHead className="text-zinc-400">Тип договор</TableHead>
+                  <TableHead className="text-zinc-400">Статус</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-              {data.employees.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-16 text-zinc-500">
-                    <Users size={32} className="mx-auto mb-3 opacity-50" />
-                    <p>Няма въведени служители.</p>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {data.employees.map((emp: any) => (
+                  <TableRow key={emp.id} className="hover:bg-white/5 border-white/10 transition-colors group">
+                    <TableCell className="pl-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs">
+                          {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-zinc-200">{emp.firstName} {emp.lastName}</div>
+                          <div className="text-xs text-zinc-500">{emp.email}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-zinc-300">{emp.position || '—'}</TableCell>
+                    <TableCell className="text-zinc-300">{emp.department || '—'}</TableCell>
+                    <TableCell className="text-zinc-300">
+                      {emp.contractType === 'full_time' ? 'Трудов договор' : emp.contractType === 'part_time' ? 'Непълно работно време' : 'Граждански / Изпълнител'}
+                    </TableCell>
+                    <TableCell>
+                      {!emp.isActive ? (
+                        <Badge variant="outline" className="text-zinc-400 border-zinc-600 bg-white/5">Бивш служител</Badge>
+                      ) : emp.workStatus === 'on_leave' ? (
+                        <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 gap-1.5 px-2">В отпуск</Badge>
+                      ) : emp.workStatus === 'sick_leave' ? (
+                        <Badge variant="outline" className="border-rose-500/30 text-rose-400 bg-rose-500/10 gap-1.5 px-2">В болничен</Badge>
+                      ) : emp.workStatus === 'unpaid_leave' ? (
+                        <Badge variant="outline" className="border-slate-500/30 text-slate-400 bg-slate-500/10 gap-1.5 px-2">Неплатен отпуск</Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 gap-1.5 px-2"><CheckCircle size={12}/> На работа</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      <Link href={`/bg/dashboard/hr/${emp.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-white hover:bg-white/10">
+                          Профил <ChevronRight size={14} />
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {data.employees.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-16 text-zinc-500">
+                      <Users size={32} className="mx-auto mb-3 opacity-50" />
+                      <p>Няма въведени служители.</p>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Leave management section */}
+      <div id="leaves">
+        <h2 className="text-lg font-semibold text-white mb-4">🏖️ Болнични и Отпуски</h2>
+        <LeaveManagement />
+      </div>
     </div>
   );
 }
