@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Scale, AlertTriangle, CheckCircle, ChevronDown, Link2, Bell } from "lucide-react";
+import { Scale, AlertTriangle, CheckCircle, ChevronDown, Bell } from "lucide-react";
 
 // Bulgarian labor law parameters - updated for 2024/2025
 // Source: НАП, НОИ, МТСП
@@ -98,7 +98,7 @@ interface Employee {
   firstName: string;
   lastName: string;
   gross: number;
-  position?: string;
+  position?: string | null;
 }
 
 interface LegislativeTrackerProps {
@@ -255,13 +255,13 @@ export function LegislativeTracker({ employees }: LegislativeTrackerProps) {
               </table>
               <div className="px-4 py-3 flex items-center gap-3 border-t border-white/5">
                 <a href="https://nap.bg" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-                  <Link2 size={11} /> НАП
-                </a>
-                <a href="https://noi.bg" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-                  <Link2 size={11} /> НОИ
-                </a>
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-2">
+                НАП ↗
+              </a>
+              <a href="https://noi.bg" target="_blank" rel="noopener noreferrer"
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-2">
+                НОИ ↗
+              </a>
                 <span className="text-xs text-zinc-600 ml-auto">
                   Параметрите се обновяват при всяка промяна в законодателството
                 </span>
