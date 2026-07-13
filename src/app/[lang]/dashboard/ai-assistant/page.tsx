@@ -1,290 +1,217 @@
 'use client';
-// Fix client side crash by avoiding next/image for blob URLs
+
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic } from 'lucide-react';
-import { useChat } from '@ai-sdk/react';
-import dynamic from 'next/dynamic';
+import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
-const AIChatChart = dynamic(() => import('@/components/dashboard/AIChatChart'), { ssr: false });
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
 
-const initialAiMessages = [
+const INITIAL_MESSAGES: Message[] = [
   {
     id: '1',
     role: 'assistant',
-    parts: [
-      {
-        type: 'text',
-        text: 'Здравейте! Аз съм вашият AI Асистент. Мога да проверя неплатени фактури или да извлека данни от документи. Прикачете фактура или просто ме попитайте нещо!',
-      },
-    ],
+    content: 'Здравейте! Аз съм **Officia AI**. Мога да отговарям на въпроси за счетоводство, ДДС, ТРЗ и Bulgarian legal requirements. С какво мога да помогна?',
   },
 ];
 
 export default function AIAssistantPage() {
-  const { messages, sendMessage, status, error } = useChat({
-    api: '/api/ai/chat',
-    messages: initialAiMessages,
-  } as any) as any;
-
+  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
-  const [files, setFiles] = useState<FileList | null>(null);
-  const isLoading = status === 'submitted' || status === 'streaming';
+  const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const toggleListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Вашият браузър не поддържа гласово разпознаване. Моля, използвайте Google Chrome.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'bg-BG';
-    recognition.interimResults = true;
-
-    recognition.onstart = () => setIsListening(true);
-    
-    recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((result: any) => result[0].transcript)
-        .join('');
-      
-      setInput(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error(event.error);
-      setIsListening(false);
-    };
-
-    recognition.onend = () => setIsListening(false);
-
-    recognition.start();
-  };
-
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFiles(e.target.files);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    if (!files) return;
-    const dt = new DataTransfer();
-    for (let i = 0; i < files.length; i++) {
-      if (i !== index) dt.items.add(files[i]);
-    }
-    setFiles(dt.files.length > 0 ? dt.files : null);
-    if (fileInputRef.current) {
-      fileInputRef.current.files = dt.files;
-    }
-  };
-
-  const getMessageText = (message: any) => {
-    if (typeof message.content === 'string') return message.content;
-    if (Array.isArray(message.parts)) {
-      return message.parts
-        .filter((part: any) => part?.type === 'text')
-        .map((part: any) => part.text || '')
-        .join('');
-    }
-    return '';
-  };
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const sendMessage = async () => {
     const text = input.trim();
-    if (!text && (!files || files.length === 0)) return;
+    if (!text && files.length === 0) return;
+    if (isLoading) return;
 
-    await sendMessage(text ? { text, files: files || undefined } : { files: files! });
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: text || '(прикачени файлове)',
+    };
+
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput('');
-    setFiles(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    setFiles([]);
+    setIsLoading(true);
+
+    try {
+      const apiMessages = updatedMessages.map(m => ({
+        role: m.role,
+        content: m.content,
+        parts: [{ type: 'text', text: m.content }],
+      }));
+
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.response || 'Не успях да обработя заявката.',
+      }]);
+    } catch (err: any) {
+      console.error('AI error:', err);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `⚠️ Грешка при свързване с AI. ${err.message || 'Моля, опитайте отново.'}`,
+      }]);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const toggleListening = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { alert('Браузърът не поддържа гласово въвеждане. Използвайте Chrome.'); return; }
+    const r = new SR();
+    r.lang = 'bg-BG';
+    r.interimResults = true;
+    r.onstart = () => setIsListening(true);
+    r.onresult = (e: any) => setInput(Array.from(e.results).map((res: any) => res[0].transcript).join(''));
+    r.onerror = () => setIsListening(false);
+    r.onend = () => setIsListening(false);
+    r.start();
   };
 
   return (
     <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
-      <div className="flex items-center gap-3">
-        <Bot className="h-8 w-8 text-violet-500" />
-        <h1 className="text-3xl font-bold tracking-tight text-white">AI Асистент</h1>
+      {/* Заглавие */}
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="h-10 w-10 rounded-xl bg-violet-600 flex items-center justify-center">
+          <Bot size={20} className="text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">AI Асистент</h1>
+          <p className="text-xs text-zinc-500">Захранен от Anthropic Claude · Реагира на български</p>
+        </div>
+        <span className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          Онлайн
+        </span>
       </div>
-      
-      <Card className="flex-1 flex flex-col overflow-hidden shadow-sm border-white/10 bg-white/5">
-        <CardContent className="flex-1 p-0 flex flex-col">
-          
+
+      {/* Chat area */}
+      <Card className="flex-1 flex flex-col overflow-hidden border-white/10 bg-white/3 min-h-0">
+        <CardContent className="flex-1 p-0 flex flex-col min-h-0">
+
+          {/* Messages */}
           <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-            <div className="space-y-6 pb-4">
-              {messages.map((msg: any) => (
-                <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className="space-y-5 pb-4">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
-                    <div className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 mt-1">
-                      <Bot size={16} className="text-violet-500" />
+                    <div className="h-8 w-8 rounded-full bg-violet-600/20 flex items-center justify-center shrink-0 mt-1">
+                      <Bot size={15} className="text-violet-400" />
                     </div>
                   )}
-                  
-                  <div className={`max-w-[75%] p-4 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === 'user' 
-                      ? 'bg-violet-600 text-white rounded-tr-sm' 
-                      : 'bg-white/5 text-zinc-300 rounded-tl-sm border border-white/10'
+                  <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-indigo-600 text-white rounded-tr-sm'
+                      : 'bg-white/5 text-zinc-200 rounded-tl-sm border border-white/10'
                   }`}>
-                    {/* Визуализация на съдържанието */}
-                    <div className="whitespace-pre-wrap font-sans">
-                      {getMessageText(msg)}
+                    <div className="prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
-
-                    {/* Визуализация на AI Инструменти (Графики) */}
-                    {msg.toolInvocations?.map((toolInvocation: any) => {
-                      if (toolInvocation.toolName === 'generateChart' && toolInvocation.state === 'result') {
-                        const { chartData } = toolInvocation.result;
-                        if (!chartData) return null;
-                        return (
-                          <AIChatChart key={toolInvocation.toolCallId} chartData={chartData} />
-                        );
-                      }
-                      return null;
-                    })}
-
-                    {/* Визуализация на прикачените файлове */}
-                    {msg.experimental_attachments?.map((attachment: any, index: number) => (
-                      <div key={index} className="mt-3">
-                        {attachment.contentType?.startsWith('image/') ? (
-                          <div className="relative w-48 h-48 rounded-lg overflow-hidden border border-white/20">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={attachment.url}
-                              alt="Прикачен файл"
-                              className="object-cover w-full h-full"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg border border-white/20">
-                            <FileIcon size={20} />
-                            <span className="text-xs truncate">{attachment.name}</span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
                   </div>
-
                   {msg.role === 'user' && (
-                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 mt-1">
-                      <User size={16} className="text-slate-600" />
+                    <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-1">
+                      <User size={15} className="text-zinc-400" />
                     </div>
                   )}
                 </div>
               ))}
-              
-              {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                <div className="flex gap-4 justify-start">
-                  <div className="h-8 w-8 rounded-full bg-[#4F46E5]/10 flex items-center justify-center shrink-0 mt-1">
-                    <Bot size={16} className="text-[#4F46E5]" />
-                  </div>
-                  <div className="bg-gray-50 text-gray-800 p-4 rounded-2xl rounded-tl-sm border border-gray-100">
-                    <div className="flex gap-1 items-center h-5">
-                      <span className="w-2 h-2 bg-[#4F46E5]/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-[#4F46E5]/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-[#4F46E5]/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {error && (
-                <div className="text-center text-red-500 text-sm py-4">
-                  Възникна грешка при връзката с асистента. Моля, опитайте отново.
+              {isLoading && (
+                <div className="flex gap-3 justify-start">
+                  <div className="h-8 w-8 rounded-full bg-violet-600/20 flex items-center justify-center shrink-0">
+                    <Bot size={15} className="text-violet-400" />
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
+                    <Loader2 size={14} className="text-violet-400 animate-spin" />
+                    <span className="text-xs text-zinc-500">Officia AI пише...</span>
+                  </div>
                 </div>
               )}
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-white/10 bg-[#0A0F1C]">
-            {/* Файлови визуализации преди изпращане */}
-            {files && files.length > 0 && (
-              <div className="flex gap-3 mb-3 px-2 overflow-x-auto">
-                {Array.from(files).map((file, index) => (
-                  <div key={index} className="relative flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg p-2 max-w-[200px]">
-                    {file.type.startsWith('image/') ? (
-                      <div className="w-10 h-10 relative shrink-0 rounded overflow-hidden border border-white/10">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={URL.createObjectURL(file)} alt="preview" className="object-cover w-full h-full" />
-                      </div>
-                    ) : (
-                      <FileIcon size={24} className="text-violet-500 shrink-0" />
-                    )}
-                    <span className="text-xs truncate text-zinc-300">{file.name}</span>
-                    <button 
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="absolute -top-2 -right-2 bg-slate-800 rounded-full border border-white/10 p-0.5 text-zinc-400 hover:text-rose-400 shadow-sm"
-                    >
-                      <X size={14} />
+          {/* Input */}
+          <div className="p-4 border-t border-white/10 bg-[#0A0F1C] shrink-0">
+            {files.length > 0 && (
+              <div className="flex gap-2 mb-3 flex-wrap">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-300">
+                    <FileIcon size={12} className="text-violet-400" />
+                    <span className="truncate max-w-[140px]">{f.name}</span>
+                    <button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-rose-400">
+                      <X size={12} />
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
-            <form onSubmit={onSubmit} className="flex gap-3 relative">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-violet-400 transition-colors"
-                title="Прикачи фактура или документ"
-              >
-                <Paperclip size={20} />
-              </button>
-              
-              <input 
-                type="file"
-                ref={fileInputRef}
-                onChange={onFileChange}
-                className="hidden"
-                multiple
-                accept="image/*,application/pdf"
-              />
+            <div className="flex gap-2 items-end">
+              <div className="flex flex-col gap-1">
+                <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white/5 text-zinc-500 hover:text-violet-400 rounded-lg transition-colors" title="Прикачи файл">
+                  <Paperclip size={18} />
+                </button>
+                <button onClick={toggleListening} className={`p-2 rounded-lg transition-all ${isListening ? 'bg-rose-500 text-white animate-pulse' : 'hover:bg-white/5 text-zinc-500 hover:text-violet-400'}`} title="Гласово въвеждане">
+                  <Mic size={18} />
+                </button>
+              </div>
 
-              <Input 
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder={isListening ? "Слушам ви..." : "Попитай асистента или прикачи фактура за сканиране..."}
-                className="flex-1 rounded-xl bg-white/5 border-white/10 focus-visible:ring-violet-500 text-white placeholder:text-zinc-500 py-6 pl-12 pr-12 text-[15px]"
-                disabled={isLoading}
-              />
+              <div className="flex-1 relative">
+                <textarea
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                  placeholder={isListening ? 'Слушам...' : 'Напишете въпрос или команда...'}
+                  disabled={isLoading}
+                  rows={1}
+                  className="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+                  style={{ fieldSizing: 'content', maxHeight: '120px' } as any}
+                />
+              </div>
 
-              <button
-                type="button"
-                onClick={toggleListening}
-                className={`absolute right-[140px] top-1/2 -translate-y-1/2 transition-colors ${isListening ? 'text-rose-500 animate-pulse' : 'text-zinc-400 hover:text-violet-400'}`}
-                title="Гласово въвеждане"
+              <Button
+                onClick={sendMessage}
+                disabled={(!input.trim() && files.length === 0) || isLoading}
+                className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl px-5 h-11 shrink-0"
               >
-                <Mic size={20} />
-              </button>
-
-              <Button 
-                type="submit" 
-                disabled={(!input.trim() && (!files || files.length === 0)) || isLoading}
-                className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl px-6 h-auto"
-              >
-                <Send size={18} className="mr-2" />
-                Изпрати
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </Button>
-            </form>
+            </div>
+
+            <input ref={fileInputRef} type="file" multiple accept="image/*,application/pdf" className="hidden"
+              onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
           </div>
         </CardContent>
       </Card>
