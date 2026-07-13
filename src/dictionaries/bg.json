@@ -11,6 +11,7 @@
     "fixedAssets": "Дълготрайни активи",
     "counterparties": "Контрагенти",
     "invoices": "Фактури",
+    "purchaseInvoices": "Входящи фактури",
     "settings": "Настройки",
     "logout": "Изход",
     "profile": "Моят Профил"

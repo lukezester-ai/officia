@@ -11,7 +11,9 @@
                     "fixedAssets":  "Fixed Assets",
                     "counterparties":  "Counterparties",
                     "invoices":  "Invoices",
+                    "purchaseInvoices":  "Purchase Invoices",
                     "settings":  "Settings",
+
                     "logout":  "Log Out",
                     "profile":  "My Profile"
                 },
