@@ -46,8 +46,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Call Anthropic
+    const model = (process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5') as any;
+
     const { text } = await generateText({
-      model: anthropic('claude-haiku-4-5'),
+      model: anthropic(model),
       system: 'Ти си Officia AI — интелигентен офис асистент за български фирми. Отговаряй винаги на български език, ясно и професионално. Помагаш с въпроси за счетоводство, ДДС, ТРЗ, фактури, складово стопанство и бизнес процеси.',
       messages: coreMessages,
       maxOutputTokens: 2048,
