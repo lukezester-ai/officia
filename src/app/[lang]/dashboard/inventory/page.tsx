@@ -210,8 +210,39 @@ export default function InventoryPage() {
     !search || i.name?.toLowerCase().includes(search.toLowerCase()) || i.sku?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const lowStock = data.items.filter((i: any) => i.currentQuantity <= 0);
+  const criticalStock = data.items.filter((i: any) => i.currentQuantity > 0 && i.currentQuantity < 5);
+
   return (
     <div className="space-y-6 pb-10">
+      {/* Low-stock alert banner */}
+      {(lowStock.length > 0 || criticalStock.length > 0) && (
+        <div className="space-y-2">
+          {lowStock.length > 0 && (
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-rose-500/20 shrink-0">
+                <Package size={18} className="text-rose-400" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-rose-400">⚠️ {lowStock.length} артикула с нулева наличност</p>
+                <p className="text-sm text-rose-300/70">{lowStock.slice(0, 3).map((i: any) => i.name).join(', ')}{lowStock.length > 3 ? ` +${lowStock.length - 3} още` : ''}</p>
+              </div>
+            </div>
+          )}
+          {criticalStock.length > 0 && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 shrink-0">
+                <Box size={18} className="text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-400">⚠️ {criticalStock.length} артикула с критично ниска наличност (&lt;5)</p>
+                <p className="text-sm text-amber-300/70">{criticalStock.slice(0, 3).map((i: any) => `${i.name} (${i.currentQuantity} ${i.unitOfMeasure})`).join(', ')}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

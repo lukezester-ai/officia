@@ -49,6 +49,9 @@ export default function InvoicesPage() {
   const totalIssued = issued.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
   const totalPaid = paid.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
 
+  const overdue = invoices.filter(i => i.status === 'issued' && i.dueDate && new Date(i.dueDate) < new Date());
+  const overdueAmount = overdue.reduce((s: number, i: any) => s + parseFloat(i.totalAmount || '0'), 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -58,6 +61,33 @@ export default function InvoicesPage() {
         </div>
         <NewInvoiceDialog onCreated={load} />
       </div>
+
+      {/* Overdue alert banner */}
+      {overdue.length > 0 && (
+        <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
+          <div className="p-2.5 rounded-xl bg-rose-500/20 shrink-0">
+            <Clock size={18} className="text-rose-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-rose-400">
+              ⚠️ {overdue.length} {overdue.length === 1 ? 'просрочена фактура' : 'просрочени фактури'}
+            </p>
+            <p className="text-sm text-rose-300/70">
+              Обща сума: <span className="font-bold">{fmt(overdueAmount)} лв.</span> — моля предприемете действие.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {overdue.slice(0, 2).map((inv: any) => (
+              <span key={inv.id} className="text-xs bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded-lg px-2.5 py-1">
+                {inv.invoiceNumber || inv.clientName} · {fmt(parseFloat(inv.totalAmount || '0'))} лв.
+              </span>
+            ))}
+            {overdue.length > 2 && (
+              <span className="text-xs text-rose-400 self-center">+{overdue.length - 2} още</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-white/20">
