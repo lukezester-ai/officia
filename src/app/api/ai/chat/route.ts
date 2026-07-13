@@ -91,8 +91,9 @@ export async function POST(req: NextRequest) {
       model: anthropic('claude-3-5-sonnet-latest'),
       system: 'Ти си Officia AI - интелигентен офис асистент за български фирми. Отговаряй на български език, ясно и професионално.',
       messages: coreMessages,
-      maxTokens: 2048,
+      maxOutputTokens: 2048,
     });
+
 
     return NextResponse.json({ response: text });
 
