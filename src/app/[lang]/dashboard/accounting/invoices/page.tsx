@@ -1,10 +1,9 @@
 // @ts-nocheck
 import { db } from "@/lib/db/db";
 import { invoices } from "@/lib/db/schema";
+import { requireTenant } from "@/lib/auth/get-tenant";
 import InvoicesClient from "./InvoicesClient";
-import { desc } from "drizzle-orm";
-import Link from "next/link";
-import { Plus, FileText } from "lucide-react";
+import { desc, eq } from "drizzle-orm";
 
 export default async function InvoicesPage({
   params,
@@ -15,15 +14,17 @@ export default async function InvoicesPage({
 
   let rows: any[] = [];
   try {
-    rows = await (db as any)
+    const { tenantId } = await requireTenant();
+    rows = await db
       .select()
       .from(invoices)
+      .where(eq((invoices as any).tenantId, tenantId))
       .orderBy(desc((invoices as any).createdAt))
       .limit(500);
   } catch {}
 
   const serialized = rows.map((r: any) => ({
-    id: Number(r.id),
+    id: r.id,
     invoiceNumber: String(r.invoiceNumber ?? r.invoice_number ?? ""),
     clientName: String(r.clientName ?? r.client_name ?? ""),
     clientAddress: String(r.clientAddress ?? r.client_address ?? ""),
@@ -33,7 +34,7 @@ export default async function InvoicesPage({
     status: String(r.status ?? "draft"),
     subtotal: String(r.subtotal ?? "0"),
     vatAmount: String(r.vatAmount ?? r.vat_amount ?? "0"),
-    total: String(r.total ?? "0"),
+    total: String(r.total ?? r.totalAmount ?? r.total_amount ?? "0"),
     notes: String(r.notes ?? ""),
     items: Array.isArray(r.items) ? r.items : [],
     createdAt: String(r.createdAt ?? r.created_at ?? ""),

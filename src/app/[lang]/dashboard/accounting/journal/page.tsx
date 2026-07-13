@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { db } from "@/lib/db/db";
 import { journalHeaders } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { requireTenant } from "@/lib/auth/get-tenant";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { BookOpen, Plus, TrendingUp, ArrowUpDown, Zap } from "lucide-react";
 
@@ -12,9 +13,11 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
   let totalCredit = 0;
 
   try {
+    const { tenantId } = await requireTenant();
     entries = await db
       .select()
       .from(journalHeaders as any)
+      .where(eq((journalHeaders as any).tenantId, tenantId))
       .orderBy(desc((journalHeaders as any).createdAt))
       .limit(100);
     totalDebit = entries.reduce(
@@ -30,12 +33,12 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
   const balanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
   const stats = [
-    { label: "Zapisvaniya", value: String(entries.length), color: "from-violet-500 to-purple-600" },
-    { label: "Obshto debit", value: totalDebit.toFixed(2) + " lv.", color: "from-blue-500 to-cyan-600" },
-    { label: "Obshto kredit", value: totalCredit.toFixed(2) + " lv.", color: "from-emerald-500 to-teal-600" },
+    { label: "Записвания", value: String(entries.length), color: "from-violet-500 to-purple-600" },
+    { label: "Общо дебит", value: totalDebit.toFixed(2) + " лв.", color: "from-blue-500 to-cyan-600" },
+    { label: "Общо кредит", value: totalCredit.toFixed(2) + " лв.", color: "from-emerald-500 to-teal-600" },
     {
-      label: "Balans",
-      value: (totalDebit - totalCredit).toFixed(2) + " lv.",
+      label: "Баланс",
+      value: (totalDebit - totalCredit).toFixed(2) + " лв.",
       color: balanced ? "from-emerald-500 to-teal-600" : "from-red-500 to-rose-600",
     },
   ];

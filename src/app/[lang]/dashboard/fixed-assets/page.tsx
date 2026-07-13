@@ -108,10 +108,24 @@ export default function FixedAssetsPage() {
 
   const active = assets.filter(a => a.status === 'active');
   const writtenOff = assets.filter(a => a.status === 'written_off');
-  const totalCost = active.reduce((s, a) => s + parseFloat(a.acquisitionCost || '0'), 0);
-  const totalBookValue = active.reduce((s, a) => s + calcCurrentBookValue(a), 0);
+  const totalCost = active.reduce((s, a) => s + parseFloat(a.acquisitionCost || a.acquisition_cost || '0'), 0);
+
+  // Нормализираме полетата преди изчисление (DB може да използва различни имена)
+  function normalizeForCalc(a: any) {
+    return {
+      acquisitionDate:   a.acquisitionDate   ?? a.acquisition_date   ?? new Date().toISOString(),
+      acquisitionCost:   parseFloat(a.acquisitionCost   ?? a.acquisition_cost   ?? '0'),
+      salvageValue:      parseFloat(a.residualValue     ?? a.salvage_value      ?? a.residual_value ?? '0'),
+      usefulLifeMonths:  parseFloat(a.usefulLifeMonths  ?? a.useful_life_months ?? '0') ||
+                         (parseFloat(a.usefulLifeYears ?? a.useful_life_years ?? '1') * 12),
+      amortizationMethod: a.amortizationMethod ?? a.depreciation_method ?? 'straight_line',
+    };
+  }
+
+  const totalBookValue = active.reduce((s, a) => s + calcCurrentBookValue(normalizeForCalc(a)), 0);
   const monthlyDepr = active.reduce((s, a) => {
-    const annual = (parseFloat(a.acquisitionCost || '0') - parseFloat(a.residualValue || '0')) / (a.usefulLifeYears || 1);
+    const n = normalizeForCalc(a);
+    const annual = (n.acquisitionCost - n.salvageValue) / Math.max(n.usefulLifeMonths / 12, 1);
     return s + annual / 12;
   }, 0);
 
