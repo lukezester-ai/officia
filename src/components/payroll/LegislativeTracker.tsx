@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Scale, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ExternalLink, Bell } from "lucide-react";
+import { Scale, AlertTriangle, CheckCircle, ChevronDown, Link2, Bell } from "lucide-react";
 
 // Bulgarian labor law parameters - updated for 2024/2025
 // Source: НАП, НОИ, МТСП
@@ -213,8 +213,8 @@ export function LegislativeTracker({ employees }: LegislativeTrackerProps) {
             onClick={() => setExpanded(!expanded)}
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors w-full"
           >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            {expanded ? "Скрий" : "Покажи"} всички параметри за {LEGISLATION.currentYear}
+            <ChevronDown size={14} className={expanded ? 'rotate-180 transition-transform' : 'transition-transform'} />
+            {expanded ? 'Скрий' : 'Покажи'} всички параметри за {LEGISLATION.currentYear}
           </button>
 
           {expanded && (
@@ -256,11 +256,11 @@ export function LegislativeTracker({ employees }: LegislativeTrackerProps) {
               <div className="px-4 py-3 flex items-center gap-3 border-t border-white/5">
                 <a href="https://nap.bg" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-                  <ExternalLink size={11} /> НАП
+                  <Link2 size={11} /> НАП
                 </a>
                 <a href="https://noi.bg" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-                  <ExternalLink size={11} /> НОИ
+                  <Link2 size={11} /> НОИ
                 </a>
                 <span className="text-xs text-zinc-600 ml-auto">
                   Параметрите се обновяват при всяка промяна в законодателството

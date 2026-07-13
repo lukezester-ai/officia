@@ -7,9 +7,10 @@ interface Employee {
   id: string;
   firstName: string;
   lastName: string;
-  position?: string;
+  position?: string | null;
   net: number;
 }
+
 
 interface BatchPaymentExportProps {
   employees: Employee[];

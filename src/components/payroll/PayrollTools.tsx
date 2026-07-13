@@ -175,7 +175,7 @@ interface Employee {
   firstName: string;
   lastName: string;
   gross: number;
-  position?: string;
+  position?: string | null;
 }
 
 interface AnomalyDetectorProps {

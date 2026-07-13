@@ -1,6 +1,7 @@
 "use client";
 
-import { TrendingUp, AlertTriangle, Info } from "lucide-react";
+import { TrendingUp, AlertTriangle, CircleAlert } from "lucide-react";
+
 
 const BG_MONTHS = ["Яну", "Фев", "Мар", "Апр", "Май", "Юни", "Юли", "Авг", "Сеп", "Окт", "Ное", "Дек"];
 
@@ -52,7 +53,8 @@ export function PayrollForecast({ monthlyGross, employeeCount }: PayrollForecast
           <h2 className="text-lg font-semibold text-white">Прогноза ФРЗ — следващи 6 месеца</h2>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-          <Info size={12} />
+          <CircleAlert size={12} />
+
           <span>Включва работодателски осигуровки ({(EMPLOYER_RATE * 100).toFixed(1)}%)</span>
         </div>
       </div>
