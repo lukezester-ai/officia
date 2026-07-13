@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle, Zap, Building2, Sparkles } from 'lucide-react';
+import { CheckCircle, Zap, Building2, Sparkles, Scale } from 'lucide-react';
 
 function getPlanHref(planId: string, isAnnual: boolean): string {
   if (planId === 'starter') return '/sign-up';
@@ -15,77 +15,107 @@ const PLANS = [
     id: 'starter',
     name: 'Стартер',
     icon: Zap,
-    iconColor: 'text-emerald-400',
     description: 'За самонаети и микро-фирми',
     monthlyPrice: 0,
     annualPrice: 0,
     annualTotal: 0,
-    priceLabel: 'Безплатно',
-    priceSubLabel: '14 дни · без кредитна карта',
+    isFree: true,
+    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-7 text-left transition-all hover:bg-white/5 flex flex-col',
+    textColor: 'text-zinc-400',
+    subTextColor: 'text-zinc-500',
+    checkColor: 'text-emerald-400',
     cta: 'Започни безплатно',
-    ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10',
-    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-8 text-left transition-all hover:bg-white/5',
+    ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10 mt-auto',
     features: [
       'До 30 фактури/месец',
       'Основно счетоводство',
-      'ДДС дневници (само преглед)',
+      'ДДС дневници (преглед)',
       '1 потребител',
       '1 банкова сметка',
       'Email поддръжка',
     ],
-    notIncluded: ['ТРЗ и HR', 'AI асистент', 'НАП export'],
+    locked: ['ТРЗ и HR', 'AI асистент', 'НАП export'],
   },
   {
     id: 'business',
     name: 'Бизнес',
     icon: Building2,
-    iconColor: 'text-violet-400',
     description: 'За малки и средни предприятия',
-    monthlyPrice: 29,
-    annualPrice: 23.20,
-    annualTotal: 278.40,
-    priceLabel: null,
-    priceSubLabel: null,
-    badge: 'Препоръчан',
+    monthlyPrice: 25,
+    annualPrice: 20,
+    annualTotal: 240,
+    isFree: false,
+    badge: 'Най-популярен',
+    cardStyle: 'bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-500/30 rounded-2xl p-7 text-left relative overflow-hidden shadow-2xl shadow-violet-900/50 flex flex-col',
+    textColor: 'text-violet-100',
+    subTextColor: 'text-violet-200',
+    checkColor: 'text-white',
+    featured: true,
     cta: 'Започни пробния период',
-    ctaStyle: 'block text-center bg-white text-violet-700 hover:bg-violet-50 rounded-xl py-3 text-sm font-semibold transition-all shadow-lg hover:shadow-xl',
-    cardStyle: 'bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-500/30 rounded-2xl p-8 text-left relative overflow-hidden shadow-2xl shadow-violet-900/50',
+    ctaStyle: 'block text-center bg-white text-violet-700 hover:bg-violet-50 rounded-xl py-3 text-sm font-semibold transition-all shadow-lg mt-auto',
     features: [
       'Неограничени фактури и покупки',
       'Пълно счетоводство + ДДС',
-      'ТРЗ до 10 служители (Обр.1, Обр.6)',
+      'ТРЗ до 10 служители',
+      'Обр.1 и Обр.6 XML за НАП',
       'HR управление и отпуски',
       'Банкиране PSD2 / GoCardless',
       'Batch export за банкови преводи',
-      '3 потребители',
       'Законодателен монитор НАП/НОИ',
+      '3 потребители',
     ],
-    featured: true,
   },
   {
     id: 'pro',
     name: 'Про',
     icon: Sparkles,
-    iconColor: 'text-amber-400',
-    description: 'За счетоводни кантори и растящи компании',
-    monthlyPrice: 59,
-    annualPrice: 47.20,
-    annualTotal: 566.40,
-    priceLabel: null,
-    priceSubLabel: null,
-    cta: 'Свържи се с нас',
-    ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10',
-    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-8 text-left transition-all hover:bg-white/5',
+    description: 'За по-големи екипи и растящи компании',
+    monthlyPrice: 49,
+    annualPrice: 39,
+    annualTotal: 468,
+    isFree: false,
+    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-7 text-left transition-all hover:bg-white/5 flex flex-col',
+    textColor: 'text-zinc-400',
+    subTextColor: 'text-zinc-500',
+    checkColor: 'text-emerald-400',
+    cta: 'Започни пробния период',
+    ctaStyle: 'block text-center border border-violet-500/40 hover:border-violet-400 text-violet-400 hover:bg-violet-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
     features: [
       'Всичко от Бизнес',
       'Неограничени служители ТРЗ',
-      'AI асистент (Claude) + OCR на фактури',
+      'AI асистент Claude + OCR',
       'Гласово въвеждане на BG',
       'AI паметова система (RAG)',
-      'Автоматичен AI одит на ведомости',
+      'AI одит на ведомости',
       'НАП директна интеграция',
       'До 10 потребители + права',
-      'Приоритетна поддръжка 24/7',
+      'Приоритетна поддръжка',
+    ],
+  },
+  {
+    id: 'accounting_firm',
+    name: 'Кантора',
+    icon: Scale,
+    description: 'За счетоводни кантори с множество клиенти',
+    monthlyPrice: 89,
+    annualPrice: 71,
+    annualTotal: 852,
+    isFree: false,
+    cardStyle: 'bg-white/3 border border-amber-500/20 rounded-2xl p-7 text-left transition-all hover:bg-amber-500/5 flex flex-col',
+    textColor: 'text-zinc-400',
+    subTextColor: 'text-zinc-500',
+    checkColor: 'text-amber-400',
+    cta: 'Свържи се с нас',
+    ctaStyle: 'block text-center border border-amber-500/30 hover:border-amber-400 text-amber-400 hover:bg-amber-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
+    features: [
+      'Всичко от Про',
+      'Неограничени клиентски workspace-и',
+      'Управление на множество фирми',
+      'Консолидирани отчети',
+      'Бял етикет (white label)',
+      'Приоритетни НАП updates',
+      'Неограничени потребители',
+      'Dedicated поддръжка',
     ],
   },
 ];
@@ -95,7 +125,7 @@ export default function PricingSection() {
 
   return (
     <section id="pricing" className="py-24 px-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Прост, честен ценови план</h2>
           <p className="text-zinc-400 mb-8">Без скрити такси. Без изненади. Смени плана по всяко време.</p>
@@ -117,12 +147,10 @@ export default function PricingSection() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {PLANS.map((plan) => {
             const Icon = plan.icon;
-            const price = plan.monthlyPrice === 0
-              ? null
-              : isAnnual ? plan.annualPrice : plan.monthlyPrice;
+            const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
 
             return (
               <div key={plan.id} className={plan.cardStyle}>
@@ -132,50 +160,45 @@ export default function PricingSection() {
                   </div>
                 )}
 
-                {/* Plan header */}
-                <div className="flex items-center gap-2 mb-2">
-                  <Icon size={18} className={plan.featured ? 'text-violet-200' : plan.iconColor} />
-                  <div className={`text-sm font-medium uppercase tracking-wider ${plan.featured ? 'text-violet-200' : 'text-zinc-400'}`}>
-                    {plan.name}
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon size={16} className={plan.featured ? 'text-violet-200' : plan.checkColor} />
+                    <div className={`text-xs font-semibold uppercase tracking-wider ${plan.featured ? 'text-violet-200' : plan.textColor}`}>
+                      {plan.name}
+                    </div>
                   </div>
-                </div>
-                <div className={`text-sm mb-4 ${plan.featured ? 'text-violet-200' : 'text-zinc-500'}`}>
-                  {plan.description}
+                  <div className={`text-xs mb-4 ${plan.subTextColor}`}>{plan.description}</div>
+
+                  {plan.isFree ? (
+                    <>
+                      <div className="text-3xl font-bold text-white">Безплатно</div>
+                      <div className={`text-xs mt-1 ${plan.subTextColor}`}>14 дни · без кредитна карта</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-end gap-1">
+                        <div className="text-3xl font-bold text-white">{price} €</div>
+                        <div className={`text-sm mb-1 ${plan.subTextColor}`}>/мес</div>
+                      </div>
+                      <div className={`text-xs mt-1 ${plan.subTextColor}`}>
+                        {isAnnual
+                          ? `${plan.annualTotal} € годишно · спестяваш ${(plan.monthlyPrice - plan.annualPrice) * 12} €`
+                          : 'Таксува се всеки месец'}
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {/* Price */}
-                {price === null ? (
-                  <>
-                    <div className="text-4xl font-bold mb-1">Безплатно</div>
-                    <div className={`text-sm mb-6 ${plan.featured ? 'text-violet-200' : 'text-zinc-500'}`}>
-                      14 дни · без кредитна карта
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-end gap-1 mb-1">
-                      <div className="text-4xl font-bold">{price.toFixed(2).replace('.', ',')} €</div>
-                      <div className={`text-lg font-normal mb-1 ${plan.featured ? 'text-violet-200' : 'text-zinc-400'}`}>/мес</div>
-                    </div>
-                    <div className={`text-sm mb-6 ${plan.featured ? 'text-violet-200' : 'text-zinc-500'}`}>
-                      {isAnnual
-                        ? `Таксува се ${plan.annualTotal.toFixed(2).replace('.', ',')} € веднъж годишно`
-                        : 'Таксува се всеки месец'}
-                    </div>
-                  </>
-                )}
-
-                {/* Features */}
-                <div className={`space-y-2.5 text-sm mb-8 ${plan.featured ? 'text-violet-100' : 'text-zinc-400'}`}>
+                <div className={`space-y-2 text-xs mb-6 flex-1 ${plan.featured ? 'text-violet-100' : plan.textColor}`}>
                   {plan.features.map((f) => (
-                    <div key={f} className="flex items-start gap-2">
-                      <CheckCircle size={14} className={`shrink-0 mt-0.5 ${plan.featured ? 'text-white' : 'text-emerald-400'}`} />
+                    <div key={f} className="flex items-start gap-1.5">
+                      <CheckCircle size={12} className={`shrink-0 mt-0.5 ${plan.checkColor}`} />
                       {f}
                     </div>
                   ))}
-                  {plan.notIncluded?.map((f) => (
-                    <div key={f} className="flex items-start gap-2 opacity-40">
-                      <div className="w-3.5 h-3.5 rounded-full border border-zinc-600 shrink-0 mt-0.5" />
+                  {plan.locked?.map((f) => (
+                    <div key={f} className="flex items-start gap-1.5 opacity-35">
+                      <div className="w-3 h-3 rounded-full border border-zinc-600 shrink-0 mt-0.5 flex-none" />
                       {f}
                     </div>
                   ))}
@@ -189,10 +212,8 @@ export default function PricingSection() {
           })}
         </div>
 
-        {/* Bottom note */}
         <p className="text-center text-zinc-600 text-xs mt-8">
-          Всички планове включват SSL сигурност, автоматични backup-и и съответствие с GDPR.
-          При годишен план — 2 месеца безплатно.
+          Всички планове включват SSL, автоматични backup-и и съответствие с GDPR. При годишен план — 2 месеца безплатно.
         </p>
       </div>
     </section>
