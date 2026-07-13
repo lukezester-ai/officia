@@ -15,8 +15,18 @@ export async function requireTenant() {
     throw new Error('Not authenticated');
   }
 
-  // Намираме потребителя по Clerk ID
-  const userRecords = await db.select().from(users).where(eq(users.clerkId, userId));
+  // Намираме потребителя по Clerk ID - само необходимите колони
+  const userRecords = await db
+    .select({
+      id: users.id,
+      clerkId: users.clerkId,
+      tenantId: users.tenantId,
+      email: users.email,
+      name: users.name,
+    })
+    .from(users)
+    .where(eq(users.clerkId, userId))
+    .limit(1);
   
   if (userRecords.length === 0) {
     throw new Error('User not found in local database');
