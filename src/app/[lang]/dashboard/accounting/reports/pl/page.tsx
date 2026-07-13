@@ -69,7 +69,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
           <div className="bg-emerald-950/40 border border-emerald-500/20 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp size={14} className="text-emerald-400" />
-              <span className="text-xs text-zinc-400">Obshto prikhodi</span>
+              <span className="text-xs text-zinc-400">Общо приходи</span>
             </div>
             <div className="text-2xl font-bold text-emerald-400 tabular-nums">{totalRevenue.toFixed(2)}</div>
             <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
@@ -77,7 +77,7 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
           <div className="bg-red-950/40 border border-red-500/20 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown size={14} className="text-red-400" />
-              <span className="text-xs text-zinc-400">Obshto razkhodi</span>
+              <span className="text-xs text-zinc-400">Общо разходи</span>
             </div>
             <div className="text-2xl font-bold text-red-400 tabular-nums">{totalExpenses.toFixed(2)}</div>
             <div className="text-xs text-zinc-500 mt-0.5">EUR</div>
@@ -155,8 +155,8 @@ export default async function PLReport({ params }: { params: Promise<{ lang: str
         <div className={`border rounded-2xl p-6 ${net >= 0 ? "bg-emerald-950/20 border-emerald-500/20" : "bg-red-950/20 border-red-500/20"}`}>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-bold text-lg">{net >= 0 ? "Pechalba" : "Zaguba"}</div>
-              <div className="text-zinc-400 text-sm">Prikhodi - Razkhodi</div>
+              <div className="font-bold text-lg">{net >= 0 ? "Печалба" : "Загуба"}</div>
+              <div className="text-zinc-400 text-sm">Приходи − Разходи</div>
             </div>
             <div className={`text-3xl font-bold tabular-nums ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               {net >= 0 ? "+" : ""}{net.toFixed(2)} EUR

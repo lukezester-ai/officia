@@ -1,25 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Download, FileSpreadsheet, FileText, TrendingUp, TrendingDown, DollarSign, Wallet } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
+import { Download, FileSpreadsheet, TrendingUp, TrendingDown, Scale, Wallet, ArrowRight, FileText, BarChart2 } from 'lucide-react';
 import { getReportsData } from './actions';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+
+function fmt(n: number) {
+  return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+const BG_MONTHS = ['Яну', 'Фев', 'Мар', 'Апр', 'Май', 'Юни', 'Юли', 'Авг', 'Сеп', 'Окт', 'Ное', 'Дек'];
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [data, setData]       = useState<any>(null);
+  const [year, setYear]       = useState(new Date().getFullYear());
+  const params = useParams();
+  const lang = (params?.lang as string) || 'bg';
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       const res = await getReportsData(year);
-      if (res.success) {
-        setData(res.data);
-      }
+      if (res.success) setData(res.data);
       setLoading(false);
     }
     load();
@@ -27,250 +34,196 @@ export default function ReportsPage() {
 
   const exportCSV = () => {
     if (!data) return;
-    
-    // Example simple CSV generation for monthly P&L
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    csvContent += "Месец,Приходи,Разходи,Печалба\n";
-    
-    data.monthlyData.forEach((row: any) => {
-      csvContent += `${row.name},${row.Приходи},${row.Разходи},${row.Печалба}\n`;
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `officia_pnl_${year}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    let csv = '\uFEFFМесец,Приходи,Разходи,Печалба\n';
+    data.monthlyData.forEach((r: any) => { csv += `${r.name},${r.Приходи},${r.Разходи},${r.Печалба}\n`; });
+    const a = document.createElement('a');
+    a.href = encodeURI('data:text/csv;charset=utf-8,' + csv);
+    a.download = `officia_opr_${year}.csv`;
+    a.click();
   };
 
-  const exportPDF = () => {
-    // For a real app, use jspdf. For now, simple print dialog handles PDF export well enough!
-    window.print();
-  };
-
-  if (loading) {
-    return <div className="p-8 text-center">Зареждане на отчети...</div>;
-  }
-
-  const ytdRev = Math.abs(Number(data?.ytdPnL?.revenue?.total || 0));
-  const ytdExp = Math.abs(Number(data?.ytdPnL?.expenses?.total || 0));
+  const ytdRev    = Math.abs(Number(data?.ytdPnL?.revenue?.total || 0));
+  const ytdExp    = Math.abs(Number(data?.ytdPnL?.expenses?.total || 0));
   const netProfit = ytdRev - ytdExp;
+  const margin    = ytdRev > 0 ? ((netProfit / ytdRev) * 100).toFixed(1) : '0.0';
+
+  const chartData = (data?.monthlyData || []).map((d: any, i: number) => ({
+    ...d,
+    name: BG_MONTHS[i] ?? d.name,
+  }));
 
   return (
-    <div id="main-content" className="space-y-6">
+    <div id="main-content" className="space-y-8 pb-10">
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Финансови Отчети</h1>
-          <p className="text-gray-500 mt-1">Обобщение на финансовото състояние на фирмата за {year} г.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Финансови Отчети</h1>
+          <p className="text-zinc-400 mt-1 text-sm">Финансово обобщение за <span className="text-white font-semibold">{year} г.</span></p>
         </div>
-        <div className="flex gap-2 print:hidden">
-          <select 
-            value={year} 
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="border-gray-200 rounded-md shadow-sm text-sm"
+        <div className="flex gap-2 print:hidden flex-wrap">
+          <select
+            value={year}
+            onChange={e => setYear(Number(e.target.value))}
+            className="bg-white/5 border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
           >
             {[...Array(5)].map((_, i) => (
-              <option key={i} value={new Date().getFullYear() - i}>{new Date().getFullYear() - i}</option>
+              <option key={i} value={new Date().getFullYear() - i} className="bg-zinc-900">
+                {new Date().getFullYear() - i}
+              </option>
             ))}
           </select>
-          <Button variant="outline" onClick={exportCSV} className="gap-2">
-            <FileSpreadsheet size={16} />
-            Експорт CSV
+          <Button variant="outline" onClick={exportCSV} className="gap-2 border-white/10 text-zinc-300 hover:bg-white/5 hover:text-white">
+            <FileSpreadsheet size={15} /> Експорт CSV
           </Button>
-          <Button variant="default" onClick={exportPDF} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
-            <Download size={16} />
-            Свали PDF
+          <Button onClick={() => window.print()} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Download size={15} /> Свали PDF
           </Button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-sm ring-1 ring-gray-100">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Общо Приходи</p>
-                <p className="text-3xl font-bold mt-2 text-gray-900">{ytdRev.toLocaleString('bg-BG', { style: 'currency', currency: 'EUR' })}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Общо Приходи', value: `${fmt(ytdRev)} €`, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+          { label: 'Общо Разходи', value: `${fmt(ytdExp)} €`, icon: TrendingDown, color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' },
+          { label: 'Нетна Печалба', value: `${netProfit >= 0 ? '+' : ''}${fmt(netProfit)} €`, icon: Wallet, color: netProfit >= 0 ? 'text-indigo-400' : 'text-rose-400', bg: netProfit >= 0 ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-rose-500/10 border-rose-500/20' },
+          { label: 'Марж на печалба', value: `${margin}%`, icon: BarChart2, color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+        ].map(k => (
+          <Card key={k.label} className={`border ${k.bg} shadow-sm`}>
+            <CardContent className="p-5">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-zinc-400 font-medium">{k.label}</p>
+                  <p className={`text-2xl font-bold mt-2 tabular-nums ${k.color}`}>{loading ? '...' : k.value}</p>
+                </div>
+                <div className={`p-2.5 rounded-xl ${k.bg}`}>
+                  <k.icon size={18} className={k.color} />
+                </div>
               </div>
-              <div className="p-3 rounded-xl bg-green-50 text-green-600">
-                <TrendingUp size={24} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm ring-1 ring-gray-100">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Общо Разходи</p>
-                <p className="text-3xl font-bold mt-2 text-gray-900">{ytdExp.toLocaleString('bg-BG', { style: 'currency', currency: 'EUR' })}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-red-50 text-red-600">
-                <TrendingDown size={24} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm ring-1 ring-gray-100">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Нетна Печалба</p>
-                <p className={`text-3xl font-bold mt-2 ${netProfit >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
-                  {netProfit.toLocaleString('bg-BG', { style: 'currency', currency: 'EUR' })}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600">
-                <DollarSign size={24} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-md bg-gray-100/50 p-1 print:hidden">
-          <TabsTrigger value="overview">Преглед</TabsTrigger>
-          <TabsTrigger value="pnl">ОПР (P&L)</TabsTrigger>
-          <TabsTrigger value="balance">Баланс</TabsTrigger>
-        </TabsList>
+      {/* Chart */}
+      <Card className="border-white/10 bg-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/5 bg-black/20 pb-4">
+          <CardTitle className="text-white text-base">Приходи и Разходи по месеци — {year} г.</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {loading ? (
+            <div className="h-72 flex items-center justify-center text-zinc-500">Зареждане...</div>
+          ) : (
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 11 }} tickFormatter={v => `${v} €`} width={70} />
+                  <RechartsTooltip
+                    contentStyle={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                    formatter={(v: any) => [`${fmt(v)} €`]}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ color: '#a1a1aa', fontSize: 12 }} />
+                  <Bar dataKey="Приходи" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="Разходи" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value="overview" className="mt-6 space-y-6 print:block">
-          <Card className="border-0 shadow-sm ring-1 ring-gray-100 print:shadow-none print:ring-0">
-            <CardHeader>
-              <CardTitle>Приходи и Разходи по месеци</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data?.monthlyData || []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} tickFormatter={(value) => `${value} €`} />
-                    <RechartsTooltip cursor={{fill: '#f9fafb'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-                    <Legend iconType="circle" />
-                    <Bar dataKey="Приходи" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                    <Bar dataKey="Разходи" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Profit trend line */}
+      {!loading && chartData.some((d: any) => d.Печалба !== 0) && (
+        <Card className="border-white/10 bg-white/5 overflow-hidden">
+          <CardHeader className="border-b border-white/5 bg-black/20 pb-4">
+            <CardTitle className="text-white text-base">Тренд на печалбата — {year} г.</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 11 }} tickFormatter={v => `${v} €`} width={70} />
+                  <RechartsTooltip
+                    contentStyle={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+                    cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+                    formatter={(v: any) => [`${fmt(v)} €`, 'Печалба']}
+                  />
+                  <Area type="monotone" dataKey="Печалба" stroke="#6366f1" strokeWidth={2} fill="url(#profitGrad)" dot={{ fill: '#6366f1', r: 3 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <TabsContent value="pnl" className="mt-6">
-          <Card className="border-0 shadow-sm ring-1 ring-gray-100">
-            <CardHeader>
-              <CardTitle>Отчет за Приходите и Разходите (ОПР)</CardTitle>
-              <CardDescription>За периода {year}-01-01 до {year}-12-31</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border border-gray-100 overflow-hidden">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-gray-50 text-gray-500 font-medium">
-                    <tr>
-                      <th className="px-6 py-3">Показател</th>
-                      <th className="px-6 py-3 text-right">Сума (EUR)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    <tr className="bg-green-50/30">
-                      <td className="px-6 py-4 font-semibold text-gray-900">I. Общо Приходи от Дейността</td>
-                      <td className="px-6 py-4 font-semibold text-right text-gray-900">
-                        {ytdRev.toLocaleString('bg-BG', { minimumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                    <tr className="bg-red-50/30">
-                      <td className="px-6 py-4 font-semibold text-gray-900">II. Общо Разходи за Дейността</td>
-                      <td className="px-6 py-4 font-semibold text-right text-gray-900">
-                        {ytdExp.toLocaleString('bg-BG', { minimumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                    <tr className="bg-indigo-50/50">
-                      <td className="px-6 py-4 font-bold text-gray-900">III. Счетоводна Печалба / Загуба</td>
-                      <td className="px-6 py-4 font-bold text-right text-gray-900">
-                        {netProfit.toLocaleString('bg-BG', { minimumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="balance" className="mt-6">
-          <Card className="border-0 shadow-sm ring-1 ring-gray-100">
-            <CardHeader>
-              <CardTitle>Счетоводен Баланс</CardTitle>
-              <CardDescription>Към текущата дата</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-semibold border-b pb-2 mb-4">Актив (Assets)</h3>
-                  <table className="w-full text-sm text-left">
-                    <tbody className="divide-y divide-gray-100">
-                      <tr>
-                        <td className="py-3 text-gray-600">Текущи активи</td>
-                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalAssets || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
-                      </tr>
-                      <tr className="bg-gray-50/50">
-                        <td className="py-3 px-2 font-bold text-gray-900">Общо Сума на Актива</td>
-                        <td className="py-3 px-2 font-bold text-right text-gray-900">{Math.abs(Number(data?.balanceSheet?.totalAssets || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
-                      </tr>
-                    </tbody>
-                  </table>
+      {/* Detailed report navigation cards */}
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-4">Детайлни отчети</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {[
+            {
+              href: `/${lang}/dashboard/accounting/reports/pl`,
+              title: 'ОПР — Отчет за Приходите и Разходите',
+              desc: 'Разбивка по счетоводни сметки (7xx приходи / 6xx разходи). Нетен финансов резултат.',
+              icon: TrendingUp,
+              color: 'text-emerald-400',
+              border: 'border-emerald-500/20 hover:border-emerald-500/40',
+              bg: 'from-emerald-950/30 to-teal-950/20',
+            },
+            {
+              href: `/${lang}/dashboard/accounting/reports/balance`,
+              title: 'Счетоводен Баланс',
+              desc: 'Актив и пасив към текущата дата. Собствен капитал, задължения, вземания.',
+              icon: Scale,
+              color: 'text-indigo-400',
+              border: 'border-indigo-500/20 hover:border-indigo-500/40',
+              bg: 'from-indigo-950/30 to-blue-950/20',
+            },
+            {
+              href: `/${lang}/dashboard/accounting/reports/cashflow`,
+              title: 'Паричен Поток',
+              desc: 'Входящи и изходящи парични потоци. Нетна промяна в ликвидността.',
+              icon: Wallet,
+              color: 'text-violet-400',
+              border: 'border-violet-500/20 hover:border-violet-500/40',
+              bg: 'from-violet-950/30 to-purple-950/20',
+            },
+          ].map(r => (
+            <Link key={r.href} href={r.href}>
+              <div className={`group rounded-2xl border ${r.border} bg-gradient-to-br ${r.bg} p-6 h-full transition-all hover:bg-white/5 cursor-pointer`}>
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center`}>
+                    <r.icon size={20} className={r.color} />
+                  </div>
+                  <ArrowRight size={16} className="text-zinc-600 group-hover:text-zinc-300 transition-colors mt-1" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold border-b pb-2 mb-4">Пасив (Liabilities & Equity)</h3>
-                  <table className="w-full text-sm text-left">
-                    <tbody className="divide-y divide-gray-100">
-                      <tr>
-                        <td className="py-3 text-gray-600">Собствен капитал</td>
-                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalEquity || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 text-gray-600">Текущи задължения</td>
-                        <td className="py-3 text-right font-medium">{Math.abs(Number(data?.balanceSheet?.totalLiabilities || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
-                      </tr>
-                      <tr className="bg-gray-50/50">
-                        <td className="py-3 px-2 font-bold text-gray-900">Общо Сума на Пасива</td>
-                        <td className="py-3 px-2 font-bold text-right text-gray-900">{Math.abs(Number(data?.balanceSheet?.totalLiabilitiesAndEquity || 0)).toLocaleString('bg-BG', { minimumFractionDigits: 2 })} €</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <h3 className="font-semibold text-white text-sm mb-2">{r.title}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{r.desc}</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </Link>
+          ))}
+        </div>
+      </div>
 
-      {/* Global Print Styles */}
+      {/* Print styles */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          #main-content, #main-content * {
-            visibility: visible;
-          }
-          #main-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          .print\\:block {
-            display: block !important;
-          }
+          body * { visibility: hidden; }
+          #main-content, #main-content * { visibility: visible; }
+          #main-content { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; }
+          .print\\:hidden { display: none !important; }
         }
       `}} />
     </div>
