@@ -4,17 +4,14 @@
 import { db } from '@/lib/db/db';
 import { documents } from '@/lib/db/schema/documents';
 import { tasks } from '@/lib/db/schema/tasks';
-import { tenants } from '@/lib/db/schema/tenants';
+import { requireTenant } from '@/lib/auth/get-tenant';
 import { eq, desc } from 'drizzle-orm';
-import { auth } from '@clerk/nextjs/server';
 import { TaskGenerator } from '@/workflows/task-generator';
 import { revalidatePath } from 'next/cache';
 
 export async function uploadAndAnalyzeDocument(formData: FormData) {
   try {
-    const t = await db.select().from(tenants).limit(1);
-    const tenantId = t[0]?.id;
-    if (!tenantId) throw new Error('No tenant found');
+    const { tenantId } = await requireTenant();
     
     const file = formData.get('file') as File;
     const rawText = formData.get('rawText') as string;
@@ -42,10 +39,14 @@ export async function uploadAndAnalyzeDocument(formData: FormData) {
 
 export async function getDocuments() {
   try {
-    const data = await db.select().from(documents).orderBy(desc(documents.createdAt));
+    const { tenantId } = await requireTenant();
+    const data = await db
+      .select({ id: documents.id, title: documents.title, type: documents.type, status: documents.status, createdAt: documents.createdAt })
+      .from(documents)
+      .where(eq(documents.tenantId, tenantId))
+      .orderBy(desc(documents.createdAt));
     return { success: true, data };
   } catch (err: any) {
-    console.error('[getDocuments]', err);
     return { success: false, data: [] };
   }
 }
