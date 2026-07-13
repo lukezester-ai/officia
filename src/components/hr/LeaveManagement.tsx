@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Check, X, Plus, CalendarDays, Stethoscope, Umbrella, Clock, AlertCircle } from 'lucide-react';
-import { getLeaveRequests, createLeaveRequest, approveLeaveRequest, rejectLeaveRequest, getEmployeesForSelect } from './leave-actions';
+import { getLeaveRequests, createLeaveRequest, approveLeaveRequest, rejectLeaveRequest, getEmployeesForSelect, getLeaveBalance } from '@/app/[lang]/dashboard/hr/leave-actions';
 
 const TYPE_COLORS: Record<string, string> = {
   annual: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
@@ -40,7 +40,9 @@ function daysBetween(start: string, end: string) {
 export function LeaveManagement() {
   const [leaves, setLeaves]         = useState<any[]>([]);
   const [emps, setEmps]             = useState<any[]>([]);
+  const [balance, setBalance]       = useState<any[]>([]);
   const [filter, setFilter]         = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [tab, setTab]               = useState<'requests' | 'balance'>('requests');
   const [open, setOpen]             = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -48,9 +50,10 @@ export function LeaveManagement() {
   const [form, setForm] = useState({ employeeId: '', startDate: '', endDate: '', type: 'annual', reason: '' });
 
   async function reload() {
-    const [lr, er] = await Promise.all([getLeaveRequests(), getEmployeesForSelect()]);
+    const [lr, er, br] = await Promise.all([getLeaveRequests(), getEmployeesForSelect(), getLeaveBalance()]);
     setLeaves(lr.data ?? []);
     setEmps(er.data ?? []);
+    setBalance(br.data ?? []);
   }
 
   useEffect(() => { reload(); }, []);
@@ -125,6 +128,81 @@ export function LeaveManagement() {
         ))}
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex gap-1.5 bg-white/5 border border-white/10 rounded-xl p-1 w-fit">
+        <button onClick={() => setTab('requests')} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === 'requests' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'}`}>📋 Заявки</button>
+        <button onClick={() => setTab('balance')}  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === 'balance'  ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'}`}>📊 Баланс</button>
+      </div>
+
+      {tab === 'balance' && (
+        <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/8">
+            <h3 className="font-semibold text-white">Баланс отпуски {new Date().getFullYear()} г.</h3>
+            <p className="text-xs text-zinc-500 mt-0.5">Лимит: 20 дни платен отпуск/год. по Кодекса на труда</p>
+          </div>
+          {balance.length === 0 ? (
+            <div className="p-12 text-center text-zinc-500">Няма активни служители.</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/8 text-xs text-zinc-500">
+                  <th className="text-left px-6 py-3">Служител</th>
+                  <th className="text-center px-4 py-3">Платен отпуск</th>
+                  <th className="text-center px-4 py-3">Използван</th>
+                  <th className="text-center px-4 py-3">Остатък</th>
+                  <th className="text-center px-4 py-3">Болнични дни</th>
+                  <th className="text-center px-4 py-3">Неплатен отп.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {balance.map((emp: any) => {
+                  const pct = Math.min(100, Math.round((emp.annualUsed / emp.annualLimit) * 100));
+                  const lowLeft = emp.annualLeft <= 5;
+                  return (
+                    <tr key={emp.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs">
+                            {emp.firstName?.[0]}{emp.lastName?.[0]}
+                          </div>
+                          <div>
+                            <div className="font-medium text-zinc-200">{emp.firstName} {emp.lastName}</div>
+                            <div className="text-xs text-zinc-500">{emp.position || '—'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="text-center px-4 py-4">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <span className="text-zinc-300 font-medium">{emp.annualLimit} дни</span>
+                          <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${pct > 80 ? 'bg-rose-500' : pct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="text-center px-4 py-4">
+                        <span className={`font-semibold tabular-nums ${emp.annualUsed > 0 ? 'text-amber-400' : 'text-zinc-500'}`}>{emp.annualUsed}</span>
+                      </td>
+                      <td className="text-center px-4 py-4">
+                        <span className={`font-bold tabular-nums ${lowLeft ? 'text-rose-400' : 'text-emerald-400'}`}>{emp.annualLeft}</span>
+                        {lowLeft && <span className="ml-1 text-xs text-rose-500">⚠️</span>}
+                      </td>
+                      <td className="text-center px-4 py-4">
+                        <span className={`tabular-nums ${emp.sickDays > 0 ? 'text-rose-400' : 'text-zinc-500'}`}>{emp.sickDays}</span>
+                      </td>
+                      <td className="text-center px-4 py-4">
+                        <span className={`tabular-nums ${emp.unpaidDays > 0 ? 'text-slate-400' : 'text-zinc-500'}`}>{emp.unpaidDays}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {tab === 'requests' && (
+      <>
       {/* Header + filters */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1.5 bg-white/5 border border-white/10 rounded-xl p-1">
@@ -309,6 +387,8 @@ export function LeaveManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </>
+      )}
     </div>
   );
 }

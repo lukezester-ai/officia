@@ -132,3 +132,76 @@ export async function getEmployeesForSelect() {
     return { success: false, data: [] };
   }
 }
+
+const ANNUAL_DAYS_LIMIT = 20; // КТ стандарт – 20 дни платен отпуск/год.
+
+export async function getLeaveBalance() {
+  try {
+    const { tenantId } = await requireTenant();
+
+    // Всички активни служители
+    const emps = await db
+      .select({
+        id:        employees.id,
+        firstName: employees.firstName,
+        lastName:  employees.lastName,
+        position:  employees.position,
+        workStatus: employees.workStatus,
+      })
+      .from(employees)
+      .where(and(eq(employees.tenantId, tenantId), eq(employees.isActive, true)));
+
+    if (emps.length === 0) return { success: true, data: [] };
+
+    // Одобрени заявки за текущата година
+    const year = new Date().getFullYear();
+    const yearStart = `${year}-01-01`;
+    const yearEnd   = `${year}-12-31`;
+
+    const approved = await db
+      .select({
+        employeeId: leaveRequests.employeeId,
+        type:       leaveRequests.type,
+        startDate:  leaveRequests.startDate,
+        endDate:    leaveRequests.endDate,
+      })
+      .from(leaveRequests)
+      .where(
+        and(
+          eq(leaveRequests.tenantId, tenantId),
+          eq(leaveRequests.status, 'approved'),
+        )
+      );
+
+    // Изчисляваме дни по служител
+    function countDays(start: string, end: string) {
+      return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
+    }
+
+    const balance = emps.map(emp => {
+      const empLeaves = approved.filter(l => l.employeeId === emp.id);
+      const annualUsed = empLeaves
+        .filter(l => l.type === 'annual')
+        .reduce((sum, l) => sum + countDays(l.startDate, l.endDate), 0);
+      const sickDays = empLeaves
+        .filter(l => l.type === 'sick')
+        .reduce((sum, l) => sum + countDays(l.startDate, l.endDate), 0);
+      const unpaidDays = empLeaves
+        .filter(l => l.type === 'unpaid')
+        .reduce((sum, l) => sum + countDays(l.startDate, l.endDate), 0);
+
+      return {
+        ...emp,
+        annualLimit:   ANNUAL_DAYS_LIMIT,
+        annualUsed,
+        annualLeft:    Math.max(0, ANNUAL_DAYS_LIMIT - annualUsed),
+        sickDays,
+        unpaidDays,
+      };
+    });
+
+    return { success: true, data: balance };
+  } catch (e: any) {
+    return { success: false, error: e?.message, data: [] };
+  }
+}
