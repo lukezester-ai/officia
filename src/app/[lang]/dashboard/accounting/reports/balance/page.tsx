@@ -23,34 +23,43 @@ export default async function BalanceReport({ params }: { params: Promise<{ lang
   const { lang } = await params;
   const { userId } = await auth();
   
-  if (!userId) return <div className="p-8 text-white">Unauthenticated</div>;
+  if (!userId) return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Не сте влезли в системата.</div>;
 
-  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
-  const tenantId = user?.tenantId;
+  let tenantId: string | null = null;
+  try {
+    const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+    tenantId = user?.tenantId ?? null;
+  } catch (e: any) {
+    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Грешка при свързване с базата данни: {e?.message}</div>;
+  }
 
-  if (!tenantId) return <div className="p-8 text-white">No tenant configured for this user.</div>;
+  if (!tenantId) return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Не е намерен tenant за този потребител.</div>;
 
-  const asOf = new Date();
-  const report = await ReportEngine.generateBalanceSheet(tenantId, asOf);
+  let report: any;
+  try {
+    report = await ReportEngine.generateBalanceSheet(tenantId, asOf);
+  } catch (e: any) {
+    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Грешка при генериране на баланс: {e?.message}</div>;
+  }
 
   const flatten = (grouped: any) => {
     const res: [string, number][] = [];
-    Object.values(grouped).forEach((arr: any) => {
-      arr.forEach((acc: any) => {
-        res.push([acc.accountCode || "Unknown", Math.abs(Number(acc.balance) || 0)]);
+    Object.values(grouped || {}).forEach((arr: any) => {
+      (arr || []).forEach((acc: any) => {
+        res.push([acc.accountCode || 'Unknown', Math.abs(Number(acc.balance) || 0)]);
       });
     });
     return res;
   };
 
-  const assets = flatten(report.assets);
-  const liabilities = flatten(report.liabilities);
-  const equity = flatten(report.equity);
+  const assets      = flatten(report?.assets);
+  const liabilities = flatten(report?.liabilities);
+  const equity      = flatten(report?.equity);
 
-  const totalA = report.totalAssets;
-  const totalL = report.totalLiabilities;
-  const totalE = report.totalEquity;
-  const balanced = Math.abs(totalA - (totalL + totalE)) < 1;
+  const totalA    = Number(report?.totalAssets      || 0);
+  const totalL    = Number(report?.totalLiabilities || 0);
+  const totalE    = Number(report?.totalEquity      || 0);
+  const balanced  = Math.abs(totalA - (totalL + totalE)) < 1;
 
   const Section = ({ title, color, rows, total, totalColor, bg }: any) => (
     <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
