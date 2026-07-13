@@ -4,6 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, Zap, Building2, Sparkles } from 'lucide-react';
 
+function getPlanHref(planId: string, isAnnual: boolean): string {
+  if (planId === 'starter') return '/sign-up';
+  const billing = isAnnual ? 'annual' : 'monthly';
+  return `/api/stripe/checkout?plan=${planId}&billing=${billing}`;
+}
+
 const PLANS = [
   {
     id: 'starter',
@@ -175,7 +181,7 @@ export default function PricingSection() {
                   ))}
                 </div>
 
-                <Link href="/sign-up" className={plan.ctaStyle}>
+                <Link href={getPlanHref(plan.id, isAnnual)} className={plan.ctaStyle}>
                   {plan.cta}
                 </Link>
               </div>
