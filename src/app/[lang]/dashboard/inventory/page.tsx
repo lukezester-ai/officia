@@ -1,29 +1,75 @@
 'use client';
 // @ts-nocheck
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getInventoryData, createInventoryItem, addInventoryMovement } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Package, Plus, LogIn, LogOut, Tags, Box, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Package, Plus, Tags, Box, ArrowDownToLine, ArrowUpFromLine, Camera, Scan, Zap, Search, CheckCircle, AlertTriangle, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 }
 
-export default function InventoryPage() {
-  const [data, setData] = useState<any>({ items: [], totalStockValue: 0, totalItemsCount: 0 });
-  const [loading, setLoading] = useState(true);
+// ── Barcode scanner hook ─────────────────────────────────────────────────────
+// Detects USB/Bluetooth HID barcode scanners (they type fast + send Enter)
+function useBarcodeScanner(onScan: (code: string) => void) {
+  const bufferRef = useRef('');
+  const timerRef  = useRef<any>(null);
 
-  // Modals state
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      // Ignore if focus is inside an input/textarea
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      if (e.key === 'Enter') {
+        if (bufferRef.current.length >= 3) {
+          onScan(bufferRef.current.trim());
+        }
+        bufferRef.current = '';
+        clearTimeout(timerRef.current);
+        return;
+      }
+
+      if (e.key.length === 1) {
+        bufferRef.current += e.key;
+        clearTimeout(timerRef.current);
+        // Scanners finish within 50ms; reset after 300ms idle
+        timerRef.current = setTimeout(() => { bufferRef.current = ''; }, 300);
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onScan]);
+}
+
+export default function InventoryPage() {
+  const [data, setData]       = useState<any>({ items: [], totalStockValue: 0, totalItemsCount: 0 });
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
+
+  // Scan mode
+  const [scanMode, setScanMode]         = useState<'idle' | 'camera' | 'manual'>('idle');
+  const [scannedItem, setScannedItem]   = useState<any>(null);
+  const [scanInput, setScanInput]       = useState('');
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scanInterval = useRef<any>(null);
+
+  // Movement
+  const [movementOpen, setMovementOpen]   = useState(false);
+  const [movementType, setMovementType]   = useState<'in' | 'out'>('in');
+  const [selectedItem, setSelectedItem]   = useState<any>(null);
+
+  // New item
   const [newItemOpen, setNewItemOpen] = useState(false);
-  const [movementOpen, setMovementOpen] = useState(false);
-  const [movementType, setMovementType] = useState<'in' | 'out'>('in');
-  const [selectedItemId, setSelectedItemId] = useState<string>('');
 
   const load = async () => {
     const res = await getInventoryData();
@@ -31,6 +77,106 @@ export default function InventoryPage() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  // ── Find item by barcode/SKU ──────────────────────────────────────────────
+  const findItem = useCallback((code: string) => {
+    const found = data.items.find((i: any) =>
+      i.sku?.toLowerCase() === code.toLowerCase() ||
+      i.barcode?.toLowerCase() === code.toLowerCase()
+    );
+    return found || null;
+  }, [data.items]);
+
+  const handleScan = useCallback((code: string) => {
+    const item = findItem(code);
+    if (item) {
+      setScannedItem(item);
+      toast.success(`✅ Намерен: ${item.name}`, { duration: 2000 });
+    } else {
+      setScannedItem(null);
+      toast.error(`❌ Артикул "${code}" не е намерен в номенклатурата`, { duration: 3000 });
+    }
+  }, [findItem]);
+
+  // USB/BT scanner listener (global keydown)
+  useBarcodeScanner(handleScan);
+
+  // ── Camera barcode scanning ───────────────────────────────────────────────
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      setCameraStream(stream);
+      setScanMode('camera');
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
+
+      // Use native BarcodeDetector API (Chrome 83+, Edge, Android)
+      if ('BarcodeDetector' in window) {
+        const detector = new (window as any).BarcodeDetector({
+          formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e', 'codabar', 'itf'],
+        });
+        scanInterval.current = setInterval(async () => {
+          if (!videoRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            if (codes.length > 0) {
+              stopCamera();
+              handleScan(codes[0].rawValue);
+            }
+          } catch {}
+        }, 200);
+      } else {
+        toast.info('BarcodeDetector не се поддържа в този браузър. Използвайте ръчно въвеждане или Chrome.', { duration: 5000 });
+      }
+    } catch {
+      toast.error('Не може да се достъпи камерата. Проверете разрешенията.');
+    }
+  };
+
+  const stopCamera = () => {
+    clearInterval(scanInterval.current);
+    cameraStream?.getTracks().forEach(t => t.stop());
+    setCameraStream(null);
+    setScanMode('idle');
+  };
+
+  const openMovement = (type: 'in' | 'out', item: any) => {
+    setSelectedItem(item);
+    setMovementType(type);
+    setMovementOpen(true);
+  };
+
+  const handleMovement = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd  = new FormData(e.currentTarget);
+    const qty = parseFloat(fd.get('quantity') as string);
+
+    if (movementType === 'out' && selectedItem?.currentQuantity < qty) {
+      toast.error('Няма достатъчна наличност!'); return;
+    }
+
+    const res = await addInventoryMovement({
+      itemId:   selectedItem.id,
+      type:     movementType,
+      quantity: qty,
+      unitCost: movementType === 'in'
+        ? parseFloat(fd.get('unitCost') as string)
+        : selectedItem.averageUnitCost,
+    });
+
+    if (res.success) {
+      toast.success(movementType === 'in' ? '✅ Заприходено!' : '✅ Изписано!');
+      setMovementOpen(false);
+      setScannedItem(null);
+      load();
+    } else {
+      toast.error('Грешка: ' + res.error);
+    }
+  };
 
   const handleCreateItem = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,87 +186,50 @@ export default function InventoryPage() {
       name: fd.get('name') as string,
       unitOfMeasure: fd.get('unitOfMeasure') as string,
     });
-    if (res.success) {
-      toast.success("Артикулът е създаден!");
-      setNewItemOpen(false);
-      load();
-    } else {
-      toast.error("Грешка: " + res.error);
-    }
+    if (res.success) { toast.success('Артикулът е създаден!'); setNewItemOpen(false); load(); }
+    else toast.error('Грешка: ' + res.error);
   };
 
-  const handleMovement = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const qty = parseFloat(fd.get('quantity') as string);
-    const unitCost = movementType === 'in' ? parseFloat(fd.get('unitCost') as string) : 0; // out takes avg cost dynamically later, for MVP we can pass 0 or current avg
-    
-    // Quick validation
-    if (movementType === 'out') {
-      const item = data.items.find((i: any) => i.id === selectedItemId) as any;
-      if (!item || item.currentQuantity < qty) {
-        toast.error("Няма достатъчна наличност за изписване!");
-        return;
-      }
-    }
-
-    const res = await addInventoryMovement({
-      itemId: selectedItemId,
-      type: movementType,
-      quantity: qty,
-      unitCost: movementType === 'in' ? unitCost : (data.items.find((i: any) => i.id === selectedItemId) as any).averageUnitCost
-    });
-
-    if (res.success) {
-      toast.success(movementType === 'in' ? "Успешно заприходяване!" : "Успешно изписване!");
-      setMovementOpen(false);
-      load();
-    } else {
-      toast.error("Грешка: " + res.error);
-    }
-  };
-
-  const openMovementDialog = (type: 'in' | 'out', itemId: string) => {
-    setMovementType(type);
-    setSelectedItemId(itemId);
-    setMovementOpen(true);
-  };
+  const filtered = data.items.filter((i: any) =>
+    !search || i.name?.toLowerCase().includes(search.toLowerCase()) || i.sku?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            Склад (Наличности)
+            Склад
+            <span className="text-xs font-semibold px-2 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-md flex items-center gap-1">
+              <Scan size={12} /> Баркод
+            </span>
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">Управление на артикули, заприходяване и изписване.</p>
+          <p className="text-sm text-zinc-400 mt-1">Заприходяване и изписване чрез баркод скенер или камера.</p>
         </div>
-        
         <Dialog open={newItemOpen} onOpenChange={setNewItemOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-indigo-500/50">
+            <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-500/50">
               <Plus size={16} /> Нов Артикул
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-white/10 text-zinc-200">
+          <DialogContent className="sm:max-w-[440px] bg-zinc-950 border-white/10 text-zinc-200">
             <DialogHeader>
-              <DialogTitle className="text-white">Създаване на артикул</DialogTitle>
-              <DialogDescription className="text-zinc-400">Добавете нова стока или материал в номенклатурата.</DialogDescription>
+              <DialogTitle className="text-white">Нов артикул в номенклатурата</DialogTitle>
+              <DialogDescription className="text-zinc-400">SKU кодът се ползва като баркод идентификатор.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateItem}>
               <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <label htmlFor="sku" className="text-sm font-medium">SKU (Код)</label>
-                  <Input id="sku" name="sku" required className="bg-white/5 border-white/10 focus-visible:ring-indigo-500" placeholder="напр. IT-001" />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">Наименование</label>
-                  <Input id="name" name="name" required className="bg-white/5 border-white/10 focus-visible:ring-indigo-500" placeholder="напр. Лаптоп Lenovo ThinkPad" />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="unitOfMeasure" className="text-sm font-medium">Мерна единица</label>
-                  <Input id="unitOfMeasure" name="unitOfMeasure" required className="bg-white/5 border-white/10 focus-visible:ring-indigo-500" placeholder="напр. бр, кг, пакет" />
-                </div>
+                {[
+                  { id: 'sku', label: 'SKU / Баркод', placeholder: 'напр. 5901234123457' },
+                  { id: 'name', label: 'Наименование', placeholder: 'напр. Минерална вода 0.5л' },
+                  { id: 'unitOfMeasure', label: 'Мерна единица', placeholder: 'бр, кг, л, пакет...' },
+                ].map(f => (
+                  <div key={f.id} className="space-y-1.5">
+                    <label htmlFor={f.id} className="text-sm font-medium text-zinc-300">{f.label}</label>
+                    <Input id={f.id} name={f.id} required placeholder={f.placeholder} className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500" />
+                  </div>
+                ))}
               </div>
               <DialogFooter>
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full">Създай Артикул</Button>
@@ -130,87 +239,158 @@ export default function InventoryPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-white/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
-              <Tags size={14} className="text-indigo-400" /> Уникални Артикули
-            </CardTitle>
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-white tabular-nums drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">{data.totalItemsCount}</div></CardContent>
-        </Card>
-        
-        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-emerald-500/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
-              <Package size={14} className="text-emerald-400" /> Общо Количество
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]">
-              {data.items.reduce((s: number, i: any) => s + i.currentQuantity, 0).toLocaleString()} бр.
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── SCAN PANEL ── */}
+      <Card className="border-emerald-500/20 bg-emerald-500/5">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap size={16} className="text-emerald-400" />
+            <span className="text-sm font-semibold text-emerald-400">Бърз вход/изход чрез баркод</span>
+            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+              <Wifi size={10} className="mr-1" /> USB/BT скенерът работи автоматично
+            </Badge>
+          </div>
 
-        <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-violet-500/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
-              <Box size={14} className="text-violet-400" /> Обща Стойност
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-violet-400 tabular-nums drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]">{fmt(data.totalStockValue)}</div>
-          </CardContent>
-        </Card>
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Manual scan input */}
+            <div>
+              <p className="text-xs text-zinc-500 mb-2">Ръчно въведи или сканирай SKU/баркод:</p>
+              <div className="flex gap-2">
+                <Input
+                  value={scanInput}
+                  onChange={e => setScanInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { handleScan(scanInput); setScanInput(''); } }}
+                  placeholder="Сканирай или въведи баркод..."
+                  className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-emerald-500"
+                />
+                <Button onClick={() => { handleScan(scanInput); setScanInput(''); }} variant="outline" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 shrink-0">
+                  <Search size={16} />
+                </Button>
+              </div>
+            </div>
+
+            {/* Camera scan */}
+            <div>
+              <p className="text-xs text-zinc-500 mb-2">Сканирай с камера (Chrome / Android):</p>
+              {scanMode === 'camera' ? (
+                <div className="relative">
+                  <video ref={videoRef} className="w-full h-24 object-cover rounded-lg border border-emerald-500/30" autoPlay muted playsInline />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-32 h-16 border-2 border-emerald-400 rounded-md opacity-70" />
+                  </div>
+                  <Button size="sm" onClick={stopCamera} className="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white h-7 text-xs">Стоп</Button>
+                </div>
+              ) : (
+                <Button onClick={startCamera} variant="outline" className="w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 gap-2">
+                  <Camera size={16} /> Отвори камера
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Scanned item result */}
+          {scannedItem && (
+            <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle size={20} className="text-emerald-400 shrink-0" />
+                <div>
+                  <div className="text-white font-semibold">{scannedItem.name}</div>
+                  <div className="text-xs text-zinc-400">SKU: {scannedItem.sku} · Наличност: <span className="text-emerald-400 font-bold">{scannedItem.currentQuantity} {scannedItem.unitOfMeasure}</span></div>
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button size="sm" onClick={() => openMovement('in', scannedItem)} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1">
+                  <ArrowDownToLine size={14} /> Вход
+                </Button>
+                <Button size="sm" onClick={() => openMovement('out', scannedItem)} className="bg-rose-600 hover:bg-rose-700 text-white gap-1">
+                  <ArrowUpFromLine size={14} /> Изход
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <p className="text-[11px] text-zinc-600 mt-3">
+            💡 USB/Bluetooth баркод скенерите работят директно — насочете скенера към баркода без да кликате никъде.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'Артикули', value: data.totalItemsCount, icon: Tags, color: 'text-indigo-400', glow: 'white' },
+          { label: 'Общо количество', value: `${data.items.reduce((s: number, i: any) => s + i.currentQuantity, 0).toLocaleString()} бр.`, icon: Package, color: 'text-emerald-400', glow: 'emerald' },
+          { label: 'Обща стойност', value: fmt(data.totalStockValue), icon: Box, color: 'text-violet-400', glow: 'violet' },
+        ].map(s => (
+          <Card key={s.label} className="border-white/10 bg-white/5 hover:border-white/20 transition-all">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-zinc-400 font-medium flex items-center gap-1.5">
+                <s.icon size={14} className={s.color} /> {s.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">
-        <div className="bg-black/20 px-6 py-4 border-b border-white/5">
-          <h2 className="text-lg font-semibold text-white">Номенклатура и наличности</h2>
+      {/* Table */}
+      <Card className="border-white/10 bg-white/5 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold text-white">Номенклатура</h2>
+          <div className="relative max-w-xs w-full">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Търси артикул..." className="pl-8 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 h-9" />
+          </div>
         </div>
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
-             <p className="text-sm text-zinc-500 py-16 text-center">Зареждане на склад...</p>
+            <p className="text-sm text-zinc-500 py-16 text-center">Зареждане...</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="pl-6 text-zinc-400">SKU</TableHead>
-                  <TableHead className="text-zinc-400">Наименование</TableHead>
-                  <TableHead className="text-right text-zinc-400">Наличност</TableHead>
-                  <TableHead className="text-right text-zinc-400">Средна Цена</TableHead>
-                  <TableHead className="text-right text-zinc-400">Обща Стойност</TableHead>
-                  <TableHead className="text-right pr-6 text-zinc-400">Действия</TableHead>
+                  {['SKU / Баркод', 'Наименование', 'Наличност', 'Ср. цена', 'Стойност', 'Действия'].map(h => (
+                    <TableHead key={h} className={`text-zinc-400 text-xs ${h === 'Действия' ? 'text-right pr-6' : h !== 'SKU / Баркод' ? 'text-right' : 'pl-6'}`}>{h}</TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.items.map((item: any) => (
-                  <TableRow key={item.id} className="hover:bg-white/5 border-white/10 transition-colors">
-                    <TableCell className="pl-6 font-mono text-xs text-zinc-400">{item.sku}</TableCell>
-                    <TableCell className="font-medium text-zinc-200">{item.name}</TableCell>
-                    <TableCell className="text-right tabular-nums font-bold text-white">
-                      {item.currentQuantity} <span className="text-zinc-500 text-xs font-normal">{item.unitOfMeasure}</span>
+                {filtered.map((item: any) => (
+                  <TableRow key={item.id} className="hover:bg-white/3 border-white/10 transition-colors group">
+                    <TableCell className="pl-6">
+                      <div className="font-mono text-xs text-zinc-400 flex items-center gap-1.5">
+                        <Scan size={11} className="text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                        {item.sku}
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums text-zinc-400">{fmt(item.averageUnitCost)}</TableCell>
+                    <TableCell className="font-medium text-zinc-200">{item.name}</TableCell>
+                    <TableCell className="text-right">
+                      <span className={`font-bold tabular-nums ${item.currentQuantity <= 0 ? 'text-rose-400' : item.currentQuantity < 5 ? 'text-amber-400' : 'text-white'}`}>
+                        {item.currentQuantity}
+                      </span>
+                      <span className="text-zinc-500 text-xs ml-1">{item.unitOfMeasure}</span>
+                      {item.currentQuantity <= 0 && <Badge className="ml-2 bg-rose-500/20 text-rose-400 border-rose-500/30 text-[10px]">Изчерпан</Badge>}
+                      {item.currentQuantity > 0 && item.currentQuantity < 5 && <Badge className="ml-2 bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">Малко</Badge>}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums text-zinc-400 text-sm">{fmt(item.averageUnitCost)}</TableCell>
                     <TableCell className="text-right tabular-nums text-violet-300 font-medium">{fmt(item.currentValue)}</TableCell>
                     <TableCell className="text-right pr-6">
                       <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" className="h-8 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => openMovementDialog('in', item.id)}>
-                          <ArrowDownToLine size={14} className="mr-1" /> Вход
+                        <Button size="sm" variant="outline" className="h-8 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 gap-1" onClick={() => openMovement('in', item)}>
+                          <ArrowDownToLine size={13} /> Вход
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20" onClick={() => openMovementDialog('out', item.id)}>
-                          <ArrowUpFromLine size={14} className="mr-1" /> Изход
+                        <Button size="sm" variant="outline" className="h-8 bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20 gap-1" onClick={() => openMovement('out', item)}>
+                          <ArrowUpFromLine size={13} /> Изход
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                
-                {data.items.length === 0 && (
+                {filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-16 text-zinc-500">
-                      <p>Складът е празен. Създайте нов артикул.</p>
+                      {search ? `Няма резултати за "${search}"` : 'Складът е празен. Добавете артикули.'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -222,47 +402,44 @@ export default function InventoryPage() {
 
       {/* Movement Dialog */}
       <Dialog open={movementOpen} onOpenChange={setMovementOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-white/10 text-zinc-200">
+        <DialogContent className="sm:max-w-[420px] bg-zinc-950 border-white/10 text-zinc-200">
           <DialogHeader>
-            <DialogTitle className="text-white">
-              {movementType === 'in' ? 'Заприходяване на стока' : 'Изписване на стока'}
+            <DialogTitle className={`text-white flex items-center gap-2`}>
+              {movementType === 'in'
+                ? <><ArrowDownToLine size={18} className="text-emerald-400" /> Заприходяване</>
+                : <><ArrowUpFromLine size={18} className="text-rose-400" /> Изписване</>
+              }
             </DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              Въведете количеството, което влиза или излиза от склада.
-            </DialogDescription>
+            {selectedItem && (
+              <DialogDescription className="text-zinc-400">
+                <strong className="text-zinc-200">{selectedItem.name}</strong> · Наличност: <span className="text-emerald-400 font-bold">{selectedItem.currentQuantity} {selectedItem.unitOfMeasure}</span>
+              </DialogDescription>
+            )}
           </DialogHeader>
-          {selectedItemId && (
+          {selectedItem && (
             <form onSubmit={handleMovement}>
               <div className="grid gap-4 py-4">
-                <div className="bg-white/5 p-3 rounded-md text-sm mb-2">
-                  <span className="text-zinc-400 block mb-1">Артикул:</span>
-                  <strong className="text-white">{(data.items.find((i: any) => i.id === selectedItemId) as any)?.name}</strong>
-                  <div className="flex justify-between mt-2 text-xs">
-                    <span className="text-zinc-400">Текуща наличност:</span>
-                    <span className="text-emerald-400 font-bold">{(data.items.find((i: any) => i.id === selectedItemId) as any)?.currentQuantity} {(data.items.find((i: any) => i.id === selectedItemId) as any)?.unitOfMeasure}</span>
-                  </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="quantity" className="text-sm font-medium text-zinc-300">Количество ({selectedItem.unitOfMeasure})</label>
+                  <Input id="quantity" name="quantity" type="number" step="0.001" min="0.001" required autoFocus
+                    className="bg-white/5 border-white/10 text-white text-lg font-bold focus-visible:ring-indigo-500" />
                 </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="quantity" className="text-sm font-medium">Количество</label>
-                  <Input id="quantity" name="quantity" type="number" step="0.001" min="0.001" required className="bg-white/5 border-white/10 focus-visible:ring-indigo-500" />
-                </div>
-                
                 {movementType === 'in' && (
-                  <div className="space-y-2">
-                    <label htmlFor="unitCost" className="text-sm font-medium">Единична цена (Себестойност)</label>
-                    <Input id="unitCost" name="unitCost" type="number" step="0.01" min="0" required className="bg-white/5 border-white/10 focus-visible:ring-indigo-500" />
+                  <div className="space-y-1.5">
+                    <label htmlFor="unitCost" className="text-sm font-medium text-zinc-300">Единична цена (лв/ед)</label>
+                    <Input id="unitCost" name="unitCost" type="number" step="0.01" min="0" required
+                      className="bg-white/5 border-white/10 text-white focus-visible:ring-indigo-500" />
                   </div>
                 )}
                 {movementType === 'out' && (
-                  <div className="text-xs text-zinc-500 flex items-center gap-2 mt-2">
-                    <Box size={14} /> Изписването става по среднопретеглена цена.
+                  <div className="flex items-center gap-2 text-xs text-zinc-500 bg-white/5 rounded-lg p-3">
+                    <Box size={14} /> Изписва се по средна претеглена цена: <strong className="text-zinc-300">{fmt(selectedItem.averageUnitCost)}</strong>
                   </div>
                 )}
               </div>
               <DialogFooter>
-                <Button type="submit" className={movementType === 'in' ? "bg-emerald-600 hover:bg-emerald-700 w-full text-white" : "bg-rose-600 hover:bg-rose-700 w-full text-white"}>
-                  {movementType === 'in' ? 'Заприходи' : 'Изпиши'}
+                <Button type="submit" className={`w-full text-white ${movementType === 'in' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
+                  {movementType === 'in' ? '✅ Заприходи' : '📤 Изпиши'}
                 </Button>
               </DialogFooter>
             </form>
