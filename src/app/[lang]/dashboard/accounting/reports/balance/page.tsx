@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ReportEngine } from "@/lib/accounting/report-engine";
-import { auth } from "@clerk/nextjs/server";
+import { requireTenant } from "@/lib/auth/get-tenant";
 import Link from "next/link";
 import { Scale, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
@@ -15,26 +15,18 @@ const NAMES: Record<string, string> = {
   "601": "Разходи материали", "603": "Амортизации", "701": "Приходи продажби",
 };
 
-import { db } from "@/lib/db/db";
-import { users } from "@/lib/db/schema/users";
-import { eq } from "drizzle-orm";
-
 export default async function BalanceReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const { userId } = await auth();
-  
-  if (!userId) return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Не сте влезли в системата.</div>;
 
-  let tenantId: string | null = null;
+  let tenantId: string;
   try {
-    const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
-    tenantId = user?.tenantId ?? null;
+    const tenant = await requireTenant();
+    tenantId = tenant.tenantId;
   } catch (e: any) {
-    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Грешка при свързване с базата данни: {e?.message}</div>;
+    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ {e?.message || 'Не сте влезли в системата.'}</div>;
   }
 
-  if (!tenantId) return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ Не е намерен tenant за този потребител.</div>;
-
+  const asOf = new Date();
   let report: any;
   try {
     report = await ReportEngine.generateBalanceSheet(tenantId, asOf);

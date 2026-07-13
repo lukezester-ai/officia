@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ReportEngine } from "@/lib/accounting/report-engine";
-import { auth } from "@clerk/nextjs/server";
+import { requireTenant } from "@/lib/auth/get-tenant";
 import Link from "next/link";
 import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "lucide-react";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
@@ -11,20 +11,16 @@ const NAMES: Record<string, string> = {
   "604": "Разходи заплати", "609": "Други разходи",
 };
 
-import { db } from "@/lib/db/db";
-import { users } from "@/lib/db/schema/users";
-import { eq } from "drizzle-orm";
-
 export default async function PLReport({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const { userId } = await auth();
 
-  if (!userId) return <div className="p-8 text-white">Unauthenticated</div>;
-
-  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
-  const tenantId = user?.tenantId;
-
-  if (!tenantId) return <div className="p-8 text-white">No tenant configured for this user.</div>;
+  let tenantId: string;
+  try {
+    const tenant = await requireTenant();
+    tenantId = tenant.tenantId;
+  } catch (e: any) {
+    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ {e?.message || 'Не сте влезли в системата.'}</div>;
+  }
 
   const start = new Date(new Date().getFullYear(), 0, 1);
   const end = new Date();

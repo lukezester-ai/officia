@@ -1,10 +1,8 @@
-// @ts-nocheck
 import Link from "next/link";
 import { Waves, ArrowLeft, TrendingUp, TrendingDown, Wallet, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
-import { auth } from "@clerk/nextjs/server";
+import { requireTenant } from "@/lib/auth/get-tenant";
 import { db } from "@/lib/db/db";
-import { users } from "@/lib/db/schema/users";
 import { journalLines, journalHeaders } from "@/lib/db/schema/journal_entries";
 import { accountPlan } from "@/lib/db/schema/account_plan";
 import { eq, and, gte, lte, sql, like, or } from "drizzle-orm";
@@ -81,12 +79,14 @@ async function getCashFlowData(tenantId: string, start: Date, end: Date) {
 
 export default async function CashFlowPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const { userId } = await auth();
-  if (!userId) return <div className="p-8 text-white">Неоторизиран достъп.</div>;
 
-  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
-  const tenantId = user?.tenantId;
-  if (!tenantId) return <div className="p-8 text-white">Не е конфигуриран tenant.</div>;
+  let tenantId: string;
+  try {
+    const tenant = await requireTenant();
+    tenantId = tenant.tenantId;
+  } catch (e: any) {
+    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ {e?.message || 'Не сте влезли в системата.'}</div>;
+  }
 
   const year  = new Date().getFullYear();
   const start = new Date(Date.UTC(year, 0, 1));
