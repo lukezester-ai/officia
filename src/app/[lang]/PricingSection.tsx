@@ -109,8 +109,8 @@ const PLANS = [
     textColor: 'text-zinc-400',
     subTextColor: 'text-zinc-500',
     checkColor: 'text-emerald-400',
-    cta: 'Свържи се за демо',
-    ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10 mt-auto',
+    cta: 'Започни пробния период',
+    ctaStyle: 'block text-center border border-violet-500/40 hover:border-violet-400 text-violet-400 hover:bg-violet-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
     features: [
       'Всичко от Про',
       'Многофирмен режим (до 30 клиенти)',
@@ -122,7 +122,7 @@ const PLANS = [
   },
 ];
 
-export function PricingSection({ lang = 'bg' }: { lang?: string }) {
+export default function PricingSection({ lang = 'bg' }: { lang?: string }) {
   const [isAnnual, setIsAnnual] = useState(true);
 
   return (
