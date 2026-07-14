@@ -105,58 +105,49 @@ const PLANS = [
     annualPrice: 71,
     annualTotal: 852,
     isFree: false,
-    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-7 text-left transition-all hover:bg-white/5 flex flex-col',
+    cardStyle: 'bg-white/3 border border-amber-500/20 rounded-2xl p-7 text-left transition-all hover:bg-amber-500/5 flex flex-col',
     textColor: 'text-zinc-400',
     subTextColor: 'text-zinc-500',
-    checkColor: 'text-emerald-400',
+    checkColor: 'text-amber-400',
     cta: 'Започни пробния период',
-    ctaStyle: 'block text-center border border-violet-500/40 hover:border-violet-400 text-violet-400 hover:bg-violet-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
+    ctaStyle: 'block text-center border border-amber-500/40 hover:border-amber-400 text-amber-400 hover:bg-amber-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
     features: [
       'Всичко от Про',
-      'Многофирмен режим (до 30 клиенти)',
-      'Портал за клиенти',
-      'Масово подаване на декларации',
+      'Неограничени клиентски workspace-и',
+      'Управление на множество фирми',
+      'Консолидирани отчети',
+      'Бял етикет (white label)',
+      'Приоритетни НАП updates',
       'Неограничени потребители',
-      'Персонално обучение',
+      'Dedicated поддръжка',
     ],
   },
 ];
 
-export default function PricingSection({ lang = 'bg' }: { lang?: string }) {
+export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(true);
 
   return (
-    <section id="pricing" className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.06),transparent_70%)] pointer-events-none" />
+    <section id="pricing" className="py-24 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold tracking-tight mb-4">Прост, честен ценови план</h2>
+          <p className="text-zinc-400 mb-8">Без скрити такси. Без изненади. Смени плана по всяко време.</p>
 
-      <div className="max-w-7xl mx-auto px-6 relative">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-400 mb-4">
-            Прозрачни цени
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">
-            Избери план според нуждите на твоя бизнес
-          </h2>
-          <p className="text-sm text-zinc-400 mb-8">
-            Всички планове започват с 14-дневен безплатен пробен период. Без скрити такси или дългосрочни договори.
-          </p>
-
-          <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 p-1.5 rounded-2xl">
+          <div className="flex justify-center items-center gap-3">
+            <span className={`text-sm ${!isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>Месечно</span>
             <button
-              onClick={() => setIsAnnual(false)}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-all ${!isAnnual ? 'bg-white/10 text-white shadow' : 'text-zinc-400 hover:text-white'}`}
+              onClick={() => setIsAnnual(!isAnnual)}
+              className="relative w-14 h-7 bg-white/10 rounded-full border border-white/20 transition-colors focus:outline-none"
             >
-              Месечно
+              <div className={`absolute top-1 left-1 w-5 h-5 bg-indigo-500 rounded-full transition-transform ${isAnnual ? 'translate-x-7' : ''}`} />
             </button>
-            <button
-              onClick={() => setIsAnnual(true)}
-              className={`px-5 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${isAnnual ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30' : 'text-zinc-400 hover:text-white'}`}
-            >
+            <span className={`text-sm flex items-center gap-1.5 ${isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>
               Годишно
               <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 -20%
               </span>
-            </button>
+            </span>
           </div>
         </div>
 
