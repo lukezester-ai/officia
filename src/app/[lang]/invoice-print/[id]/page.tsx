@@ -3,6 +3,7 @@ import { requireTenant } from '@/lib/auth/get-tenant';
 import { notFound } from 'next/navigation';
 import { PrintButton } from './print-button';
 import { Metadata } from 'next';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 export const metadata: Metadata = {
   title: 'Фактура (PDF Печат)',
@@ -23,6 +24,7 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
   }
 
   const inv = res.data;
+  const effectiveTotal = getInvoiceEffectiveAmount(inv, inv.lines);
 
   return (
     <div className="min-h-screen bg-zinc-200/50 py-8 print:p-0 print:bg-white flex flex-col items-center">
@@ -129,7 +131,7 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
             </div>
             <div className="flex justify-between items-center py-2 text-lg">
               <span className="font-bold text-zinc-900">ОБЩО ЗА ПЛАЩАНЕ</span>
-              <span className="font-black text-violet-700">{fmt(inv.totalAmount || 0)} EUR</span>
+              <span className="font-black text-violet-700">{fmt(effectiveTotal)} EUR</span>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { getDashboardData } from './actions';
 import Link from 'next/link';
 import { getInvoices } from './invoices/actions';
 import { getPurchaseInvoices } from './purchase-invoices/actions-read';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -23,14 +24,14 @@ export default async function DashboardPage() {
 
   const revenue = invoices
     .filter(i => i.status === 'issued' || i.status === 'paid')
-    .reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
+    .reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
 
   const expenses = purchases
     .filter(i => i.status === 'approved' || i.status === 'paid')
-    .reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
+    .reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
 
   const outstanding = invoices.filter(i => i.status === 'issued');
-  const outstandingAmount = outstanding.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
+  const outstandingAmount = outstanding.reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
   const netProfit = revenue - expenses;
 
   const now = new Date();

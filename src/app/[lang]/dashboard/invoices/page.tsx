@@ -8,6 +8,7 @@ import { FileText, CheckCircle, Clock, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { NewInvoiceDialog } from './_form';
 import { InvoiceTable } from './_table';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -46,11 +47,11 @@ export default function InvoicesPage() {
   const draft = invoices.filter(i => i.status === 'draft');
   const issued = invoices.filter(i => i.status === 'issued');
   const paid = invoices.filter(i => i.status === 'paid');
-  const totalIssued = issued.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
-  const totalPaid = paid.reduce((s, i) => s + parseFloat(i.totalAmount || '0'), 0);
+  const totalIssued = issued.reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
+  const totalPaid = paid.reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
 
   const overdue = invoices.filter(i => i.status === 'issued' && i.dueDate && new Date(i.dueDate) < new Date());
-  const overdueAmount = overdue.reduce((s: number, i: any) => s + parseFloat(i.totalAmount || '0'), 0);
+  const overdueAmount = overdue.reduce((s: number, i: any) => s + getInvoiceEffectiveAmount(i), 0);
 
   return (
     <div className="space-y-6">

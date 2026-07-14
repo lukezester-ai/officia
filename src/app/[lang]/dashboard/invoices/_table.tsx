@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, XCircle, Send, Zap, DollarSign } from 'lucide-react';
 import { InvoiceDrawer } from '@/components/drawers/invoice-drawer';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -73,7 +74,7 @@ export function InvoiceTable({ items, onAction }: {
                   {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('bg-BG') : '—'}
                 </TableCell>
                 <TableCell className="text-right font-mono font-semibold">
-                  {fmt(parseFloat(inv.totalAmount || '0'))}
+                  {fmt(getInvoiceEffectiveAmount(inv))}
                 </TableCell>
                 <TableCell>
                   <Badge className={`text-xs ${st.color}`}>{st.label}</Badge>

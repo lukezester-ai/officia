@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, CheckCircle, Download, FileText } from 'lucide-react';
 import StripeCheckoutButton from './StripeCheckoutButton';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 export default async function PublicInvoicePage({
   params,
@@ -29,7 +30,8 @@ export default async function PublicInvoicePage({
   }
   const invoice = invoiceRecord[0];
 
-  const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId));
+  const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId)).catch(() => []);
+  const effectiveAmount = getInvoiceEffectiveAmount(invoice, lines);
 
   const isPaid = invoice.status === 'paid' || invoice.status === 'платена';
   const showSuccessMessage = query.success === 'true';
@@ -102,8 +104,8 @@ export default async function PublicInvoicePage({
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">Services rendered</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right">1</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right">€ {invoice.netAmount || invoice.amount || "0.00"}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 text-right font-medium">€ {invoice.netAmount || invoice.amount || "0.00"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right">€ {effectiveAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 text-right font-medium">€ {effectiveAmount.toFixed(2)}</td>
                     </tr>
                   )}
                 </tbody>
@@ -111,7 +113,7 @@ export default async function PublicInvoicePage({
               <div className="bg-slate-50 px-6 py-4 flex flex-col items-end space-y-2 border-t border-slate-200">
                 <div className="flex justify-between w-64 text-sm text-slate-600">
                   <span>Subtotal:</span>
-                  <span>€ {invoice.netAmount || invoice.subtotal || invoice.amount || "0.00"}</span>
+                  <span>€ {invoice.netAmount || invoice.subtotal || effectiveAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between w-64 text-sm text-slate-600">
                   <span>VAT:</span>
@@ -119,7 +121,7 @@ export default async function PublicInvoicePage({
                 </div>
                 <div className="flex justify-between w-64 text-xl font-bold text-slate-900 pt-2 border-t border-slate-200">
                   <span>Total:</span>
-                  <span>€ {invoice.totalAmount || invoice.total || invoice.amount || "0.00"}</span>
+                  <span>€ {effectiveAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -153,7 +155,7 @@ export default async function PublicInvoicePage({
             </Button>
             
             {!isPaid && (
-              <StripeCheckoutButton invoiceId={invoiceId} amount={invoice.totalAmount || invoice.total || invoice.amount || "0.00"} />
+              <StripeCheckoutButton invoiceId={invoiceId} amount={effectiveAmount.toFixed(2)} />
             )}
             {isPaid && (
               <div className="flex items-center text-green-600 font-semibold">

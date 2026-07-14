@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Clock, Zap, ArrowRight, Building, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -101,7 +102,7 @@ export function InvoiceDrawer({ invoice, open, onOpenChange }: { invoice: any, o
               </div>
               <div className="flex justify-between items-center text-base font-bold pt-3 border-t border-border mt-3">
                 <div>Общо за плащане</div>
-                <div>{fmt(parseFloat(invoice.totalAmount || '0'))} €</div>
+                <div>{fmt(getInvoiceEffectiveAmount(invoice))} €</div>
               </div>
             </div>
           </div>
