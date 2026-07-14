@@ -10,6 +10,10 @@ function getPlanHref(planId: string, isAnnual: boolean): string {
   return `/api/stripe/checkout?plan=${planId}&billing=${billing}`;
 }
 
+function formatPrice(n: number): string {
+  return n % 1 !== 0 ? n.toFixed(2).replace('.', ',') : n.toString();
+}
+
 const PLANS = [
   {
     id: 'starter',
@@ -41,9 +45,9 @@ const PLANS = [
     name: 'Бизнес',
     icon: Building2,
     description: 'За малки и средни предприятия',
-    monthlyPrice: 25,
-    annualPrice: 20,
-    annualTotal: 240,
+    monthlyPrice: 14.90,
+    annualPrice: 11.90,
+    annualTotal: 142.80,
     isFree: false,
     badge: 'Най-популярен',
     cardStyle: 'bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-500/30 rounded-2xl p-7 text-left relative overflow-hidden shadow-2xl shadow-violet-900/50 flex flex-col',
@@ -101,49 +105,58 @@ const PLANS = [
     annualPrice: 71,
     annualTotal: 852,
     isFree: false,
-    cardStyle: 'bg-white/3 border border-amber-500/20 rounded-2xl p-7 text-left transition-all hover:bg-amber-500/5 flex flex-col',
+    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-7 text-left transition-all hover:bg-white/5 flex flex-col',
     textColor: 'text-zinc-400',
     subTextColor: 'text-zinc-500',
-    checkColor: 'text-amber-400',
-    cta: 'Свържи се с нас',
-    ctaStyle: 'block text-center border border-amber-500/30 hover:border-amber-400 text-amber-400 hover:bg-amber-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
+    checkColor: 'text-emerald-400',
+    cta: 'Свържи се за демо',
+    ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10 mt-auto',
     features: [
       'Всичко от Про',
-      'Неограничени клиентски workspace-и',
-      'Управление на множество фирми',
-      'Консолидирани отчети',
-      'Бял етикет (white label)',
-      'Приоритетни НАП updates',
+      'Многофирмен режим (до 30 клиенти)',
+      'Портал за клиенти',
+      'Масово подаване на декларации',
       'Неограничени потребители',
-      'Dedicated поддръжка',
+      'Персонално обучение',
     ],
   },
 ];
 
-export default function PricingSection() {
+export function PricingSection({ lang = 'bg' }: { lang?: string }) {
   const [isAnnual, setIsAnnual] = useState(true);
 
   return (
-    <section id="pricing" className="py-24 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold tracking-tight mb-4">Прост, честен ценови план</h2>
-          <p className="text-zinc-400 mb-8">Без скрити такси. Без изненади. Смени плана по всяко време.</p>
+    <section id="pricing" className="py-24 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.06),transparent_70%)] pointer-events-none" />
 
-          <div className="flex justify-center items-center gap-3">
-            <span className={`text-sm ${!isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>Месечно</span>
+      <div className="max-w-7xl mx-auto px-6 relative">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-400 mb-4">
+            Прозрачни цени
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">
+            Избери план според нуждите на твоя бизнес
+          </h2>
+          <p className="text-sm text-zinc-400 mb-8">
+            Всички планове започват с 14-дневен безплатен пробен период. Без скрити такси или дългосрочни договори.
+          </p>
+
+          <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 p-1.5 rounded-2xl">
             <button
-              onClick={() => setIsAnnual(!isAnnual)}
-              className="relative w-14 h-7 bg-white/10 rounded-full border border-white/20 transition-colors focus:outline-none"
+              onClick={() => setIsAnnual(false)}
+              className={`px-5 py-2 rounded-xl text-sm font-medium transition-all ${!isAnnual ? 'bg-white/10 text-white shadow' : 'text-zinc-400 hover:text-white'}`}
             >
-              <div className={`absolute top-1 left-1 w-5 h-5 bg-indigo-500 rounded-full transition-transform ${isAnnual ? 'translate-x-7' : ''}`} />
+              Месечно
             </button>
-            <span className={`text-sm flex items-center gap-1.5 ${isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-5 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${isAnnual ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30' : 'text-zinc-400 hover:text-white'}`}
+            >
               Годишно
               <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 -20%
               </span>
-            </span>
+            </button>
           </div>
         </div>
 
@@ -177,12 +190,12 @@ export default function PricingSection() {
                   ) : (
                     <>
                       <div className="flex items-end gap-1">
-                        <div className="text-3xl font-bold text-white">{price} €</div>
+                        <div className="text-3xl font-bold text-white">{formatPrice(price)} €</div>
                         <div className={`text-sm mb-1 ${plan.subTextColor}`}>/мес</div>
                       </div>
                       <div className={`text-xs mt-1 ${plan.subTextColor}`}>
                         {isAnnual
-                          ? `${plan.annualTotal} € годишно · спестяваш ${(plan.monthlyPrice - plan.annualPrice) * 12} €`
+                          ? `${formatPrice(plan.annualTotal)} € годишно · спестяваш ${formatPrice(Math.round((plan.monthlyPrice - plan.annualPrice) * 12 * 100) / 100)} €`
                           : 'Таксува се всеки месец'}
                       </div>
                     </>
