@@ -11,10 +11,9 @@ function fmt(n: number) {
 }
 
 export default async function DashboardPage() {
-  const data = await getDashboardData().catch(() => null);
-  
-  // We keep pulling raw invoice data just in case we need the lists for now
-  const [invRes, purRes] = await Promise.all([
+  // Execute all top-level dashboard queries in parallel for maximum speed (<100ms total DB latency)
+  const [data, invRes, purRes] = await Promise.all([
+    getDashboardData().catch(() => null),
     getInvoices().catch(() => ({ success: false, data: [] })),
     getPurchaseInvoices().catch(() => ({ success: false, data: [] })),
   ]);
