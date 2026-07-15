@@ -59,7 +59,7 @@ function MetricTicker({ item, skip }: { item: MetricItem; skip: boolean }) {
   const display = item.numericValue >= 1000 ? `${Math.floor(count / 1000)} ${String(count % 1000).padStart(3, "0")}` : String(count);
 
   return (
-    <div ref={ref} className="flex flex-col items-center px-5 py-4 text-center lg:items-start lg:py-0 lg:text-left group">
+    <div ref={ref} className="flex flex-col items-center px-2 sm:px-5 py-3 sm:py-4 text-center lg:items-start lg:py-0 lg:text-left group">
       <div className="mb-1 flex items-center gap-2">
         <span className={cn("text-xl font-bold tabular-nums tracking-tight transition-transform duration-300 group-hover:scale-105", item.highlightColor === "purple" ? "text-[#a78bfa]" : "text-[#e8e8f0]")}>{display}{item.suffix}</span>
         {item.hasTrend ? <TrendingUp className="h-3.5 w-3.5 text-emerald-400" /> : null}
@@ -146,7 +146,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
               <span>Ново в България - AI + счетоводство</span>
             </motion.div>
 
-            <div className="mb-8 font-bold" style={{ fontSize: "clamp(2.8rem, 7vw + 1rem, 5.5rem)", lineHeight: 1.05, letterSpacing: "-0.02em" }}>
+            <div className="mb-8 font-bold" style={{ fontSize: "clamp(2.1rem, 6.5vw + 0.8rem, 5.5rem)", lineHeight: 1.05, letterSpacing: "-0.02em" }}>
               <motion.div initial={skip ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: easeOutQuart, delay: skip ? 0 : 0.2 }}>Интелигентният офис</motion.div>
               <motion.div initial={skip ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: easeOutQuart, delay: skip ? 0 : 0.35 }}>
                 <span className="bg-gradient-to-br from-[#a78bfa] via-[#7c3aed] to-[#6d28d9] bg-clip-text text-transparent">за твоя бизнес</span>

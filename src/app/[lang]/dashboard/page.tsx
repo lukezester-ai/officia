@@ -11,7 +11,8 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ params }: { params?: Promise<{ lang: string }> }) {
+  const { lang = 'bg' } = (await params) || {};
   // Execute all top-level dashboard queries in parallel for maximum speed (<100ms total DB latency)
   const [data, invRes, purRes] = await Promise.all([
     getDashboardData().catch(() => null),
@@ -119,7 +120,7 @@ export default async function DashboardPage() {
               <span className="text-muted-foreground">ДДС несъответствия</span>
               <span className="font-semibold text-rose-500">{data?.needsReview?.vatIssues || 0}</span>
             </div>
-            <Link href="/dashboard/ai-inbox" className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
+            <Link href={`/${lang}/dashboard/ai-inbox`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
               Преглед на всички
             </Link>
           </CardContent>
@@ -151,7 +152,7 @@ export default async function DashboardPage() {
                     <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>
                   </div>
                 ))}
-                <Link href="/dashboard/ai-inbox" className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
+                <Link href={`/${lang}/dashboard/ai-inbox`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
                   Отваряне на Inbox
                 </Link>
               </div>
@@ -180,7 +181,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="flex justify-between items-center text-sm py-2">
                 <span className="text-muted-foreground">Имате {data?.overviewStats?.approvalsPending ?? 0} заявки за преглед.</span>
-                <Link href="/dashboard/approvals" className="text-emerald-600 hover:underline font-medium">
+                <Link href={`/${lang}/dashboard/approvals`} className="text-emerald-600 hover:underline font-medium">
                   Преглед
                 </Link>
               </div>

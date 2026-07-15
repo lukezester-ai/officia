@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Sidebar } from '@/components/dashboard/sidebar';
+import { Sidebar, MobileDashboardSidebar } from '@/components/dashboard/sidebar';
 import { getDictionary, Locale } from '@/lib/get-dictionary';
 import { UserButton } from '@clerk/nextjs';
 import { Bell, Search } from 'lucide-react';
@@ -19,9 +19,10 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-background relative">
       <Sidebar dict={dict.sidebar} lang={lang} />
-      <div className="pl-64 flex flex-col min-h-screen w-full">
-        <header className="h-16 bg-background/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-10">
-          <div className="flex items-center gap-3 flex-1 max-w-sm">
+      <div className="md:pl-64 flex flex-col min-h-screen w-full">
+        <header className="h-16 bg-background/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-sm">
+            <MobileDashboardSidebar dict={dict.sidebar} lang={lang} />
             <div className="relative w-full">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
@@ -40,7 +41,7 @@ export default async function DashboardLayout({
             <UserButton />
           </div>
         </header>
-        <main className="flex-1 p-8 overflow-x-hidden">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden">
           {children}
         </main>
       </div>
