@@ -520,7 +520,7 @@ function EInvoiceMockup() {
   const [invoices, setInvoices] = useState([
     { id: "EINV-001", to: "ТехноМ ЕООД", amount: "1 200,00", vat: "240,00", status: "Одобрена", date: "15.07.2025", error: null },
     { id: "EINV-002", to: "НетУоркс АД", amount: "450,00", vat: "90,00", status: "Изпратена", date: "16.07.2025", error: null },
-    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "Грешка", date: "17.07.2025", error: "НАП: Невалиден ЕИК / UBL схема (Код 401)" },
+    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "⚠️ AI Одит: За корекция", date: "17.07.2025", error: "AI Валидация: Открита е грешка в UBL XML/ЕИК (Код 401). Кликнете за автоматична корекция:" },
     { id: "EINV-004", to: "ГрийнТек ЕООД", amount: "890,00", vat: "178,00", status: "Одобрена", date: "18.07.2025", error: null },
   ]);
 
@@ -528,7 +528,7 @@ function EInvoiceMockup() {
     setInvoices((prev) =>
       prev.map((inv) =>
         inv.id === id
-          ? { ...inv, status: "Одобрена (Auto-Journal)", error: null }
+          ? { ...inv, status: "Одобрена (AI Коригирана)", error: null }
           : inv
       )
     );
@@ -590,13 +590,13 @@ function EInvoiceMockup() {
                 </div>
               </div>
               {inv.error && (
-                <div className="mt-1.5 flex items-center justify-between rounded bg-red-500/10 px-2 py-1 border border-red-500/20">
-                  <span className="text-[8px] text-red-300 font-medium">{inv.error}</span>
+                <div className="mt-1.5 flex items-center justify-between rounded bg-amber-500/10 px-2 py-1.5 border border-amber-500/20">
+                  <span className="text-[8px] text-amber-300 font-medium leading-tight">{inv.error}</span>
                   <button
                     onClick={() => handleRetry(inv.id)}
-                    className="rounded bg-red-600 hover:bg-red-500 px-2 py-0.5 text-[8px] font-bold text-white transition-colors"
+                    className="rounded bg-indigo-600 hover:bg-indigo-500 px-2.5 py-1 text-[8px] font-bold text-white transition-colors shrink-0 shadow"
                   >
-                    Повторен опит (Retry)
+                    ⚡ AI Авто-корекция
                   </button>
                 </div>
               )}
@@ -784,7 +784,7 @@ const featureCards: FeatureCardData[] = [
     id: "bank-sync",
     tag: "Банкиране",
     title: "Банково свързване чрез PSD2 и интелигентно съпоставяне",
-    description: "Реална връзка с банка чрез GoCardless (PSD2). Автоматично синхронизиране на транзакции и AI съпоставяне със счетоводни записвания.",
+    description: "Свързване с банкови сметки (PSD2 GoCardless / MT940 CAMT импорт). Автоматично синхронизиране на транзакции и AI съпоставяне със счетоводни записвания.",
     mockup: <BankSyncMockup />,
     tags: ["PSD2", "Auto-match", "GoCardless"],
     delay: 0.3,
@@ -793,7 +793,7 @@ const featureCards: FeatureCardData[] = [
     id: "payroll-tax",
     tag: "ТРЗ и Данъци",
     title: "Автоматични декларации Обр.1 и Обр.6",
-    description: "Изчисляване на ТРЗ, осигуровки и данък общ доход. XML export за НАП — Обр.1 и Обр.6 готови.",
+    description: "Изчисляване на ТРЗ, осигуровки и данък общ доход. Масов експорт (ZIP/XML) за НАП или директно подаване през портала с КЕП.",
     mockup: <PayrollMockup />,
     tags: ["Обр.1", "Обр.6", "XML export"],
     delay: 0.4,
@@ -890,9 +890,9 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
           <div className="pointer-events-none absolute -right-[5%] -top-[20%] h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[100px]" />
           <div className="relative flex flex-col items-center justify-between gap-8 text-center md:flex-row md:text-left">
             <div>
-              <h3 className="mb-3 text-2xl font-bold tracking-tight text-white md:text-4xl">Готови ли сте за бъдещето?</h3>
-              <p className="max-w-lg text-sm leading-relaxed text-zinc-500 md:text-base">
-                Присъединете се към стотици български компании, които вече оптимизират своето счетоводство с Officia.
+              <h3 className="mb-3 text-2xl font-bold tracking-tight text-white md:text-4xl">Готови ли сте за бъдещето на счетоводството?</h3>
+              <p className="max-w-lg text-sm leading-relaxed text-zinc-400 md:text-base">
+                ⚡ <b>Пълен старт за под 5 минути:</b> внасяте сметкоплан, свързвате банкова сметка или качвате извлечение и AI автоматично разпознава първите ви документи. Без измислени метрики или скрити такси.
               </p>
             </div>
             <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">

@@ -18,8 +18,8 @@ const capabilities = [
   },
   {
     icon: Landmark,
-    title: 'Банка (PSD2)',
-    text: 'Реална PSD2 връзка чрез GoCardless. Свържи банковата си сметка за автоматично синхронизиране.',
+    title: 'Банка (PSD2/CAMT)',
+    text: 'Автоматизиран банков импорт (PSD2 GoCardless / MT940 / CAMT). Свързваш сметки или извлечения за директно синхронизиране.',
   },
   {
     icon: Shield,
