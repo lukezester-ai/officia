@@ -7,12 +7,15 @@ import { tenants } from '@/lib/db/schema/tenants';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
+import { requireTenant } from '@/lib/auth/get-tenant';
+import { cache } from 'react';
+
 async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
+  const { tenant } = await requireTenant();
   return tenant;
 }
 
-export async function getPurchaseInvoices() {
+export const getPurchaseInvoices = cache(async () => {
   try {
     const tenant = await getTenant();
     if (!tenant) return { success: false, error: 'Lipсва Tenant', data: [] };
@@ -21,7 +24,7 @@ export async function getPurchaseInvoices() {
       .orderBy(desc(purchaseInvoices.createdAt));
     return { success: true, data };
   } catch (e: any) { return { success: false, error: e.message, data: [] }; }
-}
+});
 
 export async function createPurchaseInvoice(input: any) {
   try {

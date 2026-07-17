@@ -7,8 +7,9 @@ import { approvals } from "@/lib/db/schema/approvals";
 import { bankTransactions } from "@/lib/db/schema/bank_transactions";
 import { eq, desc, and } from "drizzle-orm";
 import { requireTenant } from "@/lib/auth/get-tenant";
+import { cache } from "react";
 
-export async function getDashboardData() {
+export const getDashboardData = cache(async () => {
   const { tenantId } = await requireTenant();
   if (!tenantId) throw new Error("Unauthorized");
 
@@ -45,4 +46,4 @@ export async function getDashboardData() {
     },
     aiRecommendations: openInbox.slice(0, 5)
   };
-}
+});

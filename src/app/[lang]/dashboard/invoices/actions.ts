@@ -12,13 +12,14 @@ import { revalidatePath } from 'next/cache';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { ensureAutoJournalForInvoice } from '@/lib/accounting/auto-journal';
 import { syncStockFromSalesInvoice } from '@/lib/inventory/auto-stock';
+import { cache } from 'react';
 
 async function getTenant() {
   const { tenant } = await requireTenant();
   return tenant;
 }
 
-export async function getInvoices() {
+export const getInvoices = cache(async () => {
   try {
     const tenant = await getTenant();
     if (!tenant) return { success: false, error: 'Липсва Tenant', data: [] };
@@ -29,7 +30,7 @@ export async function getInvoices() {
   } catch (error: any) {
     return { success: false, error: error.message, data: [] };
   }
-}
+});
 
 export async function getInvoiceWithLines(id: string) {
   try {

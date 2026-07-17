@@ -1,12 +1,14 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/db';
 import { sql } from 'drizzle-orm';
+import { cache } from 'react';
 
 /**
  * Взима текущия tenant за логнатия потребител.
  * Използва raw SQL с минимални колони за максимална съвместимост.
+ * Кеширан с React cache() в рамките на един HTTP request, за да се избегнат 6+ излишни SQL заявки на всяко зареждане.
  */
-export async function requireTenant() {
+export const requireTenant = cache(async () => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -54,4 +56,4 @@ export async function requireTenant() {
   }
 
   return { tenantId, tenant, userId, user: userRow };
-}
+});

@@ -32,6 +32,8 @@ export const invoices = pgTable("invoices", {
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   paymentUrl: text("payment_url"),
   reviewStatus: text("review_status").default("pending"), // pending, reviewed, auto_approved
+  einvoiceStatus: text("einvoice_status").default("pending"), // pending, approved, rejected, error
+  errorReason: text("error_reason"), // Reason from NAP or validation if einvoiceStatus = error
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
