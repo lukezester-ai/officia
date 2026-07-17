@@ -143,7 +143,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
           <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
             <motion.div initial={skip ? false : { opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.1 }} className="mb-10 inline-flex items-center gap-2 rounded-full border border-purple-500/25 bg-purple-500/10 px-4 py-1.5 text-xs font-semibold text-[#c4b5fd]" style={{ animation: skip ? "none" : "badgePulse 2s ease-in-out infinite" }}>
               <Zap className="h-3.5 w-3.5 text-[#a78bfa]" />
-              <span>Ново в България - AI + счетоводство</span>
+              <span>Счетоводителят като финансов директор</span>
             </motion.div>
 
             <div className="mb-8 font-bold" style={{ fontSize: "clamp(2.1rem, 6.5vw + 0.8rem, 5.5rem)", lineHeight: 1.05, letterSpacing: "-0.02em" }}>
@@ -153,8 +153,8 @@ export default function OfficiaHero({ lang }: { lang: string }) {
               </motion.div>
             </div>
 
-            <motion.p initial={skip ? false : { opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.5 }} className="mb-12 max-w-2xl text-lg leading-relaxed text-[#9191b0] md:text-xl">
-              Автоматизирай счетоводството, фактурите и документите с изкуствен интелект. Специално създаден за малки и средни фирми в България.
+            <motion.p initial={skip ? false : { opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.5 }} className="mb-12 max-w-3xl text-lg leading-relaxed text-[#9191b0] md:text-xl font-medium">
+              В <span className="text-white font-bold">Officia</span> счетоводителят е <span className="text-purple-300 font-semibold">финансов директор</span>, на когото AI асистентът върши 90% от рутинната работа автоматично и му показва готови, проверени и балансирани отчети!
             </motion.p>
 
             <motion.div initial={skip ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.65 }} className="flex flex-col items-center gap-4 sm:flex-row">
