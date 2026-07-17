@@ -21,6 +21,8 @@ export const employees = pgTable('employees', {
   endDate: date('end_date'),
   isActive: boolean('is_active').default(true),
   workStatus: text('work_status').default('at_work'), // at_work, on_leave, sick_leave, unpaid_leave
+  iban: text('iban'), // IBAN for direct bank payment batch (Ticket 7)
+  egn: text('egn'), // ЕГН / ЛНЧ for statutory reporting
   aiStatus: text('ai_status'), // e.g. "missing_contract", "expiring_soon"
   createdAt: timestamp('created_at').defaultNow(),
 });

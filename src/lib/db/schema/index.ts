@@ -29,6 +29,8 @@ export * from './activity_logs';
 export * from './document_extractions';
 export * from './approvals';
 
+export * from './employees';
+export * from './payroll_runs';
 export * from './purchase-invoices';
 export * from './reports';
 export * from './tasks';
