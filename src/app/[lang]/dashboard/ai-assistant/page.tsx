@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bot, Send, User, Paperclip, X, File as FileIcon, Mic, Loader2, ShieldCheck, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { AgentManagerPanel } from './AgentManagerPanel';
 
 interface Message {
   id: string;
@@ -66,14 +68,14 @@ export default function AIAssistantPage() {
         body: JSON.stringify({ messages: apiMessages }),
       });
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) throw new Error('Грешка при връзка със сървъра');
 
       const data = await response.json();
 
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || 'Не успях да обработя заявката.',
+        content: data.response || 'Няма отговор от асистента.',
       }]);
     } catch (err: any) {
       console.error('AI error:', err);
@@ -101,120 +103,136 @@ export default function AIAssistantPage() {
   };
 
   return (
-    <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
-      {/* Заглавие */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="h-10 w-10 rounded-xl bg-violet-600 flex items-center justify-center">
-          <Bot size={20} className="text-white" />
+    <div className="space-y-6 flex flex-col min-h-[calc(100vh-8rem)]">
+      {/* Заглавие & Табове */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-600/30">
+            <Bot size={20} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">AI Асистент & Супервайзър</h1>
+            <p className="text-xs text-zinc-500">Захранен от Anthropic Claude · Реагира на български</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">AI Асистент</h1>
-          <p className="text-xs text-zinc-500">Захранен от Anthropic Claude · Реагира на български</p>
-        </div>
-        <span className="ml-auto flex items-center gap-1.5 text-xs text-emerald-400">
+
+        <span className="flex items-center gap-1.5 text-xs text-emerald-400 self-start sm:self-auto px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          Онлайн
+          Всички 6 агента са активни
         </span>
       </div>
 
-      {/* Chat area */}
-      <Card className="flex-1 flex flex-col overflow-hidden border-white/10 bg-white/3 min-h-0">
-        <CardContent className="flex-1 p-0 flex flex-col min-h-0">
+      <Tabs defaultValue="chat" className="w-full flex-1 flex flex-col min-h-0">
+        <TabsList className="grid w-full sm:w-80 grid-cols-2 h-11 items-center bg-slate-900 border border-white/10 rounded-xl p-1 shrink-0 mb-4">
+          <TabsTrigger value="chat" className="rounded-lg h-9 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium flex items-center gap-2">
+            <Bot size={15} /> Чат Асистент
+          </TabsTrigger>
+          <TabsTrigger value="manager" className="rounded-lg h-9 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium flex items-center gap-2">
+            <ShieldCheck size={15} /> Agent Manager
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-            <div className="space-y-5 pb-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.role === 'assistant' && (
-                    <div className="h-8 w-8 rounded-full bg-violet-600/20 flex items-center justify-center shrink-0 mt-1">
-                      <Bot size={15} className="text-violet-400" />
+        <TabsContent value="chat" className="flex-1 flex flex-col min-h-[500px] m-0">
+          <Card className="flex-1 flex flex-col overflow-hidden border-white/10 bg-white/3 min-h-0">
+            <CardContent className="flex-1 p-0 flex flex-col min-h-0">
+              <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+                <div className="space-y-5 pb-4">
+                  {messages.map((msg) => (
+                    <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {msg.role === 'assistant' && (
+                        <div className="h-8 w-8 rounded-full bg-violet-600/20 flex items-center justify-center shrink-0 mt-1">
+                          <Bot size={15} className="text-violet-400" />
+                        </div>
+                      )}
+                      <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                        msg.role === 'user'
+                          ? 'bg-indigo-600 text-white rounded-tr-sm'
+                          : 'bg-white/5 text-zinc-200 rounded-tl-sm border border-white/10'
+                      }`}>
+                        <div className="prose prose-sm prose-invert max-w-none">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      </div>
+                      {msg.role === 'user' && (
+                        <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-1">
+                          <User size={15} className="text-zinc-400" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-indigo-600 text-white rounded-tr-sm'
-                      : 'bg-white/5 text-zinc-200 rounded-tl-sm border border-white/10'
-                  }`}>
-                    <div className="prose prose-sm prose-invert max-w-none">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    </div>
-                  </div>
-                  {msg.role === 'user' && (
-                    <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-1">
-                      <User size={15} className="text-zinc-400" />
+                  ))}
+
+                  {isLoading && (
+                    <div className="flex gap-3 justify-start">
+                      <div className="h-8 w-8 rounded-full bg-violet-600/20 flex items-center justify-center shrink-0">
+                        <Bot size={15} className="text-violet-400" />
+                      </div>
+                      <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
+                        <Loader2 size={14} className="text-violet-400 animate-spin" />
+                        <span className="text-xs text-zinc-500">Officia AI пише...</span>
+                      </div>
                     </div>
                   )}
                 </div>
-              ))}
+              </ScrollArea>
 
-              {isLoading && (
-                <div className="flex gap-3 justify-start">
-                  <div className="h-8 w-8 rounded-full bg-violet-600/20 flex items-center justify-center shrink-0">
-                    <Bot size={15} className="text-violet-400" />
+              <div className="p-4 border-t border-white/10 bg-[#0A0F1C] shrink-0">
+                {files.length > 0 && (
+                  <div className="flex gap-2 mb-3 flex-wrap">
+                    {files.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-300">
+                        <FileIcon size={12} className="text-violet-400" />
+                        <span className="truncate max-w-[140px]">{f.name}</span>
+                        <button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-rose-400">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
-                    <Loader2 size={14} className="text-violet-400 animate-spin" />
-                    <span className="text-xs text-zinc-500">Officia AI пише...</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                )}
 
-          {/* Input */}
-          <div className="p-4 border-t border-white/10 bg-[#0A0F1C] shrink-0">
-            {files.length > 0 && (
-              <div className="flex gap-2 mb-3 flex-wrap">
-                {files.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-300">
-                    <FileIcon size={12} className="text-violet-400" />
-                    <span className="truncate max-w-[140px]">{f.name}</span>
-                    <button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-rose-400">
-                      <X size={12} />
+                <div className="flex gap-2 items-end">
+                  <div className="flex flex-col gap-1">
+                    <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white/5 text-zinc-500 hover:text-violet-400 rounded-lg transition-colors" title="Прикачи файл">
+                      <Paperclip size={18} />
+                    </button>
+                    <button onClick={toggleListening} className={`p-2 rounded-lg transition-all ${isListening ? 'bg-rose-500 text-white animate-pulse' : 'hover:bg-white/5 text-zinc-500 hover:text-violet-400'}`} title="Гласово въвеждане">
+                      <Mic size={18} />
                     </button>
                   </div>
-                ))}
+
+                  <div className="flex-1 relative">
+                    <textarea
+                      value={input}
+                      onChange={e => setInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                      placeholder={isListening ? 'Слушам...' : 'Напишете въпрос или команда...'}
+                      disabled={isLoading}
+                      rows={1}
+                      className="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+                      style={{ fieldSizing: 'content', maxHeight: '120px' } as any}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={sendMessage}
+                    disabled={(!input.trim() && files.length === 0) || isLoading}
+                    className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl px-5 h-11 shrink-0"
+                  >
+                    {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  </Button>
+                </div>
+
+                <input ref={fileInputRef} type="file" multiple accept="image/*,application/pdf" className="hidden"
+                  onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
               </div>
-            )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="flex gap-2 items-end">
-              <div className="flex flex-col gap-1">
-                <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white/5 text-zinc-500 hover:text-violet-400 rounded-lg transition-colors" title="Прикачи файл">
-                  <Paperclip size={18} />
-                </button>
-                <button onClick={toggleListening} className={`p-2 rounded-lg transition-all ${isListening ? 'bg-rose-500 text-white animate-pulse' : 'hover:bg-white/5 text-zinc-500 hover:text-violet-400'}`} title="Гласово въвеждане">
-                  <Mic size={18} />
-                </button>
-              </div>
-
-              <div className="flex-1 relative">
-                <textarea
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                  placeholder={isListening ? 'Слушам...' : 'Напишете въпрос или команда...'}
-                  disabled={isLoading}
-                  rows={1}
-                  className="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
-                  style={{ fieldSizing: 'content', maxHeight: '120px' } as any}
-                />
-              </div>
-
-              <Button
-                onClick={sendMessage}
-                disabled={(!input.trim() && files.length === 0) || isLoading}
-                className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl px-5 h-11 shrink-0"
-              >
-                {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              </Button>
-            </div>
-
-            <input ref={fileInputRef} type="file" multiple accept="image/*,application/pdf" className="hidden"
-              onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); e.target.value = ''; }} />
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="manager" className="flex-1 overflow-y-auto m-0 pb-10">
+          <AgentManagerPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
