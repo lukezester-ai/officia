@@ -21,6 +21,8 @@ export async function addInvoicesToQueue(invoiceIds: string[], tenantId: string)
   return { status: 'queued', count: invoiceIds.length };
 }
 
+import { ensureAutoJournalForInvoice } from '@/lib/accounting/auto-journal';
+
 /**
  * Worker процес, който обработва една фактура от опашката.
  * Има вграден Retry механизъм, ако сървърите на НАП върнат грешка (напр. 503 Service Unavailable).
@@ -34,6 +36,9 @@ export async function processInvoiceJob(jobData: { invoiceId: string, tenantId: 
     // 3. Подписване с КЕП (signXML)
     // 4. Изпращане към НАП (submitInvoiceToNRA)
     
+    // Автоматично създаване на счетоводна статия при успешна регистрация
+    await ensureAutoJournalForInvoice(jobData.invoiceId, jobData.tenantId);
+
     // Ако НАП върне грешка, хвърляме Exception, за да може Queue системата да направи Retry (Backoff стратегия)
     // if (!nraResponse.success) throw new Error('NRA API Error');
     

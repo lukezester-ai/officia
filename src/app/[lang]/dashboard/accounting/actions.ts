@@ -62,3 +62,13 @@ export async function postInvoiceToJournal(invoiceId: string, accountCode: strin
     return { success: false, error: error.message };
   }
 }
+
+import { runLedgerAudit, AuditReportResult } from '@/lib/ai/audit/ledger-audit';
+
+/**
+ * TICKET 8: Стартира автоматизиран AI-базиран одит на счетоводната главна книга,
+ * проверка за разбалансирани статии, дублирани фактури и грешки в ДДС.
+ */
+export async function runAiLedgerAuditAction(): Promise<AuditReportResult> {
+  return await runLedgerAudit();
+}

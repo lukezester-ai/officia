@@ -8,6 +8,7 @@ import { bankAccounts } from "@/lib/db/schema/bank_accounts";
 import { tenants } from "@/lib/db/schema/tenants";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { autoCloseMatchedDocument } from "@/lib/matching/auto-close";
 
 export async function uploadBankStatement(parsedTransactions: any[]) {
   const tenant = await db.query.tenants.findFirst();
@@ -58,6 +59,8 @@ export async function confirmMatch(transactionId: string, matchType: 'invoice' |
       .set({ isReconciled: true, matchedExpenseId: matchId as string })
       .where(eq(bankTransactions.id, transactionId));
   }
+  
+  await autoCloseMatchedDocument(transactionId);
   
   revalidatePath("/[lang]/dashboard/accounting/reconciliation", "page");
   return { success: true };

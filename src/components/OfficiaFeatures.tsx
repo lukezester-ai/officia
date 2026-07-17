@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -516,12 +517,22 @@ function HRMockup() {
 }
 
 function EInvoiceMockup() {
-  const invoices = [
-    { id: "EINV-001", to: "ТехноМ ЕООД", amount: "1 200,00", vat: "240,00", status: "Одобрена", date: "15.07.2025" },
-    { id: "EINV-002", to: "НетУоркс АД", amount: "450,00", vat: "90,00", status: "Изпратена", date: "16.07.2025" },
-    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "Грешка", date: "17.07.2025" },
-    { id: "EINV-004", to: "ГрийнТек ЕООД", amount: "890,00", vat: "178,00", status: "Одобрена", date: "18.07.2025" },
-  ];
+  const [invoices, setInvoices] = useState([
+    { id: "EINV-001", to: "ТехноМ ЕООД", amount: "1 200,00", vat: "240,00", status: "Одобрена", date: "15.07.2025", error: null },
+    { id: "EINV-002", to: "НетУоркс АД", amount: "450,00", vat: "90,00", status: "Изпратена", date: "16.07.2025", error: null },
+    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "Грешка", date: "17.07.2025", error: "НАП: Невалиден ЕИК / UBL схема (Код 401)" },
+    { id: "EINV-004", to: "ГрийнТек ЕООД", amount: "890,00", vat: "178,00", status: "Одобрена", date: "18.07.2025", error: null },
+  ]);
+
+  const handleRetry = (id: string) => {
+    setInvoices((prev) =>
+      prev.map((inv) =>
+        inv.id === id
+          ? { ...inv, status: "Одобрена (Auto-Journal)", error: null }
+          : inv
+      )
+    );
+  };
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
@@ -531,10 +542,10 @@ function EInvoiceMockup() {
             <FileCheck className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h5 className="text-[11px] font-semibold text-white">Е-фактури</h5>
+            <h5 className="text-[11px] font-semibold text-white">Е-фактури & Auto-Journal</h5>
             <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              НАП
+              НАП & Счетоводна книга
             </span>
           </div>
         </div>
@@ -553,29 +564,42 @@ function EInvoiceMockup() {
 
         <div className="space-y-1.5">
           {invoices.map((inv) => (
-            <div key={inv.id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-800/60">
-                  <FileText className="h-3 w-3 text-zinc-500" />
+            <div key={inv.id} className="flex flex-col rounded-lg bg-white/[0.03] px-3 py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-800/60">
+                    <FileText className="h-3 w-3 text-zinc-500" />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-medium text-zinc-200">{inv.to}</span>
+                    <span className="text-[7px] text-zinc-500">{inv.id} · {inv.date}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-[9px] font-medium text-zinc-200">{inv.to}</span>
-                  <span className="text-[7px] text-zinc-500">{inv.id} · {inv.date}</span>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <span className="block text-[9px] font-semibold text-white">{inv.amount} лв</span>
+                    <span className="text-[7px] text-zinc-500">ДДС {inv.vat} лв</span>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 text-[7px] font-semibold ${
+                    inv.status.includes("Одобрена") ? "bg-emerald-500/15 text-emerald-400" :
+                    inv.status === "Изпратена" ? "bg-blue-500/15 text-blue-400" :
+                    "bg-red-500/15 text-red-400"
+                  }`}>
+                    {inv.status}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <span className="block text-[9px] font-semibold text-white">{inv.amount} лв</span>
-                  <span className="text-[7px] text-zinc-500">ДДС {inv.vat} лв</span>
+              {inv.error && (
+                <div className="mt-1.5 flex items-center justify-between rounded bg-red-500/10 px-2 py-1 border border-red-500/20">
+                  <span className="text-[8px] text-red-300 font-medium">{inv.error}</span>
+                  <button
+                    onClick={() => handleRetry(inv.id)}
+                    className="rounded bg-red-600 hover:bg-red-500 px-2 py-0.5 text-[8px] font-bold text-white transition-colors"
+                  >
+                    Повторен опит (Retry)
+                  </button>
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-[7px] font-semibold ${
-                  inv.status === "Одобрена" ? "bg-emerald-500/15 text-emerald-400" :
-                  inv.status === "Изпратена" ? "bg-blue-500/15 text-blue-400" :
-                  "bg-red-500/15 text-red-400"
-                }`}>
-                  {inv.status}
-                </span>
-              </div>
+              )}
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@ import { db } from '../db/db';
 import { bankTransactions } from '../db/schema/bank_transactions';
 import { invoices } from '../db/schema/invoices';
 import { eq, and, or, ilike, desc } from 'drizzle-orm';
+import { autoCloseMatchedDocument } from './auto-close';
 
 export async function runMatchEngineForTransaction(transactionId: string) {
   try {
@@ -54,8 +55,21 @@ export async function runMatchEngineForTransaction(transactionId: string) {
       }
     }
 
-    if (bestMatch && maxConfidence >= 0.5) {
-      // Suggest the match
+    if (bestMatch && maxConfidence >= 0.85) {
+      // Auto-confirm and auto-close invoice for high confidence matches (e.g. 87% auto-match)
+      await db.update(bankTransactions).set({
+        matchedInvoiceId: bestMatch.id,
+        matchConfidence: String(maxConfidence),
+        matchStatus: 'confirmed',
+        isReconciled: true,
+        reviewRequired: false
+      }).where(eq(bankTransactions.id, transactionId));
+      
+      await autoCloseMatchedDocument(transactionId);
+      
+      return { success: true, matchedInvoice: bestMatch.id, confidence: maxConfidence, autoClosed: true };
+    } else if (bestMatch && maxConfidence >= 0.5) {
+      // Suggest the match for review
       await db.update(bankTransactions).set({
         matchedInvoiceId: bestMatch.id,
         matchConfidence: String(maxConfidence),

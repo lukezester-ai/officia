@@ -88,6 +88,11 @@ export function InvoiceTable({ items, onAction }: {
                     ) : (
                       (inv.status === 'issued') && <Badge variant="outline" className="text-zinc-400 bg-white/5 border-white/10">Чака плащане</Badge>
                     )}
+                    {inv.eInvoiceState === 'error' && (
+                      <Badge variant="outline" title={inv.eInvoiceError || "НАП грешка при валидация на UBL схема"} className="text-rose-400 bg-rose-500/10 border-rose-500/20">
+                        <XCircle size={10} className="mr-1"/>Е-фактура Грешка
+                      </Badge>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -98,6 +103,14 @@ export function InvoiceTable({ items, onAction }: {
                         disabled={busy === inv.id + 'issue'}
                         onClick={(e) => handle(e, 'issue', inv.id)}>
                         <Send size={11} /> Издай
+                      </Button>
+                    )}
+                    {inv.eInvoiceState === 'error' && (
+                      <Button variant="ghost" size="sm"
+                        className="h-7 text-xs gap-1 text-rose-400 hover:bg-rose-500/10 font-semibold border border-rose-500/20"
+                        disabled={busy === inv.id + 'issue'}
+                        onClick={(e) => handle(e, 'issue', inv.id)}>
+                        <Send size={11} /> Повторен опит (NAP Retry)
                       </Button>
                     )}
                     {inv.status === 'issued' && !inv.matchedTransactionId && (

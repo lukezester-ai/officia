@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { pgTable, text, uuid, timestamp, numeric, pgEnum } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { accountPlan } from './account_plan';
@@ -46,4 +46,6 @@ export const journalLines = pgTable('journal_lines', {
   vatCode: text('vat_code'), // напр. '20', '9', '0'
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+export const journalEntries = journalHeaders;
 

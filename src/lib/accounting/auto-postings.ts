@@ -3,7 +3,7 @@
 // Call createAutoPostings() after creating an invoice or bank transaction
 
 import { db } from "@/lib/db/db";
-import { journalEntries } from "@/lib/db/schema";
+import { journalHeaders as journalEntries } from "@/lib/db/schema/journal_entries";
 
 interface PostingLine {
   account: string;

@@ -175,9 +175,27 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
 
             {/* ── Gross ── */}
             <div className="flex items-center justify-between py-3.5 px-5 rounded-xl bg-violet-500/10 border border-violet-500/20">
-              <span className="text-zinc-300 font-semibold">Брутна заплата</span>
+              <span className="text-zinc-300 font-semibold">Брутна заплата (Обеми/Ставка)</span>
               <span className="text-violet-300 font-bold text-lg tabular-nums">{fmtBGN(calc.grossSalary)}</span>
             </div>
+
+            {calc.adjustments && (
+              <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 space-y-2 text-xs">
+                <p className="text-indigo-400 font-semibold uppercase tracking-wider mb-2">Отпуски и болнични (ЧР Интеграция)</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-zinc-300">
+                  <div>Работни дни: <span className="text-white font-bold">{calc.adjustments.workingDays || 21}</span></div>
+                  <div>Отработени: <span className="text-emerald-400 font-bold">{calc.adjustments.workedDays || 0}</span></div>
+                  <div>Платен отпуск: <span className="text-blue-400 font-bold">{calc.adjustments.paidLeaveDays || 0} дни</span></div>
+                  <div>Болничен (Раб.): <span className="text-amber-400 font-bold">{calc.adjustments.sickDaysEmployer || 0} дни ({fmtBGN(calc.sickLeaveCompEmployer || 0)})</span></div>
+                </div>
+                {calc.effectiveGross !== calc.grossSalary && (
+                  <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm">
+                    <span className="text-zinc-400 font-medium">Ефективна осигурителна база (след отпуски):</span>
+                    <span className="text-indigo-300 font-bold tabular-nums">{fmtBGN(calc.effectiveGross)}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Employee contributions ── */}
             <div>

@@ -118,3 +118,98 @@ export async function generateNapExportArchive(
   const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
   return zipBuffer;
 }
+
+/**
+ * Генерира XML файл за Декларации Образец 1 и Образец 6 към НАП (ТРЗ и Данъци).
+ */
+export function generatePayrollDeclarationXml(
+  employeesData: Array<{ pin?: string; firstName: string; lastName: string; grossSalary: number; insuranceBase: number; dooEmp: number; dzpoEmp: number; zoEmp: number; ddfl: number }>,
+  year: number,
+  month: number,
+  companyEik: string = "123456789"
+): string {
+  let totalDoo = 0;
+  let totalDzpo = 0;
+  let totalZo = 0;
+  let totalDdfl = 0;
+
+  const personsXml = employeesData.map((e, idx) => {
+    totalDoo += e.dooEmp || 0;
+    totalDzpo += e.dzpoEmp || 0;
+    totalZo += e.zoEmp || 0;
+    totalDdfl += e.ddfl || 0;
+
+    return `    <Person Row="${idx + 1}">
+      <PIN>${e.pin || '0000000000'}</PIN>
+      <Names>${e.firstName} ${e.lastName}</Names>
+      <InsuredDays>21</InsuredDays>
+      <InsuranceBase>${(e.insuranceBase || 0).toFixed(2)}</InsuranceBase>
+      <EmployeeDOO>${(e.dooEmp || 0).toFixed(2)}</EmployeeDOO>
+      <EmployeeDZPO>${(e.dzpoEmp || 0).toFixed(2)}</EmployeeDZPO>
+      <EmployeeZO>${(e.zoEmp || 0).toFixed(2)}</EmployeeZO>
+      <IncomeTaxDDFL>${(e.ddfl || 0).toFixed(2)}</IncomeTaxDDFL>
+    </Person>`;
+  }).join('\r\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<NAP_Payroll_Declarations Year="${year}" Month="${String(month).padStart(2, '0')}" EIK="${companyEik}" Software="Officia BG ERP">
+  <Declaration1_Persons>
+${personsXml}
+  </Declaration1_Persons>
+  <Declaration6_Summary>
+    <TotalDOO>${totalDoo.toFixed(2)}</TotalDOO>
+    <TotalDZPO>${totalDzpo.toFixed(2)}</TotalDZPO>
+    <TotalZO>${totalZo.toFixed(2)}</TotalZO>
+    <TotalDDFL>${totalDdfl.toFixed(2)}</TotalDDFL>
+    <StatutoryDueDate>${year}-${String(month + 1).padStart(2, '0')}-14</StatutoryDueDate>
+  </Declaration6_Summary>
+</NAP_Payroll_Declarations>`;
+}
+
+/**
+ * TICKET 7: Масов експорт на всички счетоводни, ДДС и ТРЗ файлове в един обединен ZIP пакет за НАП.
+ */
+export async function generateFullBatchNapZip(
+  vatRecords: VatRecord[],
+  employeesData: any[],
+  companyVat: string,
+  year: number,
+  month: number
+): Promise<Buffer> {
+  const sales = vatRecords.filter(r => r.type === 'sales');
+  const purchases = vatRecords.filter(r => r.type === 'purchases');
+
+  const salesLines = sales.map(r => formatSalesRow(r, companyVat));
+  const purchasesLines = purchases.map(r => formatPurchasesRow(r, companyVat));
+
+  const salesContent = salesLines.join('\r\n') + (salesLines.length > 0 ? '\r\n' : '');
+  const purchasesContent = purchasesLines.join('\r\n') + (purchasesLines.length > 0 ? '\r\n' : '');
+
+  const salesBuffer = iconv.encode(salesContent, 'win1251');
+  const purchasesBuffer = iconv.encode(purchasesContent, 'win1251');
+  const deklarBuffer = iconv.encode(`ДДС Декларация за период ${month}/${year}\r\nИН по ЗДДС: ${companyVat}`, 'win1251');
+
+  const payrollXml = generatePayrollDeclarationXml(employeesData, year, month, companyVat.replace(/^BG/, ''));
+  const payrollBuffer = Buffer.from(payrollXml, 'utf-8');
+
+  const zip = new JSZip();
+  const vatFolder = zip.folder('DDS_Ledgers_NAP');
+  if (vatFolder) {
+    vatFolder.file('PRODAJBI.TXT', salesBuffer);
+    vatFolder.file('POKUPKI.TXT', purchasesBuffer);
+    vatFolder.file('DEKLAR.TXT', deklarBuffer);
+  } else {
+    zip.file('PRODAJBI.TXT', salesBuffer);
+    zip.file('POKUPKI.TXT', purchasesBuffer);
+    zip.file('DEKLAR.TXT', deklarBuffer);
+  }
+
+  const payrollFolder = zip.folder('Payroll_TRZ_NAP');
+  if (payrollFolder) {
+    payrollFolder.file(`OBRAZEC_1_6_${month}_${year}.xml`, payrollBuffer);
+  } else {
+    zip.file(`OBRAZEC_1_6_${month}_${year}.xml`, payrollBuffer);
+  }
+
+  return await zip.generateAsync({ type: 'nodebuffer' });
+}

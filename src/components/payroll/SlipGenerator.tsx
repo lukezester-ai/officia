@@ -3,6 +3,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { calculatePayroll } from '@/lib/payroll/calculator';
+import { getEmployeeLeaveAdjustments } from '@/app/[lang]/dashboard/payroll/slip-actions';
 import { PaySlip } from '@/components/payroll/PaySlip';
 import { FileText, ChevronDown, Loader2, Sparkles } from 'lucide-react';
 
@@ -39,9 +40,11 @@ export function SlipGenerator({ employees }: Props) {
     const emp = employees.find((e) => e.id === selectedId);
     if (!emp) return;
 
-    startTransition(() => {
+    startTransition(async () => {
       const gross = parseFloat(emp.salary || '0');
-      const result = calculatePayroll(gross, selectedMonth, selectedYear);
+      const adjRes = await getEmployeeLeaveAdjustments(selectedId, selectedMonth, selectedYear);
+      const adjustments = adjRes.success ? adjRes.adjustments : undefined;
+      const result = calculatePayroll(gross, selectedMonth, selectedYear, adjustments);
       setCalcResult(result);
       setSelectedEmp(emp);
     });

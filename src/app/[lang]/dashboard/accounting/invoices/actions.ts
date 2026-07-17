@@ -37,11 +37,23 @@ export async function createInvoice(lang: string, data: {
   redirect(`/${lang}/dashboard/accounting/invoices/${id}`);
 }
 
-export async function updateInvoiceStatus(id: number, status: string, lang: string) {
+import { ensureAutoJournalForInvoice } from "@/lib/accounting/auto-journal";
+import { syncStockFromSalesInvoice } from "@/lib/inventory/auto-stock";
+
+export async function updateInvoiceStatus(id: any, status: string, lang: string) {
   await (db as any)
     .update(invoices)
     .set({ status, updatedAt: new Date() })
     .where(eq((invoices as any).id, id));
+
+  if (["issued", "approved", "sent", "paid"].includes(status)) {
+    const [inv] = await (db as any).select().from(invoices).where(eq((invoices as any).id, id));
+    if (inv && inv.tenantId) {
+      await ensureAutoJournalForInvoice(String(id), inv.tenantId);
+      await syncStockFromSalesInvoice(String(id), inv.tenantId);
+    }
+  }
+
   revalidatePath(`/${lang}/dashboard/accounting/invoices`);
   revalidatePath(`/${lang}/dashboard/accounting/invoices/${id}`);
 }

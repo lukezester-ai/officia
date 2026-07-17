@@ -10,6 +10,8 @@ import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { ensureAutoJournalForInvoice } from '@/lib/accounting/auto-journal';
+import { syncStockFromSalesInvoice } from '@/lib/inventory/auto-stock';
 
 async function getTenant() {
   const { tenant } = await requireTenant();
@@ -125,6 +127,8 @@ export async function issueInvoice(id: string) {
     if (!invoice) return { success: false, error: 'Не е намерена' };
 
     await db.update(invoices).set({ status: 'issued' }).where(eq(invoices.id, id));
+    await ensureAutoJournalForInvoice(id, tenant.id);
+    await syncStockFromSalesInvoice(id, tenant.id);
 
     if (!invoice.vatPosted) {
       const issueDate = new Date(invoice.issueDate);

@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getDeclarations, generateDds, generateProfitTaxAction } from './actions';
+import { getDeclarations, generateDds, generateProfitTaxAction, exportBatchDeclarationsAction } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Download, FileArchive, CheckCircle, PieChart } from 'lucide-react';
+import { Calculator, Download, FileArchive, CheckCircle, PieChart, Calendar, Clock, AlertTriangle, ArrowUpRight, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TaxesPage() {
@@ -13,6 +13,7 @@ export default function TaxesPage() {
   const [loading, setLoading] = useState(true);
   const [generatingDds, setGeneratingDds] = useState(false);
   const [generatingProfitTax, setGeneratingProfitTax] = useState(false);
+  const [exportingBatch, setExportingBatch] = useState(false);
 
   const load = async () => {
     const res = await getDeclarations();
@@ -84,12 +85,127 @@ export default function TaxesPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Данъци и Декларации</h1>
-          <p className="text-sm text-zinc-400 mt-1">Управление на ДДС, годишен данък печалба и експорт към НАП.</p>
+          <p className="text-sm text-zinc-400 mt-1">Управление на ДДС, годишен данък печалба, срокове и експорт към НАП.</p>
         </div>
+        <Button
+          onClick={async () => {
+            setExportingBatch(true);
+            const now = new Date();
+            let y = now.getFullYear();
+            let m = now.getMonth();
+            if (m === 0) { m = 12; y -= 1; }
+            toast.loading('Генериране на пълен пакет за НАП (ДДС + ТРЗ XML)...');
+            const res = await exportBatchDeclarationsAction(y, m);
+            toast.dismiss();
+            if (res.success && res.zipBase64) {
+              const byteCharacters = atob(res.zipBase64);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: 'application/zip' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', `NAP_Batch_Package_${m}_${y}.zip`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              toast.success(`Пълният пакет за НАП (ДДС + ТРЗ Обр.1/6 за ${m}/${y}) е изтеглен!`);
+            } else {
+              toast.error('Грешка при масов експорт: ' + (res.error || 'Неизвестна грешка'));
+            }
+            setExportingBatch(false);
+          }}
+          disabled={exportingBatch}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-900/30"
+        >
+          <Download size={16} />
+          {exportingBatch ? 'Пакетиране...' : 'Масов Експорт за НАП (ДДС + ТРЗ ZIP)'}
+        </Button>
       </div>
+
+      {/* ДАНЪЧЕН КАЛЕНДАР И ЗАКОНОВИ СРОКОВЕ (TICKET 5) */}
+      <Card className="shadow-sm border-white/10 bg-gradient-to-br from-slate-900/90 via-indigo-950/40 to-slate-900/90 overflow-hidden border-l-4 border-l-indigo-500">
+        <CardHeader className="border-b border-white/10 pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg text-white flex items-center gap-2">
+              <Calendar className="text-indigo-400" size={18} />
+              Законови Данъчни и Осигурителни Срокове (НАП / НОИ)
+            </CardTitle>
+            <p className="text-xs text-zinc-400 mt-0.5">Автоматично следене на задължителните дати за подаване на декларации и плащания</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2 bg-white/5 border-white/10 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors text-xs"
+            onClick={() => {
+              const now = new Date();
+              const y = now.getFullYear();
+              const m = String(now.getMonth() + 1).padStart(2, '0');
+              const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Officia//BG Tax Calendar//BG',
+                'BEGIN:VEVENT',
+                `SUMMARY:НАП - Краен срок за ДДС и Образец 1/6 (${m}/${y})`,
+                `DTSTART;VALUE=DATE:${y}${m}14`,
+                `DTEND;VALUE=DATE:${y}${m}15`,
+                'DESCRIPTION:Подаване на Справка-декларация по ЗДДС, VIES и Осигурителни декларации Образец 1 и 6 за предходния месец.',
+                'END:VEVENT',
+                'BEGIN:VEVENT',
+                `SUMMARY:НАП - Авансови вноски ЗКПО/ЗДДФЛ и Интрастат (${m}/${y})`,
+                `DTSTART;VALUE=DATE:${y}${m}25`,
+                `DTEND;VALUE=DATE:${y}${m}26`,
+                'DESCRIPTION:Внасяне на месечни/тримесечни авансови вноски по ЗКПО и подаване на Интрастат декларации.',
+                'END:VEVENT',
+                'END:VCALENDAR'
+              ].join('\r\n');
+              const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', `NAP_Tax_Calendar_${y}.ics`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              toast.success('Данъчният календар за НАП (.ics) е изтеглен!');
+            }}
+          >
+            <Bell size={14} /> Изтегли НАП Календар (.ics)
+          </Button>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { date: '14-то число', title: 'ДДС Справка & VIES', desc: 'За предходен месец (ЗДДС)', status: new Date().getDate() <= 14 ? 'Предстои' : 'Срокът изтече' },
+            { date: '14-то число', title: 'Образец 1 & 6 (ТРЗ)', desc: 'Осигурителни вноски НОИ/НАП', status: new Date().getDate() <= 14 ? 'Предстои' : 'Срокът изтече' },
+            { date: '25-то число', title: 'Авансов Данък & Интрастат', desc: 'Вноски ЗКПО / ЗДДФЛ', status: new Date().getDate() <= 25 ? 'Предстои' : 'Срокът изтече' },
+            { date: '31 Март', title: 'Годишно Приключване (ГФО)', desc: 'ГДД чл. 92 ЗКПО / чл. 50 ЗДДФЛ', status: new Date().getMonth() <= 2 ? 'Предстои' : 'Завършено' }
+          ].map((item, idx) => {
+            const isPending = item.status === 'Предстои';
+            return (
+              <div key={idx} className="p-4 rounded-xl border border-white/10 bg-white/5 flex flex-col justify-between hover:border-white/20 transition-all">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      {item.date}
+                    </span>
+                    <h3 className="font-semibold text-white mt-2.5 text-sm">{item.title}</h3>
+                    <p className="text-xs text-zinc-400 mt-1">{item.desc}</p>
+                  </div>
+                  <Badge variant="outline" className={`text-[10px] uppercase font-bold px-1.5 py-0.5 ${isPending ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
+                    {item.status}
+                  </Badge>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
 
       {/* ДДС СЕКЦИЯ */}
       <Card className="shadow-sm border-white/10 bg-white/5 overflow-hidden">

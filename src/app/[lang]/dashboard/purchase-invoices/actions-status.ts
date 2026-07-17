@@ -6,6 +6,8 @@ import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { tenants } from '@/lib/db/schema/tenants';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { ensureAutoJournalForPurchaseInvoice } from '@/lib/accounting/auto-journal';
+import { syncStockFromPurchaseInvoice } from '@/lib/inventory/auto-stock';
 
 async function getTenant() {
   const [tenant] = await db.select().from(tenants).limit(1);
@@ -22,6 +24,10 @@ export async function approvePurchaseInvoice(id: string) {
     await db.update(purchaseInvoices)
       .set({ status: 'approved' })
       .where(eq(purchaseInvoices.id, id));
+      
+    await ensureAutoJournalForPurchaseInvoice(id, tenant.id);
+    await syncStockFromPurchaseInvoice(id, tenant.id);
+    
     if (!inv.vatPosted) {
       const d = new Date(inv.issueDate || new Date());
       await db.insert(vatJournals).values({

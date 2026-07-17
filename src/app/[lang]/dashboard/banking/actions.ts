@@ -7,6 +7,7 @@ import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { tenants } from '@/lib/db/schema/tenants';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { autoCloseMatchedDocument } from '@/lib/matching/auto-close';
 
 export async function getBankAccounts() {
   try {
@@ -76,6 +77,8 @@ export async function acceptMatch(id: string) {
       reviewRequired: false 
     }).where(eq(bankTransactions.id, id));
     
+    await autoCloseMatchedDocument(id);
+    
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -108,6 +111,7 @@ export async function manualMatch(txId: string, documentId: string, documentType
       matchedInvoiceId: documentType === 'invoice' ? documentId : null,
       matchedExpenseId: documentType === 'expense' ? documentId : null,
     }).where(eq(bankTransactions.id, txId));
+    await autoCloseMatchedDocument(txId);
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
