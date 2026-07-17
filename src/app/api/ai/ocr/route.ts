@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { processDocumentImage } from '@/lib/ai/agents/ocr';
 
@@ -21,7 +21,11 @@ export async function POST(req: Request) {
         invoiceNumber: `INV-${Math.floor(10000 + Math.random() * 90000)}`,
         date: new Date().toISOString().split('T')[0],
         counterpartyName: 'ТехМарт България ЕООД',
-        extractedText: 'Закупуване на офис техника - Лаптоп Dell XPS, Мишка Logitech MX Master 3S. Плащане по банков път.'
+        extractedText: 'Закупуване на офис техника - Лаптоп Dell XPS, Мишка Logitech MX Master 3S. Плащане по банков път.',
+        lineItems: [
+          { description: 'Лаптоп Dell XPS 15', quantity: 1, unitPrice: 1350.00, total: 1350.00, itemType: 'goods' },
+          { description: 'Консултация по инсталация', quantity: 1, unitPrice: 100.00, total: 100.00, itemType: 'service' }
+        ]
       });
     }
 

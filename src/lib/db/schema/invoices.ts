@@ -48,4 +48,5 @@ export const invoiceLines = pgTable("invoice_lines", {
   lineNet: numeric("line_net"),
   lineVat: numeric("line_vat"),
   lineTotal: numeric("line_total"),
+  skladItemId: uuid("sklad_item_id"), // Reference to inventory_items (sklad_items)
 });

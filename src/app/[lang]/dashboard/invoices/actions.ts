@@ -108,6 +108,7 @@ export async function createInvoice(input: {
           lineNet: l.lineNet.toString(),
           lineVat: l.lineVat.toString(),
           lineTotal: l.lineTotal.toString(),
+          skladItemId: (l as any).skladItemId || null,
         }))
       );
     }

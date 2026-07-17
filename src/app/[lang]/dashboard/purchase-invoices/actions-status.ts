@@ -9,8 +9,10 @@ import { revalidatePath } from 'next/cache';
 import { ensureAutoJournalForPurchaseInvoice } from '@/lib/accounting/auto-journal';
 import { syncStockFromPurchaseInvoice } from '@/lib/inventory/auto-stock';
 
+import { requireTenant } from '@/lib/auth/get-tenant';
+
 async function getTenant() {
-  const [tenant] = await db.select().from(tenants).limit(1);
+  const { tenant } = await requireTenant();
   return tenant;
 }
 

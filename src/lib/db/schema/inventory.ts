@@ -13,6 +13,8 @@ export const inventoryItems = pgTable('inventory_items', {
   unitOfMeasure: text('unit_of_measure').notNull(), // бр, кг, литър
   inventoryAccountId: uuid('inventory_account_id').references(() => accountPlan.id), // Сметка 302, 304
   costingMethod: text('costing_method').default('fifo'), // 'fifo', 'lifo', 'weighted_average'
+  quantity: numeric('quantity', { precision: 15, scale: 3 }).default('0'), // Current stock quantity (sklad_items.quantity)
+  itemType: text('item_type').default('goods'), // 'goods' vs 'service' (classified by AI or user)
 });
 
 export const inventoryMovements = pgTable('inventory_movements', {
