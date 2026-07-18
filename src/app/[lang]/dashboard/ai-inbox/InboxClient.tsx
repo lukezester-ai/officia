@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getInboxItems, resolveInboxItem } from "./actions";
-import { Loader2, AlertTriangle, ShieldAlert, CheckCircle, Clock } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
 export default function InboxClient() {
   const [items, setItems] = useState<any[]>([]);
@@ -63,7 +63,7 @@ export default function InboxClient() {
           }`}>
             <div className="flex gap-4 items-start">
               <div className="mt-1">
-                {isCritical ? <ShieldAlert className="text-rose-500" size={24} /> :
+                {isCritical ? <AlertTriangle className="text-rose-500" size={24} /> :
                  isHigh ? <AlertTriangle className="text-amber-500" size={24} /> :
                  <AlertTriangle className="text-violet-500" size={24} />}
               </div>
