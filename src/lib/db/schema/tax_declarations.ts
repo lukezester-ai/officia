@@ -10,5 +10,6 @@ export const taxDeclarations = pgTable('tax_declarations', {
   totalAmount: numeric('total_amount', { precision: 15, scale: 2 }),
   data: jsonb('data').notNull(), // пълни данни за декларацията (JSON)
   submittedAt: timestamp('submitted_at'),
+  receiptNumber: text('receipt_number'), // НАП входящ номер
   createdAt: timestamp('created_at').defaultNow(),
 });

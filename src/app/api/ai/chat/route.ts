@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { auth } from '@clerk/nextjs/server';
+import { findRelevantTaxLaws, buildRagSystemPrompt } from '@/lib/ai/rag/tax-rag';
 
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -45,17 +46,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Празно съобщение.' }, { status: 400 });
     }
 
+    // 1. RAG: Вземаме последния въпрос на потребителя
+    const lastUserMessage = coreMessages.filter((m: any) => m.role === 'user').pop();
+    const userQuery = lastUserMessage ? lastUserMessage.content : '';
+
+    // 2. RAG: Търсим съвпадения в базата знания (ЗДДС, ЗКПО, КТ)
+    const relevantLaws = userQuery ? findRelevantTaxLaws(userQuery) : [];
+
+    // 3. RAG: Изграждаме System Prompt-а (инжектирайки законите, ако има такива)
+    const baseSystemPrompt = 'Ти си Officia AI — интелигентен офис асистент за български фирми. Отговаряй винаги на български език, ясно и професионално. Помагаш с въпроси за счетоводство, ДДС, ТРЗ, фактури, складово стопанство и бизнес процеси.';
+    const finalSystemPrompt = buildRagSystemPrompt(baseSystemPrompt, relevantLaws);
+
     // Call Anthropic
     const model = (process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5') as any;
 
     const { text } = await generateText({
       model: anthropic(model),
-      system: 'Ти си Officia AI — интелигентен офис асистент за български фирми. Отговаряй винаги на български език, ясно и професионално. Помагаш с въпроси за счетоводство, ДДС, ТРЗ, фактури, складово стопанство и бизнес процеси.',
+      system: finalSystemPrompt,
       messages: coreMessages,
       maxOutputTokens: 2048,
     });
 
-    return NextResponse.json({ response: text });
+    return NextResponse.json({ response: text, _ragDebug: relevantLaws.length > 0 });
 
   } catch (err: any) {
     console.error('[AI Chat Error]', err?.message || err);

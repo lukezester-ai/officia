@@ -190,6 +190,27 @@ export default function AIAssistantPage() {
                   </div>
                 )}
 
+                <div className="flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar print:hidden">
+                  <button 
+                    onClick={() => setInput('Трябва ли да се регистрирам по чл. 97а ЗДДС за услуги към САЩ?')}
+                    className="whitespace-nowrap px-3 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs hover:bg-violet-500/20 transition-colors"
+                  >
+                    ЗДДС: Регистрация за САЩ?
+                  </button>
+                  <button 
+                    onClick={() => setInput('Кога се подава годишната данъчна декларация по ЗКПО?')}
+                    className="whitespace-nowrap px-3 py-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs hover:bg-teal-500/20 transition-colors"
+                  >
+                    ЗКПО: ГДД Срок?
+                  </button>
+                  <button 
+                    onClick={() => setInput('Какво гласи чл. 114 от Кодекса на труда за работа през определени дни?')}
+                    className="whitespace-nowrap px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs hover:bg-amber-500/20 transition-colors"
+                  >
+                    КТ: Договор на парче?
+                  </button>
+                </div>
+
                 <div className="flex gap-2 items-end">
                   <div className="flex flex-col gap-1">
                     <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white/5 text-zinc-500 hover:text-violet-400 rounded-lg transition-colors" title="Прикачи файл">

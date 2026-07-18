@@ -21,3 +21,22 @@ export const fixedAssets = pgTable('fixed_assets', {
   writtenOffAt: timestamp('written_off_at'),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+export const depreciationRuns = pgTable('depreciation_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull(),
+  month: text('month').notNull(), // e.g. "07"
+  year: text('year').notNull(), // e.g. "2026"
+  status: text('status').default('completed'), // completed, error
+  totalAmount: numeric('total_amount', { precision: 15, scale: 2 }),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const depreciationLogs = pgTable('depreciation_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  runId: uuid('run_id').references(() => depreciationRuns.id, { onDelete: 'cascade' }).notNull(),
+  assetId: uuid('asset_id').references(() => fixedAssets.id).notNull(),
+  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+  journalEntryId: uuid('journal_entry_id'), // Връзка към счетоводната статия
+  createdAt: timestamp('created_at').defaultNow(),
+});
