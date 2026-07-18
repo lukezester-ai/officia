@@ -181,7 +181,7 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
             ) : (
               <div className="flex justify-between items-center text-sm py-2">
                 <span className="text-muted-foreground">Имате {data?.overviewStats?.approvalsPending ?? 0} заявки за преглед.</span>
-                <Link href={`/${lang}/dashboard/approvals`} className="text-emerald-600 hover:underline font-medium">
+                <Link href={`/${lang}/mobile/approvals`} className="text-emerald-600 hover:underline font-medium">
                   Преглед
                 </Link>
               </div>
