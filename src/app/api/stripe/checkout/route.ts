@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const plan = searchParams.get('plan') || 'business';
     const billing = searchParams.get('billing') || 'annual';
-    const origin = req.headers.get('origin') || 'https://officiabg.com';
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     const priceId = PRICE_IDS[plan]?.[billing as 'monthly' | 'annual'];
 
@@ -35,20 +35,21 @@ export async function GET(req: NextRequest) {
     } else {
       // Fallback: ако няма настроен priceId в променливите, създаваме динамична цена в Stripe (за да работи бутонът за плащане винаги)
       const defaultPlans: Record<string, { monthly: number; annual: number; name: string }> = {
-        business: { monthly: 1490, annual: 1190, name: 'Officia Business' },
-        pro: { monthly: 4900, annual: 3900, name: 'Officia Pro' },
-        accounting_firm: { monthly: 8900, annual: 7100, name: 'Officia Кантора (Accounting Firm)' },
+        business: { monthly: 5500, annual: 4400, name: 'Officia MENA Business' },
+        pro: { monthly: 17900, annual: 14300, name: 'Officia MENA Pro' },
+        accounting_firm: { monthly: 32900, annual: 26300, name: 'Officia MENA Practice' },
       };
       const planInfo = defaultPlans[plan] || defaultPlans.business;
-      const unitAmountCents = billing === 'annual' ? planInfo.annual * 100 : planInfo.monthly * 100;
+      // Amounts are already in fils (1 AED = 100 fils)
+      const unitAmountCents = billing === 'annual' ? planInfo.annual : planInfo.monthly;
 
       lineItems = [
         {
           price_data: {
-            currency: 'eur',
+            currency: 'aed',
             product_data: {
               name: planInfo.name,
-              description: `Абонаментен план (${billing === 'annual' ? 'Годишно таксуване' : 'Месечно таксуване'})`,
+              description: `Subscription (${billing === 'annual' ? 'annual billing' : 'monthly billing'})`,
             },
             unit_amount: unitAmountCents,
             recurring: {
@@ -81,6 +82,6 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     console.error('[STRIPE_SUBSCRIPTION_ERROR]', err);
     // Fallback към sign-up ако Stripe гърми
-    return NextResponse.redirect('https://officiabg.com/sign-up');
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/sign-up`);
   }
 }
