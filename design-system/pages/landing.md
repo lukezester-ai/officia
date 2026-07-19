@@ -21,3 +21,8 @@ Industrial ledger / gold-trust fintech. Dark slate atmosphere with amber as the 
 ## Typography
 - Brand / headings: Fira Code
 - Body: Fira Sans
+
+## Below-the-fold sections
+- **Features:** same slate background; amber tags/accents; no purple pills; industrial borders
+- **Social proof:** capability tiles with amber icons; amber primary CTA
+- **Pricing:** featured plan uses amber border/fill (not violet gradient); toggle amber; sharp edges
