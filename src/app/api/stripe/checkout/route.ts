@@ -34,13 +34,13 @@ export async function GET(req: NextRequest) {
       lineItems = [{ price: priceId, quantity: 1 }];
     } else {
       // Fallback: ако няма настроен priceId в променливите, създаваме динамична цена в Stripe (за да работи бутонът за плащане винаги)
+      // Stripe unit_amount in fils (1 AED = 100 fils). Annual = full yearly charge.
       const defaultPlans: Record<string, { monthly: number; annual: number; name: string }> = {
-        business: { monthly: 5500, annual: 4400, name: 'Officia MENA Business' },
-        pro: { monthly: 17900, annual: 14300, name: 'Officia MENA Pro' },
-        accounting_firm: { monthly: 32900, annual: 26300, name: 'Officia MENA Practice' },
+        business: { monthly: 5500, annual: 52800, name: 'Officia MENA Business' },
+        pro: { monthly: 17900, annual: 171600, name: 'Officia MENA Pro' },
+        accounting_firm: { monthly: 32900, annual: 315600, name: 'Officia MENA Practice' },
       };
       const planInfo = defaultPlans[plan] || defaultPlans.business;
-      // Amounts are already in fils (1 AED = 100 fils)
       const unitAmountCents = billing === 'annual' ? planInfo.annual : planInfo.monthly;
 
       lineItems = [
