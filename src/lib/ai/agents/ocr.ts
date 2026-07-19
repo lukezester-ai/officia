@@ -34,12 +34,18 @@ export async function processDocumentImage(base64Image: string, mimeType: string
     messages: [
       {
         role: 'system',
-        content: 'You are a highly precise OCR and data extraction agent. You will be provided with an image of a document (invoice, receipt, contract). Your task is to extract the requested fields with 100% accuracy. If a field is not present, return a sensible default.'
+        content: `You are Officia OCR — a precise Bulgarian accounting document extraction agent.
+Rules:
+1. Extract every monetary value carefully (totals, VAT, line items). Prefer EUR; if BGN is shown convert only if both are present, otherwise keep the document currency.
+2. For Bulgarian invoices capture supplier name, invoice number, and dates in YYYY-MM-DD.
+3. Classify each line as goods or service for inventory/accounting handoff.
+4. Put the full readable text into extractedText (Bulgarian if the document is Bulgarian).
+5. Never invent VAT IDs or amounts that are not visible — use defaults from the schema instead.`
       },
       {
         role: 'user',
         content: [
-          { type: 'text', text: 'Please extract the data from this document.' },
+          { type: 'text', text: 'Извлечи структурираните данни от този документ за последващо осчетоводяване и банково съпоставяне.' },
           { type: 'image', image: cleanBase64 }
         ]
       }

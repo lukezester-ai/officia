@@ -23,7 +23,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-[#0B1220] text-[#F8FAFC]">
       <OfficiaHero lang={lang} />
 
       <OfficiaFeatures lang={lang} />
@@ -45,19 +45,19 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 ))}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 rounded-2xl p-8">
+            <div className="border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-slate-900/40 p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center"><Shield size={18} /></div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#F59E0B] text-[#0B1220]"><Shield size={18} /></div>
                 <div>
                   <div className="font-semibold">Сигурност по дизайн</div>
                   <div className="text-sm text-zinc-400">Clerk + PostgreSQL + tenant изолация</div>
                 </div>
               </div>
               <div className="space-y-4 text-sm text-zinc-400">
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Clerk автентикация (MFA/SSO чрез Clerk настройки)</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Всяка фирма вижда само своите данни</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>PostgreSQL + Drizzle ORM</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Ограничаване на заявките към разпознаването и изкуствения интелект</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="mt-0.5 shrink-0 text-amber-400" /><span>Clerk автентикация (MFA/SSO чрез Clerk настройки)</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="mt-0.5 shrink-0 text-amber-400" /><span>Всяка фирма вижда само своите данни</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="mt-0.5 shrink-0 text-amber-400" /><span>PostgreSQL + Drizzle ORM</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="mt-0.5 shrink-0 text-amber-400" /><span>Ограничаване на заявките към разпознаването и изкуствения интелект</span></div>
               </div>
             </div>
           </div>
@@ -70,7 +70,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да автоматизираш офиса си?</h2>
           <p className="text-zinc-400 mb-8">Регистрирай се безплатно — 14 дни пълен достъп, после честни лимити по план.</p>
-          <Link href={signUpHref} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
+          <Link href={signUpHref} className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-[#F59E0B] px-10 py-4 text-lg font-semibold text-[#0B1220] transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#FBBF24]">
             Стартирай безплатно <ArrowRight size={18} />
           </Link>
         </div>

@@ -33,7 +33,7 @@ const journalEntries = [
 ];
 
 const vatData = [
-  { name: "ДДС 20%", value: 80, color: "#7c3aed" },
+  { name: "ДДС 20%", value: 80, color: "#F59E0B" },
   { name: "Други", value: 20, color: "#1f2937" },
 ];
 
@@ -47,8 +47,8 @@ function AccountingMockup() {
   return (
     <div className="flex h-full w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
       <div className="flex w-14 shrink-0 flex-col items-center gap-6 border-r border-white/[0.06] bg-[#0a0a12] py-5">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-[10px] font-bold text-white">O</div>
-        <LayoutDashboard className="h-4 w-4 text-purple-500" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500 text-[10px] font-bold text-[#0B1220]">O</div>
+        <LayoutDashboard className="h-4 w-4 text-amber-500" />
         <FileText className="h-4 w-4 text-zinc-600" />
         <Users className="h-4 w-4 text-zinc-600" />
         <CreditCard className="h-4 w-4 text-zinc-600" />
@@ -63,7 +63,7 @@ function AccountingMockup() {
           <h4 className="text-[11px] font-semibold tracking-tight text-white">Журнални записи</h4>
           <div className="flex gap-1.5">
             <span className="rounded border border-white/[0.05] bg-[#1e1e2e] px-2.5 py-1 text-[9px] text-zinc-500">Януари 2025</span>
-            <button className="flex items-center gap-1 rounded bg-purple-600 px-2.5 py-1 text-[9px] font-medium text-white">
+            <button className="flex items-center gap-1 rounded bg-amber-500 px-2.5 py-1 text-[9px] font-medium text-white">
               <Plus className="h-2.5 w-2.5" />
               Нов
             </button>
@@ -116,8 +116,8 @@ function AccountingMockup() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-purple-500/20 bg-purple-600/10 p-3">
-              <span className="mb-1 block font-mono text-[8px] uppercase tracking-[0.08em] text-purple-400">За внасяне</span>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
+              <span className="mb-1 block font-mono text-[8px] uppercase tracking-[0.08em] text-amber-400">За внасяне</span>
               <span className="text-[11px] font-bold text-white">842,15 лв</span>
             </div>
           </div>
@@ -161,16 +161,16 @@ function AIDocumentsMockup() {
           <div className="space-y-3">
             <div className="h-2 w-3/4 rounded bg-zinc-800/60" />
             <div className="h-2 w-1/2 rounded bg-zinc-800/60" />
-            <div className="h-2 w-2/3 rounded border border-purple-500/30 bg-purple-500/25" />
+            <div className="h-2 w-2/3 rounded border border-amber-500/30 bg-amber-500/25" />
             <div className="mt-6 h-10 w-full rounded bg-zinc-800/20" />
           </div>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <motion.div
               animate={{ scale: [1, 1.12, 1], opacity: [0.25, 0.55, 0.25] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              className="flex h-28 w-28 items-center justify-center rounded-full border border-purple-500/40 bg-purple-500/5 shadow-[0_0_32px_8px_rgba(124,58,237,0.12)]"
+              className="flex h-28 w-28 items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/5 shadow-[0_0_32px_8px_rgba(245,158,11,0.12)]"
             >
-              <Bot className="h-7 w-7 text-purple-500" />
+              <Bot className="h-7 w-7 text-amber-500" />
             </motion.div>
           </div>
         </div>
@@ -181,19 +181,19 @@ function AIDocumentsMockup() {
               key={field.label}
               className="space-y-1 rounded-lg border p-3"
               style={{
-                background: field.highlight ? "rgba(124,58,237,0.07)" : "rgba(255,255,255,0.03)",
-                borderColor: field.highlight ? "rgba(124,58,237,0.35)" : "rgba(255,255,255,0.05)",
+                background: field.highlight ? "rgba(245,158,11,0.07)" : "rgba(255,255,255,0.03)",
+                borderColor: field.highlight ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.05)",
               }}
             >
-              <span className="block font-mono text-[8px] uppercase tracking-[0.1em]" style={{ color: field.highlight ? "#a78bfa" : "#71717a" }}>{field.label}</span>
+              <span className="block font-mono text-[8px] uppercase tracking-[0.1em]" style={{ color: field.highlight ? "#FBBF24" : "#71717a" }}>{field.label}</span>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] font-semibold text-white">{field.value}</span>
-                {field.confirmed ? <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" /> : <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ duration: 1.4, repeat: Infinity }} className="h-3.5 w-1.5 rounded-sm bg-purple-500" />}
+                {field.confirmed ? <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" /> : <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ duration: 1.4, repeat: Infinity }} className="h-3.5 w-1.5 rounded-sm bg-amber-500" />}
               </div>
             </div>
           ))}
 
-          <div className="mt-1 rounded-xl bg-purple-600 p-3 shadow-[0_4px_24px_rgba(124,58,237,0.35)]">
+          <div className="mt-1 rounded-xl bg-amber-500 p-3 shadow-[0_4px_24px_rgba(245,158,11,0.35)]">
             <div className="flex items-start gap-2">
               <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/20">
                 <Bot className="h-3 w-3 text-white" />
@@ -201,7 +201,7 @@ function AIDocumentsMockup() {
               <p className="text-[10px] leading-relaxed text-white/90">Искаш ли да осчетоводя тази фактура към сметка 601 (Материали)?</p>
             </div>
             <div className="mt-2.5 flex gap-2">
-              <button className="flex-1 rounded-lg bg-white py-1.5 text-[10px] font-bold text-purple-700">ДА</button>
+              <button className="flex-1 rounded-lg bg-white py-1.5 text-[10px] font-bold text-amber-900">ДА</button>
               <button className="flex-1 rounded-lg bg-white/20 py-1.5 text-[10px] text-white">НЕ</button>
             </div>
           </div>
@@ -237,10 +237,10 @@ function BankSyncMockup() {
         <div className="mb-5">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-zinc-500">AI автоматично съпоставяне</span>
-            <span className="text-[11px] font-bold tabular-nums text-purple-400">87%</span>
+            <span className="text-[11px] font-bold tabular-nums text-amber-400">87%</span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800/80">
-            <motion.div initial={{ width: 0 }} whileInView={{ width: "87%" }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full rounded-full bg-gradient-to-r from-[#7c3aed] to-indigo-500" />
+            <motion.div initial={{ width: 0 }} whileInView={{ width: "87%" }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full rounded-full bg-gradient-to-r from-[#F59E0B] to-amber-400" />
           </div>
         </div>
 
@@ -276,7 +276,7 @@ function BankSyncMockup() {
 
         <div className="mt-4 flex shrink-0 gap-2">
           <button className="flex-1 rounded-lg border border-white/[0.07] bg-zinc-800/40 py-2 text-[9px] font-medium text-white transition-colors hover:bg-zinc-800/60">Всички транзакции</button>
-          <button className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-purple-600 py-2 text-[9px] font-bold text-white transition-colors hover:bg-purple-500">
+          <button className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-amber-500 py-2 text-[9px] font-bold text-white transition-colors hover:bg-amber-500">
             <Zap className="h-3 w-3 fill-white" />
             Синхронизирай
           </button>
@@ -307,21 +307,21 @@ function FeatureCard({ data }: { data: FeatureCardData }) {
       transition={{ duration: 0.75, delay: data.delay }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex flex-col overflow-hidden rounded-[1.75rem]"
+      className="flex flex-col overflow-hidden rounded-md"
       style={{
         background: "rgba(255,255,255,0.025)",
-        border: hovered ? "1px solid rgba(124,58,237,0.35)" : "1px solid rgba(255,255,255,0.06)",
-        boxShadow: hovered ? "0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(124,58,237,0.15) inset" : "0 8px 32px rgba(0,0,0,0.45)",
+        border: hovered ? "1px solid rgba(245,158,11,0.35)" : "1px solid rgba(255,255,255,0.06)",
+        boxShadow: hovered ? "0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(245,158,11,0.15) inset" : "0 8px 32px rgba(0,0,0,0.45)",
         transition: "box-shadow 200ms ease-out, border-color 200ms ease-out",
       }}
     >
       <div className="p-8 pb-5">
-        <span className="mb-4 block font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-purple-400">{data.tag}</span>
+        <span className="mb-4 block font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-amber-400">{data.tag}</span>
         <h3 className="mb-3 text-xl font-bold leading-tight tracking-tight text-white">{data.title}</h3>
         <p className="mb-5 text-sm leading-relaxed text-zinc-400">{data.description}</p>
         <div className="flex flex-wrap gap-2">
           {data.tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-[#2a2a45] bg-[#1e1e32] px-3 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] text-[#a1a1c4]">
+            <span key={tag} className="border border-white/10 bg-[#1E293B] px-3 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] text-[#94A3B8]">
               {tag}
             </span>
           ))}
@@ -373,7 +373,7 @@ function PayrollMockup() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-500">Служители</span>
-          <span className="rounded-full bg-purple-600/20 px-2 py-0.5 text-[8px] font-semibold text-purple-400">3 назначени</span>
+          <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[8px] font-semibold text-amber-400">3 назначени</span>
         </div>
 
         <table className="w-full border-separate border-spacing-0 text-left">
@@ -700,12 +700,12 @@ function ReportsMockup() {
     <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
       <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0a0a12] p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-purple-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-600">
             <BarChart3 className="h-4 w-4 text-white" />
           </div>
           <div>
             <h5 className="text-[11px] font-semibold text-white">Финансови справки</h5>
-            <span className="flex items-center gap-1 text-[9px] font-medium text-purple-400">
+            <span className="flex items-center gap-1 text-[9px] font-medium text-amber-400">
               Януари – Юли 2025
             </span>
           </div>
@@ -841,23 +841,17 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
   const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
 
   return (
-    <section id="features" className="overflow-hidden bg-[#09090f] px-4 py-24 selection:bg-purple-500 selection:text-white md:px-8">
+    <section id="features" className="overflow-hidden bg-[#0B1220] px-4 py-24 selection:bg-amber-500 selection:text-white md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-purple-400"
-          >
-            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500" />
-            Всичко-в-едно платформа
-          </motion.div>
+          <p className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-[#F59E0B]">
+            Функции
+          </p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-5 font-bold leading-tight tracking-tight text-white"
+            className="mb-5 font-mono font-bold leading-tight tracking-tight text-white"
             style={{ fontSize: "clamp(2.5rem, 6vw, 3.75rem)" }}
           >
             Всичко на едно място
@@ -885,14 +879,14 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mt-24 overflow-hidden rounded-[2.5rem] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(124,58,237,0.12)_0%,rgba(22,22,31,0.95)_50%,#09090f_100%)] px-6 py-12 md:px-14 md:py-16"
+          className="relative mt-24 overflow-hidden border border-[#F59E0B]/25 bg-[linear-gradient(135deg,rgba(245,158,11,0.12)_0%,rgba(15,23,42,0.95)_50%,#0B1220_100%)] px-6 py-12 md:px-14 md:py-16"
         >
-          <div className="pointer-events-none absolute -right-[5%] -top-[20%] h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[100px]" />
+          <div className="pointer-events-none absolute -right-[5%] -top-[20%] h-[400px] w-[400px] rounded-full bg-amber-500/10 blur-[100px]" />
           <div className="relative flex flex-col items-center justify-between gap-8 text-center md:flex-row md:text-left">
             <div>
               <h3 className="mb-3 text-2xl font-bold tracking-tight text-white md:text-4xl">Готови ли сте за бъдещето на счетоводството?</h3>
               <p className="max-w-lg text-sm leading-relaxed text-zinc-400 md:text-base">
-                ⚡ <b>Пълен старт за под 5 минути:</b> внасяте сметкоплан, свързвате банкова сметка или качвате извлечение и AI автоматично разпознава първите ви документи. Без измислени метрики или скрити такси.
+                <b>Пълен старт за под 5 минути:</b> внасяте сметкоплан, свързвате банкова сметка или качвате извлечение и AI автоматично разпознава първите ви документи. Без измислени метрики или скрити такси.
               </p>
             </div>
             <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
@@ -914,11 +908,11 @@ function CTAButton({ href, variant, label }: { href: string; variant: "primary" 
       href={href}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors"
+      className="flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md px-7 py-3.5 text-sm font-bold transition-colors"
       style={{
-        background: variant === "primary" ? (hovered ? "#8b5cf6" : "#7c3aed") : hovered ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+        background: variant === "primary" ? (hovered ? "#FBBF24" : "#F59E0B") : hovered ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
         border: variant === "secondary" ? "1px solid rgba(255,255,255,0.1)" : "none",
-        boxShadow: variant === "primary" ? "0 8px 28px rgba(124,58,237,0.3)" : "none",
+        color: variant === "primary" ? "#0B1220" : "#F8FAFC",
       }}
     >
       {label}

@@ -10,6 +10,7 @@ export const inventoryItems = pgTable('inventory_items', {
   tenantId: uuid('tenant_id').notNull(),
   sku: text('sku').notNull(),
   name: text('name').notNull(),
+  barcode: text('barcode'), // EAN/UPC/QR value for scanners
   unitOfMeasure: text('unit_of_measure').notNull(), // бр, кг, литър
   inventoryAccountId: uuid('inventory_account_id').references(() => accountPlan.id), // Сметка 302, 304
   costingMethod: text('costing_method').default('fifo'), // 'fifo', 'lifo', 'weighted_average'

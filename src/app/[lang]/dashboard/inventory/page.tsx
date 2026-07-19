@@ -2,7 +2,7 @@
 // @ts-nocheck
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getInventoryData, createInventoryItem, addInventoryMovement } from './actions';
+import { getInventoryData, createInventoryItem, addInventoryMovement, processInventoryScan } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -103,16 +103,34 @@ export default function InventoryPage() {
     return found || null;
   }, [data.items]);
 
-  const handleScan = useCallback((code: string) => {
-    const item = findItem(code);
-    if (item) {
-      setScannedItem(item);
-      toast.success(`✅ Намерен: ${item.name}`, { duration: 2000 });
-    } else {
+  const handleScan = useCallback(async (code: string) => {
+    if (!code?.trim()) return;
+
+    // Local instant feedback
+    const local = findItem(code);
+    if (local) setScannedItem(local);
+
+    // Cross-agent inventory_scan pipeline (inbox + optional journal)
+    const res: any = await processInventoryScan({ code: code.trim(), autoIssue: false });
+    if (res?.found && res.item) {
+      const enriched = data.items.find((i: any) => i.id === res.item.id) || {
+        ...res.item,
+        currentQuantity: res.item.currentQuantity,
+        averageUnitCost: 0,
+      };
+      setScannedItem(enriched);
+      toast.success(`Сканиран: ${res.item.name}`, { description: 'AI pipeline уведоми склада и AI Inbox' });
+      load();
+    } else if (res && res.found === false) {
       setScannedItem(null);
-      toast.error(`❌ Артикул "${code}" не е намерен в номенклатурата`, { duration: 3000 });
+      toast.error(`Непознат баркод: ${code}`, {
+        description: 'Създадено е известие в AI Inbox за регистрация',
+      });
+    } else if (!local) {
+      setScannedItem(null);
+      toast.error(`Артикул "${code}" не е намерен`);
     }
-  }, [findItem]);
+  }, [findItem, data.items]);
 
   // USB/BT scanner listener (global keydown)
   useBarcodeScanner(handleScan);
@@ -185,7 +203,17 @@ export default function InventoryPage() {
     });
 
     if (res.success) {
-      toast.success(movementType === 'in' ? '✅ Заприходено!' : '✅ Изписано!');
+      const auto = (res as any).automation;
+      toast.success(
+        movementType === 'in' ? 'Заприходено!' : 'Изписано!',
+        {
+          description: auto?.approval
+            ? 'Контировка е изпратена за одобрение в AI Inbox'
+            : auto?.lowStockTask
+              ? 'Създадена задача за снабдяване (ниска наличност)'
+              : undefined,
+        },
+      );
       setMovementOpen(false);
       setScannedItem(null);
       load();
@@ -197,13 +225,21 @@ export default function InventoryPage() {
   const handleCreateItem = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const sku = fd.get('sku') as string;
+    const barcode = (fd.get('barcode') as string) || sku;
     const res = await createInventoryItem({
-      sku: fd.get('sku') as string,
+      sku,
       name: fd.get('name') as string,
       unitOfMeasure: fd.get('unitOfMeasure') as string,
+      barcode,
     });
-    if (res.success) { toast.success('Артикулът е създаден!'); setNewItemOpen(false); load(); }
-    else toast.error('Грешка: ' + res.error);
+    if (res.success) {
+      toast.success('Артикулът е създаден!', {
+        description: 'AI pipeline регистрира продукта към складовата автоматизация',
+      });
+      setNewItemOpen(false);
+      load();
+    } else toast.error('Грешка: ' + res.error);
   };
 
   const filtered = data.items.filter((i: any) =>
@@ -268,13 +304,14 @@ export default function InventoryPage() {
             <form onSubmit={handleCreateItem}>
               <div className="grid gap-4 py-4">
                 {[
-                  { id: 'sku', label: 'SKU / Баркод', placeholder: 'напр. 5901234123457' },
-                  { id: 'name', label: 'Наименование', placeholder: 'напр. Минерална вода 0.5л' },
-                  { id: 'unitOfMeasure', label: 'Мерна единица', placeholder: 'бр, кг, л, пакет...' },
+                  { id: 'sku', label: 'SKU', placeholder: 'напр. WATER-05', required: true },
+                  { id: 'barcode', label: 'Баркод / QR', placeholder: 'напр. 5901234123457 (опционално)' },
+                  { id: 'name', label: 'Наименование', placeholder: 'напр. Минерална вода 0.5л', required: true },
+                  { id: 'unitOfMeasure', label: 'Мерна единица', placeholder: 'бр, кг, л, пакет...', required: true },
                 ].map(f => (
                   <div key={f.id} className="space-y-1.5">
                     <label htmlFor={f.id} className="text-sm font-medium text-zinc-300">{f.label}</label>
-                    <Input id={f.id} name={f.id} required placeholder={f.placeholder} className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500" />
+                    <Input id={f.id} name={f.id} required={!!f.required} placeholder={f.placeholder} className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500" />
                   </div>
                 ))}
               </div>

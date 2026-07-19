@@ -27,25 +27,36 @@ export const buildProcessInboxTool = (tenantId: string) => tool({
       let resolvedCount = 0;
       const details = [];
 
-      // 2. Интелигентна обработка на всяко съобщение
+      // 2. Интелигентна обработка — НЕ затваряме human-approval заявки автоматично
       for (const item of inboxItems) {
-         let actionTaken = "";
-
-         if (item.type === 'invoice_duplicate') {
-            actionTaken = "Засечено дублиране на фактура. Дубликатът беше отхвърлен (Rejected).";
-         } else if (item.type === 'unmatched_transaction') {
-            actionTaken = "Банковият превод е прекалено неясен. Оставен е за ръчно разпределение.";
-         } else if (item.type === 'missing_vat_data') {
-            actionTaken = "Автоматично потърсихме ДДС номера в публичните регистри и го попълнихме.";
-         } else if (item.title && item.title.toLowerCase().includes('фактура')) {
-            actionTaken = "Прикачената фактура беше прочетена с Vision модел и автоматично осчетоводена.";
-         } else {
-            actionTaken = "Документът беше прочетен, класифициран и архивиран в папките.";
+         if (item.type === 'ai_approval_required') {
+            details.push(`⏳ Одобрение: "${item.title}" — оставено за човешки преглед (използвай /api/ai/approvals).`);
+            continue;
          }
 
-         // Маркираме съобщението като приключено (resolved)
+         let actionTaken = "";
+         let nextStatus = 'resolved';
+
+         if (item.type === 'invoice_duplicate') {
+            actionTaken = "Засечено дублиране на фактура. Маркирано за отхвърляне.";
+            nextStatus = 'rejected';
+         } else if (item.type === 'unmatched_transaction' || item.type === 'bank_match_suggested') {
+            actionTaken = "Банковото съпоставяне изисква ръчно потвърждение — оставено отворено.";
+            details.push(`🔎 Известие: "${item.title}"\n   ↳ Действие: ${actionTaken}`);
+            continue;
+         } else if (item.type === 'missing_vat_data') {
+            actionTaken = "Липсващи ДДС данни — ескалирано с висок приоритет.";
+            await db.update(aiInboxItems).set({ priority: 'high' }).where(eq(aiInboxItems.id, item.id));
+            details.push(`⚠️ Известие: "${item.title}"\n   ↳ Действие: ${actionTaken}`);
+            continue;
+         } else if (item.type === 'document_pipeline_ready') {
+            actionTaken = "Pipeline е завършил — документите са готови; сигналът е архивиран след преглед.";
+         } else {
+            actionTaken = "Класифицирано и архивирано.";
+         }
+
          await db.update(aiInboxItems)
-           .set({ status: 'resolved' })
+           .set({ status: nextStatus })
            .where(eq(aiInboxItems.id, item.id));
 
          resolvedCount++;

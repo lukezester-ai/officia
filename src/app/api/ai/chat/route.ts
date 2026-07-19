@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { auth } from '@clerk/nextjs/server';
-import { findRelevantTaxLaws, buildRagSystemPrompt } from '@/lib/ai/rag/tax-rag';
+import { db } from '@/lib/db/db';
+import { users } from '@/lib/db/schema/users';
+import { eq } from 'drizzle-orm';
+import { runAIAssistant } from '@/lib/ai/assistant';
 
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -10,35 +11,36 @@ const MAX_REQUESTS_PER_WINDOW = 20;
 
 export async function POST(req: NextRequest) {
   try {
-    // Auth check
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Не сте влезли в системата.' }, { status: 401 });
     }
 
-    // Rate limiting
     const now = Date.now();
     const rl = rateLimitMap.get(userId) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
-    if (now > rl.resetTime) { rl.count = 1; rl.resetTime = now + RATE_LIMIT_WINDOW_MS; }
-    else rl.count++;
+    if (now > rl.resetTime) {
+      rl.count = 1;
+      rl.resetTime = now + RATE_LIMIT_WINDOW_MS;
+    } else {
+      rl.count++;
+    }
     rateLimitMap.set(userId, rl);
     if (rl.count > MAX_REQUESTS_PER_WINDOW) {
       return NextResponse.json({ error: 'Твърде много заявки. Изчакайте минута.' }, { status: 429 });
     }
 
-    // Parse body
     const body = await req.json().catch(() => null);
     if (!body?.messages || !Array.isArray(body.messages)) {
       return NextResponse.json({ error: 'Невалидни данни.' }, { status: 400 });
     }
 
-    // Build CoreMessages – filter only user/assistant with non-empty content
     const coreMessages = body.messages
       .map((m: any) => ({
         role: m.role as 'user' | 'assistant',
-        content: typeof m.content === 'string'
-          ? m.content
-          : (m.parts?.find((p: any) => p?.type === 'text')?.text ?? ''),
+        content:
+          typeof m.content === 'string'
+            ? m.content
+            : (m.parts?.find((p: any) => p?.type === 'text')?.text ?? ''),
       }))
       .filter((m: any) => m.content.trim().length > 0);
 
@@ -46,34 +48,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Празно съобщение.' }, { status: 400 });
     }
 
-    // 1. RAG: Вземаме последния въпрос на потребителя
     const lastUserMessage = coreMessages.filter((m: any) => m.role === 'user').pop();
     const userQuery = lastUserMessage ? lastUserMessage.content : '';
+    const history = coreMessages.slice(0, -1);
 
-    // 2. RAG: Търсим съвпадения в базата знания (ЗДДС, ЗКПО, КТ)
-    const relevantLaws = userQuery ? findRelevantTaxLaws(userQuery) : [];
+    let tenantId = 'default';
+    try {
+      const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+      if (user?.tenantId) tenantId = user.tenantId;
+    } catch {
+      // keep default for demo environments
+    }
 
-    // 3. RAG: Изграждаме System Prompt-а (инжектирайки законите, ако има такива)
-    const baseSystemPrompt = 'Ти си Officia AI — интелигентен офис асистент за български фирми. Отговаряй винаги на български език, ясно и професионално. Помагаш с въпроси за счетоводство, ДДС, ТРЗ, фактури, складово стопанство и бизнес процеси.';
-    const finalSystemPrompt = buildRagSystemPrompt(baseSystemPrompt, relevantLaws);
+    const result = await runAIAssistant(userQuery, tenantId, userId, history);
 
-    // Call Anthropic
-    const model = (process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5') as any;
-
-    const { text } = await generateText({
-      model: anthropic(model),
-      system: finalSystemPrompt,
-      messages: coreMessages,
-      maxOutputTokens: 2048,
+    return NextResponse.json({
+      response: result.response,
+      toolCalls: result.toolCalls,
+      orchestration: result.orchestration,
+      _ragDebug: result.ragUsed,
     });
-
-    return NextResponse.json({ response: text, _ragDebug: relevantLaws.length > 0 });
-
   } catch (err: any) {
     console.error('[AI Chat Error]', err?.message || err);
     return NextResponse.json(
       { error: `Грешка при свързване с AI: ${err?.message || 'Непозната грешка'}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
