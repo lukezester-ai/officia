@@ -1,16 +1,12 @@
 // @ts-nocheck
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { stripe } from '@/lib/stripe';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2026-05-27.dahlia' as any,
-});
 
 export async function POST(req: Request) {
   const body = await req.text();
