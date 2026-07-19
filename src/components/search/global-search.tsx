@@ -30,7 +30,7 @@ export function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const params = useParams();
-  const lang = (params.lang as string) || "bg";
+  const lang = (params.lang as string) || "ar";
 
   const filtered = query.trim()
     ? PAGES.filter(p => p.label.toLowerCase().includes(query.toLowerCase()))

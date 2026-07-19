@@ -1,25 +1,203 @@
 {
-    "sidebar":  {
-                    "dashboard":  "Dashboard",
-                    "accounting":  "Accounting",
-                    "hr":  "HR",
-                    "banking":  "Banking",
-                    "documents":  "Documents",
-                    "aiAssistant":  "AI Assistant",
-                    "reports":  "Reports",
-                    "vatJournals":  "VAT Journals",
-                    "fixedAssets":  "Fixed Assets",
-                    "counterparties":  "Counterparties",
-                    "invoices":  "Invoices",
-                    "purchaseInvoices":  "Purchase Invoices",
-                    "settings":  "Settings",
-
-                    "logout":  "Log Out",
-                    "profile":  "My Profile"
-                },
-    "dashboard":  {
-                      "title":  "Welcome to Officia",
-                      "subtitle":  "Your smart office manager"
-                  },
-    "purchaseInvoices":  "Purchase Invoices"
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "accounting": "Accounting",
+    "hr": "HR",
+    "banking": "Banking",
+    "documents": "Documents",
+    "aiAssistant": "AI Assistant",
+    "aiInbox": "AI Inbox",
+    "aiTasks": "AI Tasks",
+    "reports": "Reports",
+    "vatJournals": "VAT Journals",
+    "fixedAssets": "Fixed Assets",
+    "counterparties": "Counterparties",
+    "invoices": "Sales Invoices",
+    "purchaseInvoices": "Purchase Invoices",
+    "inventory": "Inventory",
+    "payroll": "Payroll",
+    "taxes": "Taxes",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "profile": "My Profile",
+    "search": "Search..."
+  },
+  "dashboard": {
+    "title": "Welcome to Officia MENA",
+    "subtitle": "Your smart office assistant for Middle East businesses"
+  },
+  "common": {
+    "startFree": "Start free",
+    "seeDemo": "See demo",
+    "signIn": "Sign in",
+    "features": "Features",
+    "pricing": "Pricing",
+    "capabilities": "Capabilities",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "landing": {
+    "brand": "Officia MENA",
+    "headline": "The intelligent office for your MENA business",
+    "subhead": "AI handles the routine. You approve ready invoices, reports, and VAT.",
+    "trialNote": "14 days full access · no credit card",
+    "whyTitle": "Why Officia MENA?",
+    "whyText": "Built for Middle East & North Africa companies — Arabic UI, RTL layout, and AED pricing.",
+    "ctaTitle": "Ready to automate your office?",
+    "ctaText": "Sign up free — 14 full days, then clear plans.",
+    "featuresTitle": "Everything in one place",
+    "featuresText": "Accounting, invoicing, inventory, HR, and banking — with an AI assistant.",
+    "featuresEyebrow": "Features",
+    "capabilitiesEyebrow": "Capabilities",
+    "capabilitiesTitle": "What you actually get",
+    "capabilitiesText": "No fake reviews. Here is what works in the product today.",
+    "securityTitle": "Security by design",
+    "securitySub": "Clerk + PostgreSQL + tenant isolation",
+    "security1": "Clerk authentication (MFA/SSO via Clerk settings)",
+    "security2": "Each company sees only its own data",
+    "security3": "PostgreSQL + Drizzle ORM",
+    "security4": "Rate limits on OCR and AI requests",
+    "footerCopy": "© 2026 Officia MENA. All rights reserved.",
+    "benefits": [
+      "Accounting and journal entries",
+      "AI extraction from photos and PDFs",
+      "VAT journals and ready reports",
+      "Sales and purchase invoices",
+      "HR and payroll",
+      "Arabic UI with RTL",
+      "Secure login and company data isolation",
+      "CSV/Excel/PDF export"
+    ],
+    "capabilityItems": [
+      {
+        "title": "Invoices & VAT",
+        "text": "Issue invoices, keep VAT journals, and prepare reports ready for review."
+      },
+      {
+        "title": "AI OCR",
+        "text": "Extract data from photos and text PDFs — with review before posting."
+      },
+      {
+        "title": "Banking",
+        "text": "Import statements and match transactions to invoices and expenses."
+      },
+      {
+        "title": "Security",
+        "text": "Protected login, isolated company spaces, and PostgreSQL — no overpromises."
+      }
+    ],
+    "featureItems": [
+      {
+        "tag": "Accounting",
+        "title": "Chart of accounts and automated journals",
+        "description": "Journal entries, VAT books, balance sheet, and P&L — one flow.",
+        "tags": ["VAT", "Reports", "Journals"]
+      },
+      {
+        "tag": "AI",
+        "title": "Automatic invoice reading",
+        "description": "PDF or photo → the assistant extracts vendor, amount, VAT and proposes the entry.",
+        "tags": ["OCR", "Claude", "Review"]
+      },
+      {
+        "tag": "Inventory",
+        "title": "Register, issue, and receive",
+        "description": "Products, barcodes, stock movements, and low-stock alerts.",
+        "tags": ["Barcode", "Issue", "Receive"]
+      },
+      {
+        "tag": "HR",
+        "title": "Payroll and leave",
+        "description": "Payroll calculation, leave, and exports for your team.",
+        "tags": ["Payroll", "Leave", "HR"]
+      },
+      {
+        "tag": "Banking",
+        "title": "Smart bank matching",
+        "description": "Import statements and match expenses to invoices with AI help.",
+        "tags": ["Statements", "Match", "PSD2"]
+      },
+      {
+        "tag": "Invoices",
+        "title": "Sales and purchases",
+        "description": "Professional invoices for customers and suppliers with status tracking.",
+        "tags": ["Sales", "Purchases", "PDF"]
+      }
+    ]
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "title": "Simple, honest plans",
+    "subtitle": "No hidden fees. Change plans anytime.",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "perMonth": "/mo",
+    "billedMonthly": "Billed every month",
+    "free": "Free",
+    "freeNote": "14 days · no credit card",
+    "annualNote": "{total} AED / year · save {save} AED",
+    "footer": "All plans include SSL, automatic backups, and data privacy. Annual plans include 2 months free.",
+    "currency": "AED",
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "For freelancers and micro businesses",
+        "cta": "Start free",
+        "features": [
+          "Up to 30 invoices/month",
+          "Basic accounting",
+          "VAT journals (view)",
+          "1 user",
+          "1 bank account",
+          "Email support"
+        ],
+        "locked": ["Payroll & HR", "AI assistant", "Advanced tax export"]
+      },
+      "business": {
+        "name": "Business",
+        "description": "For small and medium companies",
+        "badge": "Most popular",
+        "cta": "Start trial",
+        "features": [
+          "Unlimited invoices and purchases",
+          "Full accounting + VAT",
+          "Payroll up to 10 employees",
+          "Tax report export",
+          "HR and leave",
+          "Bank reconciliation",
+          "Bank payment batch export",
+          "3 users"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For larger teams and growing companies",
+        "cta": "Start trial",
+        "features": [
+          "Everything in Business",
+          "Unlimited payroll employees",
+          "AI assistant + OCR",
+          "Arabic voice input",
+          "Company context memory",
+          "AI ledger audit",
+          "Up to 10 users + roles",
+          "Priority support"
+        ]
+      },
+      "accounting_firm": {
+        "name": "Practice",
+        "description": "For accounting firms with many clients",
+        "cta": "Start trial",
+        "features": [
+          "Everything in Pro",
+          "Unlimited client workspaces",
+          "Multi-company management",
+          "Consolidated reports",
+          "White label",
+          "Unlimited users",
+          "Dedicated support"
+        ]
+      }
+    }
+  }
 }

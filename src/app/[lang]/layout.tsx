@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { SetHtmlLang } from "@/components/set-html-lang";
+import { defaultLocale, isLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Officia — Вашият офис. По-умно.",
-  description: "Модерен SaaS за счетоводители и офис мениджъри",
+  title: "Officia MENA — مكتبك. أذكى.",
+  description: "نظام SaaS حديث للمحاسبة وإدارة المكاتب في الشرق الأوسط وشمال أفريقيا",
 };
 
 export default async function LangLayout({
@@ -16,10 +17,11 @@ export default async function LangLayout({
   params: Promise<{ lang: string }>;
 }>) {
   const { lang } = await params;
+  const locale = isLocale(lang) ? lang : defaultLocale;
 
   return (
     <>
-      <SetHtmlLang lang={lang} />
+      <SetHtmlLang lang={locale} />
       <TooltipProvider>
         {children}
       </TooltipProvider>

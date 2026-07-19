@@ -1,41 +1,41 @@
 // @ts-nocheck
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from '@clerk/nextjs';
-import { Fira_Sans, Fira_Code } from "next/font/google";
+import { Fira_Code, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Toaster } from 'sonner';
 import AiAssistant from '@/components/ai/AiAssistant';
 
-const firaSans = Fira_Sans({
+const arabicSans = IBM_Plex_Sans_Arabic({
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-fira-sans",
-  subsets: ["latin", "cyrillic"],
+  subsets: ["arabic", "latin"],
 });
 
 const firaCode = Fira_Code({
   weight: ["400", "500", "600", "700"],
   variable: "--font-fira-code",
-  subsets: ["latin", "cyrillic"],
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  applicationName: "Officia",
+  applicationName: "Officia MENA",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Officia",
+    title: "Officia MENA",
     statusBarStyle: "black-translucent",
   },
-  title: 'Officia',
-  description: 'AI ERP система',
+  title: 'Officia MENA',
+  description: 'نظام ERP ذكي للشركات في الشرق الأوسط وشمال أفريقيا',
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#4F46E5",
+  themeColor: "#0B1220",
 };
 
 export default function RootLayout({
@@ -45,9 +45,8 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="bg" className="dark" suppressHydrationWarning>
-        <body className={`${firaSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>
-          {/* Premium Background Grid */}
+      <html lang="ar" dir="rtl" className="dark" suppressHydrationWarning>
+        <body className={`${arabicSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>
           <div className="absolute inset-0 -z-10 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
           <ThemeProvider
             attribute="class"

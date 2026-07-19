@@ -1,94 +1,56 @@
-# Officia – Интелигентният Офис Асистент
+# Officia MENA — المكتب الذكي
 
-**Модерен ERP + AI офис софтуер за малки и средни фирми в България.**
+**Modern ERP + AI office software for small and mid-size businesses in the Middle East & North Africa.**
 
-Officia комбинира класическо счетоводство, фактуриране и управление на документи с мощни **AI възможности** – автоматично извличане на текст от сканирани документи, чат с AI върху твоите фактури и договори, и интелигентно съпоставяне на банкови транзакции.
+Officia MENA combines accounting, invoicing, inventory, HR, and document management with AI — Arabic-first UI, RTL layout, and AED pricing.
 
 ---
 
-## ✨ Основни функции
+## Features
 
-- **Счетоводство**  
-  Сметкоплан, журнални записи, ДДС дневници, баланс, отчет за приходи и разходи, амортизация.
+- **Accounting** — Chart of accounts, journals, VAT books, balance sheet, P&L
+- **Invoicing** — Sales and purchase invoices
+- **Documents + AI** — Upload PDF/photos → AI extraction → review before posting
+- **Banking** — Statement import and AI matching
+- **Inventory** — Products, barcode scan, issue/receive
+- **HR & Payroll** — Employees, leave, payroll
+- **Dashboard** — Live KPIs and reports
 
-- **Фактуриране**  
-  Създаване и управление на продажбени и покупни фактури.
-
-- **Документи + AI**  
-  Качвай PDF/снимки → AI (Claude Vision) извлича текста автоматично → **чат директно с документа**.
-
-- **Банкиране**  
-  Автоматична синхронизация чрез PSD2 (Nordigen/GoCardless) + **AI съпоставяне** на транзакции с разходи.
-
-- **Контрагенти & HR**  
-  Управление на клиенти, доставчици и служители.
-
-- **Dashboard**  
-  Красиви KPI-та, графики и бърз преглед на бизнеса.
-
-### Технологии
-- **Next.js 15** (App Router) + TypeScript + Tailwind + shadcn/ui
-- **Clerk** – автентикация и multi-tenant
+### Stack
+- **Next.js 15** (App Router) + TypeScript + Tailwind
+- **Clerk** — auth and multi-tenant
 - **Drizzle ORM** + PostgreSQL
-- **Anthropic Claude** – AI за документи и анализ
-- Docker + CI/CD
+- **Anthropic Claude** — documents and analysis
+
+### Locales
+- **Arabic (`ar`)** — default, RTL
+- **English (`en`)** — LTR
+- Currency display: **AED**
 
 ---
 
-## 🚀 Бърз старт
-
-### Локално развитие
+## Quick start
 
 ```bash
-# 1. Клонирай репото
-git clone https://github.com/lukezester-ai/officia.git
-cd officia
-
-# 2. Инсталирай зависимости
 npm install
-
-# 3. Настрой променливи (копирай .env.example → .env.local)
-cp .env.example .env.local
-
-# 4. Стартирай базата (Docker)
-docker-compose up -d
-
-# 5. Приложи миграции
-npm run db:push
-
-# 6. Стартирай
 npm run dev
 ```
 
-Отвори http://localhost:3000
-
-### Docker (production-like)
-```bash
-docker-compose up --build
-```
-
-### 🔧 Настройки за AI и Банки
-
-- `CLAUDE_API_KEY` – за Anthropic (OCR + чат)
-- `NORDIGEN_SECRET_ID` / `NORDIGEN_SECRET_KEY` – за банкови връзки
+Open [http://localhost:3000](http://localhost:3000) — you will be redirected to `/ar`.
 
 ---
 
-## 📌 Планове за развитие
+## Scripts
 
-- Публичен Live Demo
-- Мобилно приложение (PWA вече е готово)
-- Експорт към Excel / PDF отчети
-- Многоезичност (BG/EN)
-- Интеграции с e-FACT, e-invoicing и др.
+| Command | Description |
+|--------|-------------|
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm start` | Start production server |
+| `npm run lint` | ESLint |
 
 ---
 
-## 👨‍💻 Автор
-Създадено от lukezester-ai с ❤️ за българския бизнес.
+## Notes
 
-**Готов си да автоматизираш офиса си?**
-⭐ Star-вай проекта и следи развитието!
-
-## Contributing
-Pull requests са добре дошли! Ако искаш да помогнеш – отвори issue или пиши директно.
+This product foundation is Arabic/MENA-first (routing, dictionaries, RTL, landing, AED). Backend modules may still evolve for regional tax/compliance.

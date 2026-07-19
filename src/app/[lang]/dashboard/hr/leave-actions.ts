@@ -81,7 +81,7 @@ export async function createLeaveRequest(data: {
       status:     'pending',
     });
 
-    revalidatePath('/bg/dashboard/hr');
+    revalidatePath('/ar/dashboard/hr');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e?.message };
@@ -100,7 +100,7 @@ export async function approveLeaveRequest(id: string, employeeId: string, type: 
       .set({ workStatus: newStatus })
       .where(eq(employees.id, employeeId));
 
-    revalidatePath('/bg/dashboard/hr');
+    revalidatePath('/ar/dashboard/hr');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e?.message };
@@ -113,7 +113,7 @@ export async function rejectLeaveRequest(id: string) {
       .set({ status: 'rejected' })
       .where(eq(leaveRequests.id, id));
 
-    revalidatePath('/bg/dashboard/hr');
+    revalidatePath('/ar/dashboard/hr');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e?.message };

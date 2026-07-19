@@ -41,7 +41,7 @@ export async function createBudget(data: {
     plannedAmount: String(data.plannedAmount),
   });
 
-  revalidatePath('/bg/dashboard/accounting/budgets');
+  revalidatePath('/ar/dashboard/accounting/budgets');
 }
 
 export async function deleteBudget(id: string) {
@@ -51,5 +51,5 @@ export async function deleteBudget(id: string) {
     .delete(budgets)
     .where(and(eq(budgets.id, id), eq(budgets.tenantId, tenantId)));
 
-  revalidatePath('/bg/dashboard/accounting/budgets');
+  revalidatePath('/ar/dashboard/accounting/budgets');
 }

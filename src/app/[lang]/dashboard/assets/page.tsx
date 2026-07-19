@@ -17,7 +17,7 @@ export default async function AssetsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Дълготрайни активи</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Инвентар, амортизации и свързани документи.</p>
         </div>
-        <Link href="/bg/dashboard/fixed-assets">
+        <Link href="/ar/dashboard/fixed-assets">
           <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
             <Plus size={16} /> Нов актив
           </Button>

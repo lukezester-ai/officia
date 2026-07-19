@@ -57,7 +57,7 @@ export default function ApprovalClient() {
         <h2 className="text-xl font-bold text-white mb-2">Всичко е изчистено!</h2>
         <p className="text-zinc-400 mb-8">Нямате чакащи фактури за одобрение.</p>
         <Link 
-          href="/bg/dashboard/accounting" 
+          href="/ar/dashboard/accounting" 
           className="px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-white font-medium transition-colors"
         >
           Към Таблото
@@ -72,7 +72,7 @@ export default function ApprovalClient() {
     <div className="flex flex-col min-h-screen pb-24">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10 sticky top-0 bg-zinc-950/80 backdrop-blur-md z-10">
-        <Link href="/bg/dashboard/accounting" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white">
+        <Link href="/ar/dashboard/accounting" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white">
           <ArrowLeft size={18} />
         </Link>
         <div className="text-center">

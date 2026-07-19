@@ -20,7 +20,7 @@ export default async function HrPage() {
           <h1 className="text-3xl font-bold tracking-tight text-white">Кадри (HR)</h1>
           <p className="text-sm text-zinc-400 mt-1">Управление на служители, болнични и отпуски.</p>
         </div>
-        <Link href={`/bg/dashboard/hr/new`}>
+        <Link href={`/ar/dashboard/hr/new`}>
           <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-indigo-500/50">
             <Plus size={16} /> Добави служител
           </Button>
@@ -99,7 +99,7 @@ export default async function HrPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right pr-6">
-                      <Link href={`/bg/dashboard/hr/${emp.id}`}>
+                      <Link href={`/ar/dashboard/hr/${emp.id}`}>
                         <Button variant="ghost" size="sm" className="h-8 gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-white hover:bg-white/10">
                           Профил <ChevronRight size={14} />
                         </Button>

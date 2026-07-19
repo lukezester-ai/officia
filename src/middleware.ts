@@ -1,10 +1,7 @@
 // @ts-nocheck
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-const locales = ['bg', 'en'];
-const defaultLocale = 'bg';
+import { defaultLocale, locales } from '@/lib/i18n';
 
 const isProtectedRoute = createRouteMatcher([
   '/:locale/dashboard(.*)',
@@ -18,24 +15,27 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { pathname } = req.nextUrl;
 
-  // Пропускаме auth и api пътища
-  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/api')) {
+  if (
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-up') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/register')
+  ) {
     return;
   }
 
-  // Ако URL-ът е /en/... → пренасочваме към /bg/...
-  if (pathname.startsWith('/en/') || pathname === '/en') {
-    req.nextUrl.pathname = pathname.replace(/^\/en/, '/bg');
+  // Legacy Bulgarian paths → Arabic MENA default
+  if (pathname.startsWith('/ar/') || pathname === '/bg') {
+    req.nextUrl.pathname = pathname.replace(/^\/bg/, `/${defaultLocale}`);
     return NextResponse.redirect(req.nextUrl);
   }
 
   const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 
   if (!pathnameHasLocale) {
-    // Винаги пренасочваме към /bg/
-    req.nextUrl.pathname = `/${defaultLocale}${pathname}`;
+    req.nextUrl.pathname = `/${defaultLocale}${pathname === '/' ? '' : pathname}`;
     return NextResponse.redirect(req.nextUrl);
   }
 });

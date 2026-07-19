@@ -11,204 +11,183 @@ function getPlanHref(planId: string, isAnnual: boolean): string {
 }
 
 function formatPrice(n: number): string {
-  return n % 1 !== 0 ? n.toFixed(2).replace('.', ',') : n.toString();
+  return n % 1 !== 0 ? n.toFixed(2) : n.toString();
 }
 
-const PLANS = [
-  {
-    id: 'starter',
-    name: 'Стартер',
-    icon: Zap,
-    description: 'За самонаети и микро-фирми',
-    monthlyPrice: 0,
-    annualPrice: 0,
-    annualTotal: 0,
-    isFree: true,
-    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-7 text-left transition-all hover:bg-white/5 flex flex-col',
-    textColor: 'text-zinc-400',
-    subTextColor: 'text-zinc-500',
-    checkColor: 'text-emerald-400',
-    cta: 'Започни безплатно',
-    ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10 mt-auto',
-    features: [
-      'До 30 фактури/месец',
-      'Основно счетоводство',
-      'ДДС дневници (преглед)',
-      '1 потребител',
-      '1 банкова сметка',
-      'Email поддръжка',
-    ],
-    locked: ['ТРЗ и HR', 'AI асистент', 'НАП export'],
-  },
-  {
-    id: 'business',
-    name: 'Бизнес',
-    icon: Building2,
-    description: 'За малки и средни предприятия',
-    monthlyPrice: 14.90,
-    annualPrice: 11.90,
-    annualTotal: 142.80,
-    isFree: false,
-    badge: 'Най-популярен',
-    cardStyle: 'bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-500/30 rounded-2xl p-7 text-left relative overflow-hidden shadow-2xl shadow-violet-900/50 flex flex-col',
-    textColor: 'text-violet-100',
-    subTextColor: 'text-violet-200',
-    checkColor: 'text-white',
-    featured: true,
-    cta: 'Започни пробния период',
-    ctaStyle: 'block text-center bg-white text-violet-700 hover:bg-violet-50 rounded-xl py-3 text-sm font-semibold transition-all shadow-lg mt-auto',
-    features: [
-      'Неограничени фактури и покупки',
-      'Пълно счетоводство + ДДС',
-      'ТРЗ до 10 служители',
-      'Масов експорт на ДДС и ТРЗ (ZIP/XML за НАП клиент)',
-      'HR управление и отпуски',
-      'Банково равнение и импорт на извлечения (PSD2/CAMT)',
-      'Batch export за банкови преводи',
-      'Законодателен монитор НАП/НОИ',
-      '3 потребители',
-    ],
-  },
-  {
-    id: 'pro',
-    name: 'Про',
-    icon: Sparkles,
-    description: 'За по-големи екипи и растящи компании',
-    monthlyPrice: 49,
-    annualPrice: 39,
-    annualTotal: 468,
-    isFree: false,
-    cardStyle: 'bg-white/3 border border-white/10 rounded-2xl p-7 text-left transition-all hover:bg-white/5 flex flex-col',
-    textColor: 'text-zinc-400',
-    subTextColor: 'text-zinc-500',
-    checkColor: 'text-emerald-400',
-    cta: 'Започни пробния период',
-    ctaStyle: 'block text-center border border-violet-500/40 hover:border-violet-400 text-violet-400 hover:bg-violet-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
-    features: [
-      'Всичко от Бизнес',
-      'Неограничени служители ТРЗ',
-      'AI асистент Claude + OCR',
-      'Гласово въвеждане на BG',
-      'AI помни историята и не ви пита едно и също два пъти',
-      'AI одит на ведомости и главна книга',
-      'Директно подаване през НАП/НОИ портал с ПИК и КЕП без ръчно качване',
-      'До 10 потребители + права',
-      'Приоритетна поддръжка',
-    ],
-  },
-  {
-    id: 'accounting_firm',
-    name: 'Кантора',
-    icon: Scale,
-    description: 'За счетоводни кантори с множество клиенти',
-    monthlyPrice: 89,
-    annualPrice: 71,
-    annualTotal: 852,
-    isFree: false,
-    cardStyle: 'bg-white/3 border border-amber-500/20 rounded-2xl p-7 text-left transition-all hover:bg-amber-500/5 flex flex-col',
-    textColor: 'text-zinc-400',
-    subTextColor: 'text-zinc-500',
-    checkColor: 'text-amber-400',
-    cta: 'Започни пробния период',
-    ctaStyle: 'block text-center border border-amber-500/40 hover:border-amber-400 text-amber-400 hover:bg-amber-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
-    features: [
-      'Всичко от Про',
-      'Неограничени клиентски workspace-и',
-      'Управление на множество фирми',
-      'Консолидирани отчети',
-      'Бял етикет (white label)',
-      'Приоритетни НАП updates',
-      'Неограничени потребители',
-      'Dedicated поддръжка',
-    ],
-  },
+type PlanCopy = {
+  name: string;
+  description: string;
+  badge?: string;
+  cta: string;
+  features: string[];
+  locked?: string[];
+};
+
+type PricingCopy = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  monthly: string;
+  annual: string;
+  perMonth: string;
+  billedMonthly: string;
+  free: string;
+  freeNote: string;
+  annualNote: string;
+  footer: string;
+  currency: string;
+  plans: {
+    starter: PlanCopy;
+    business: PlanCopy;
+    pro: PlanCopy;
+    accounting_firm: PlanCopy;
+  };
+};
+
+const PLAN_META = [
+  { id: 'starter' as const, icon: Zap, monthlyPrice: 0, annualPrice: 0, annualTotal: 0, isFree: true },
+  { id: 'business' as const, icon: Building2, monthlyPrice: 55, annualPrice: 44, annualTotal: 528, isFree: false, featured: true },
+  { id: 'pro' as const, icon: Sparkles, monthlyPrice: 179, annualPrice: 143, annualTotal: 1716, isFree: false },
+  { id: 'accounting_firm' as const, icon: Scale, monthlyPrice: 329, annualPrice: 263, annualTotal: 3156, isFree: false },
 ];
 
-export default function PricingSection() {
+export default function PricingSection({ copy }: { copy: PricingCopy }) {
   const [isAnnual, setIsAnnual] = useState(true);
 
   return (
-    <section id="pricing" className="py-24 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold tracking-tight mb-4">Прост, честен ценови план</h2>
-          <p className="text-zinc-400 mb-8">Без скрити такси. Без изненади. Смени плана по всяко време.</p>
+    <section id="pricing" className="relative overflow-hidden px-6 py-24 text-[#F8FAFC]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 55%), #0B1220',
+        }}
+      />
 
-          <div className="flex justify-center items-center gap-3">
-            <span className={`text-sm ${!isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>Месечно</span>
+      <div className="relative mx-auto max-w-6xl">
+        <div className="mb-14 text-center">
+          <p className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-[#F59E0B]">
+            {copy.eyebrow}
+          </p>
+          <h2 className="mb-4 font-mono text-3xl font-bold tracking-tight md:text-4xl">
+            {copy.title}
+          </h2>
+          <p className="mb-8 text-[#94A3B8]">{copy.subtitle}</p>
+
+          <div className="inline-flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2">
+            <span className={`text-sm ${!isAnnual ? 'font-semibold text-white' : 'text-[#94A3B8]'}`}>
+              {copy.monthly}
+            </span>
             <button
+              type="button"
               onClick={() => setIsAnnual(!isAnnual)}
-              className="relative w-14 h-7 bg-white/10 rounded-full border border-white/20 transition-colors focus:outline-none"
+              aria-label="Toggle billing period"
+              className="relative h-7 w-14 cursor-pointer rounded-full border border-white/15 bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
             >
-              <div className={`absolute top-1 left-1 w-5 h-5 bg-indigo-500 rounded-full transition-transform ${isAnnual ? 'translate-x-7' : ''}`} />
+              <span
+                className={`absolute top-1 start-1 h-5 w-5 rounded-full bg-[#F59E0B] transition-transform ${
+                  isAnnual ? 'translate-x-7 rtl:-translate-x-7' : ''
+                }`}
+              />
             </button>
-            <span className={`text-sm flex items-center gap-1.5 ${isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>
-              Годишно
-              <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className={`flex items-center gap-1.5 text-sm ${isAnnual ? 'font-semibold text-white' : 'text-[#94A3B8]'}`}>
+              {copy.annual}
+              <span className="bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                 -20%
               </span>
             </span>
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          {PLANS.map((plan) => {
-            const Icon = plan.icon;
-            const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {PLAN_META.map((meta) => {
+            const plan = copy.plans[meta.id];
+            const Icon = meta.icon;
+            const price = isAnnual ? meta.annualPrice : meta.monthlyPrice;
+            const featured = 'featured' in meta && meta.featured;
 
             return (
-              <div key={plan.id} className={plan.cardStyle}>
+              <div
+                key={meta.id}
+                className={
+                  featured
+                    ? 'relative flex flex-col border border-[#F59E0B]/45 bg-gradient-to-b from-[#F59E0B]/15 to-[#0B1220] p-6'
+                    : 'relative flex flex-col border border-white/10 bg-white/[0.025] p-6 transition-colors hover:border-white/20'
+                }
+              >
                 {plan.badge && (
-                  <div className="absolute top-4 right-4 bg-white/20 text-xs font-semibold px-2.5 py-1 rounded-full">
+                  <div className="absolute top-4 end-4 bg-[#F59E0B] px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#0B1220]">
                     {plan.badge}
                   </div>
                 )}
 
                 <div className="mb-5">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon size={16} className={plan.featured ? 'text-violet-200' : plan.checkColor} />
-                    <div className={`text-xs font-semibold uppercase tracking-wider ${plan.featured ? 'text-violet-200' : plan.textColor}`}>
+                  <div className="mb-1 flex items-center gap-2">
+                    <Icon size={16} className={featured ? 'text-[#FBBF24]' : 'text-[#F59E0B]'} />
+                    <div className="font-mono text-xs font-semibold uppercase tracking-wider text-[#F8FAFC]">
                       {plan.name}
                     </div>
                   </div>
-                  <div className={`text-xs mb-4 ${plan.subTextColor}`}>{plan.description}</div>
+                  <div className="mb-4 text-xs text-[#94A3B8]">{plan.description}</div>
 
-                  {plan.isFree ? (
+                  {meta.isFree ? (
                     <>
-                      <div className="text-3xl font-bold text-white">Безплатно</div>
-                      <div className={`text-xs mt-1 ${plan.subTextColor}`}>14 дни · без кредитна карта</div>
+                      <div className="font-mono text-3xl font-bold text-white">{copy.free}</div>
+                      <div className="mt-1 text-xs text-[#64748B]">{copy.freeNote}</div>
                     </>
                   ) : (
                     <>
                       <div className="flex items-end gap-1">
-                        <div className="text-3xl font-bold text-white">{formatPrice(price)} €</div>
-                        <div className={`text-sm mb-1 ${plan.subTextColor}`}>/мес</div>
+                        <div className="font-mono text-3xl font-bold text-white">
+                          {formatPrice(price)} {copy.currency}
+                        </div>
+                        <div className="mb-1 text-sm text-[#94A3B8]">{copy.perMonth}</div>
                       </div>
-                      <div className={`text-xs mt-1 ${plan.subTextColor}`}>
+                      <div className="mt-1 text-xs text-[#64748B]">
                         {isAnnual
-                          ? `${formatPrice(plan.annualTotal)} € годишно · спестяваш ${formatPrice(Math.round((plan.monthlyPrice - plan.annualPrice) * 12 * 100) / 100)} €`
-                          : 'Таксува се всеки месец'}
+                          ? copy.annualNote
+                              .replace('{total}', formatPrice(meta.annualTotal))
+                              .replace(
+                                '{save}',
+                                formatPrice(
+                                  Math.round((meta.monthlyPrice - meta.annualPrice) * 12 * 100) / 100,
+                                ),
+                              )
+                          : copy.billedMonthly}
                       </div>
                     </>
                   )}
                 </div>
 
-                <div className={`space-y-2 text-xs mb-6 flex-1 ${plan.featured ? 'text-violet-100' : plan.textColor}`}>
+                <div className="mb-6 flex-1 space-y-2 text-xs text-[#CBD5E1]">
                   {plan.features.map((f) => (
                     <div key={f} className="flex items-start gap-1.5">
-                      <CheckCircle size={12} className={`shrink-0 mt-0.5 ${plan.checkColor}`} />
+                      <CheckCircle
+                        size={12}
+                        className={`mt-0.5 shrink-0 ${featured ? 'text-[#FBBF24]' : 'text-emerald-400'}`}
+                      />
                       {f}
                     </div>
                   ))}
                   {plan.locked?.map((f) => (
                     <div key={f} className="flex items-start gap-1.5 opacity-35">
-                      <div className="w-3 h-3 rounded-full border border-zinc-600 shrink-0 mt-0.5 flex-none" />
+                      <div className="mt-0.5 h-3 w-3 shrink-0 rounded-full border border-zinc-600" />
                       {f}
                     </div>
                   ))}
                 </div>
 
-                <Link href={getPlanHref(plan.id, isAnnual)} className={plan.ctaStyle}>
+                <Link
+                  href={getPlanHref(meta.id, isAnnual)}
+                  className={
+                    featured
+                      ? 'mt-auto block cursor-pointer bg-[#F59E0B] py-3 text-center text-sm font-semibold text-[#0B1220] transition-colors hover:bg-[#FBBF24]'
+                      : meta.isFree
+                        ? 'mt-auto block cursor-pointer border border-white/15 py-3 text-center text-sm font-medium transition-colors hover:border-white/30 hover:bg-white/5'
+                        : 'mt-auto block cursor-pointer border border-[#F59E0B]/40 py-3 text-center text-sm font-semibold text-[#F59E0B] transition-colors hover:border-[#FBBF24] hover:bg-[#F59E0B]/10'
+                  }
+                >
                   {plan.cta}
                 </Link>
               </div>
@@ -216,9 +195,7 @@ export default function PricingSection() {
           })}
         </div>
 
-        <p className="text-center text-zinc-600 text-xs mt-8">
-          Всички планове включват SSL, автоматични backup-и и съответствие с GDPR. При годишен план — 2 месеца безплатно.
-        </p>
+        <p className="mt-8 text-center text-xs text-[#64748B]">{copy.footer}</p>
       </div>
     </section>
   );

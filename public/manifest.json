@@ -1,11 +1,11 @@
 {
-  "name": "Officia ERP",
-  "short_name": "Officia",
-  "description": "Модерна AI ERP система за бизнеса.",
-  "start_url": "/",
+  "name": "Officia MENA",
+  "short_name": "Officia MENA",
+  "description": "AI ERP for Middle East & North Africa businesses.",
+  "start_url": "/ar",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#4F46E5",
+  "background_color": "#0B1220",
+  "theme_color": "#0B1220",
   "orientation": "portrait",
   "icons": [
     {

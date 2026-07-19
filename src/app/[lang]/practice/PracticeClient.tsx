@@ -34,7 +34,7 @@ export default function PracticeClient() {
     // В реално приложение тук се запазва избрания tenantId в cookie/localStorage 
     // и се пренасочва към дашборда
     document.cookie = `tenantId=${tenantId}; path=/`;
-    router.push('/bg/dashboard');
+    router.push('/ar/dashboard');
   };
 
   if (loading) {

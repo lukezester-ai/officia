@@ -61,7 +61,7 @@ export async function approveInvoice(id: number) {
       })
       .where(and(eq(invoices.id, id), eq(invoices.tenantId, tenantId)));
 
-    revalidatePath('/bg/mobile/approvals');
+    revalidatePath('/ar/mobile/approvals');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -86,7 +86,7 @@ export async function rejectInvoice(id: number, reason: string = 'Отхвърл
       })
       .where(and(eq(invoices.id, id), eq(invoices.tenantId, tenantId)));
 
-    revalidatePath('/bg/mobile/approvals');
+    revalidatePath('/ar/mobile/approvals');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
