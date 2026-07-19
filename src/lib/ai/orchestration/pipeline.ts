@@ -12,6 +12,7 @@ import { invoices } from '@/lib/db/schema/invoices';
 import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 import { matchTransactionWithAI } from '@/lib/ai/agents/matcher';
 import { publishAiEvent } from './events';
+import { runInventoryFromPurchaseDraft } from './inventory-pipeline';
 import type { PipelineName, PipelineStep } from './types';
 
 async function upsertRun(input: {
@@ -99,6 +100,7 @@ export async function runDocumentLifecyclePipeline(input: {
   const steps: PipelineStep[] = [
     { key: 'persist_ocr', domain: 'documents', label: 'Запис на OCR данни', status: 'pending' },
     { key: 'draft_purchase', domain: 'accounting', label: 'Чернова покупна фактура', status: 'pending' },
+    { key: 'inventory_stock', domain: 'inventory', label: 'Заскладяване на стоки', status: 'pending' },
     { key: 'propose_journal', domain: 'accounting', label: 'Предложение за контировка', status: 'pending', requiresHumanReview: true },
     { key: 'bank_match', domain: 'banking', label: 'Опит за банково съпоставяне', status: 'pending' },
     { key: 'inbox_notify', domain: 'orchestrator', label: 'Известие в AI Inbox', status: 'pending' },
@@ -217,8 +219,28 @@ export async function runDocumentLifecyclePipeline(input: {
     steps[1].error = err.message;
   }
 
-  // Step 3 — propose journal (human approval)
+  // Step 3 — warehouse stock for goods lines
   steps[2].status = 'running';
+  try {
+    if (purchaseInvoiceId) {
+      const stockResult = await runInventoryFromPurchaseDraft({
+        tenantId: input.tenantId,
+        userId: input.userId,
+        purchaseInvoiceId,
+        lineItems: ocr.lineItems || [],
+      });
+      steps[2].status = stockResult.movementsAdded > 0 ? 'completed' : 'skipped';
+      steps[2].result = stockResult;
+    } else {
+      steps[2].status = 'skipped';
+    }
+  } catch (err: any) {
+    steps[2].status = 'failed';
+    steps[2].error = err.message;
+  }
+
+  // Step 4 — propose journal (human approval)
+  steps[3].status = 'running';
   try {
     const approval = await queueAiApprovalRequest({
       tenantId: input.tenantId,
@@ -242,8 +264,8 @@ export async function runDocumentLifecyclePipeline(input: {
         documentId: input.documentId,
       },
     });
-    steps[2].status = 'waiting_approval';
-    steps[2].result = approval;
+    steps[3].status = 'waiting_approval';
+    steps[3].result = approval;
     await publishAiEvent({
       type: 'accounting.journal_proposed',
       tenantId: input.tenantId,
@@ -255,12 +277,12 @@ export async function runDocumentLifecyclePipeline(input: {
       payload: { approvalId: approval.approvalId },
     });
   } catch (err: any) {
-    steps[2].status = 'failed';
-    steps[2].error = err.message;
+    steps[3].status = 'failed';
+    steps[3].error = err.message;
   }
 
-  // Step 4 — bank match (best effort, non-blocking)
-  steps[3].status = 'running';
+  // Step 5 — bank match (best effort, non-blocking)
+  steps[4].status = 'running';
   try {
     const accounts = await db.select({ id: bankAccounts.id }).from(bankAccounts).where(eq(bankAccounts.tenantId, input.tenantId));
     const accountIds = accounts.map((a) => a.id);
@@ -340,15 +362,15 @@ export async function runDocumentLifecyclePipeline(input: {
       }
     }
 
-    steps[3].status = matched ? 'completed' : 'skipped';
-    steps[3].result = { matched };
+    steps[4].status = matched ? 'completed' : 'skipped';
+    steps[4].result = { matched };
   } catch (err: any) {
-    steps[3].status = 'skipped';
-    steps[3].error = err.message;
+    steps[4].status = 'skipped';
+    steps[4].error = err.message;
   }
 
-  // Step 5 — inbox notify
-  steps[4].status = 'running';
+  // Step 6 — inbox notify
+  steps[5].status = 'running';
   try {
     await db.insert(aiInboxItems).values({
       tenantId: input.tenantId,
@@ -356,7 +378,7 @@ export async function runDocumentLifecyclePipeline(input: {
       sourceType: 'document',
       sourceId: input.documentId || purchaseInvoiceId || correlationId,
       title: 'Документът е готов за преглед',
-      description: `Pipeline обработи документ → чернова фактура → предложена контировка. Корелация: ${correlationId.slice(0, 8)}`,
+      description: `Pipeline: документ → фактура → склад → контировка. Корелация: ${correlationId.slice(0, 8)}`,
       confidence: '0.92',
       status: 'open',
       priority: 'normal',
@@ -367,10 +389,10 @@ export async function runDocumentLifecyclePipeline(input: {
         steps: steps.map((s) => ({ key: s.key, status: s.status })),
       },
     });
-    steps[4].status = 'completed';
+    steps[5].status = 'completed';
   } catch (err: any) {
-    steps[4].status = 'failed';
-    steps[4].error = err.message;
+    steps[5].status = 'failed';
+    steps[5].error = err.message;
   }
 
   const completed = steps.filter((s) => s.status === 'completed' || s.status === 'waiting_approval' || s.status === 'skipped').length;

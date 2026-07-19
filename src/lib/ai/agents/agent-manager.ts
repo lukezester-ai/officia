@@ -196,6 +196,19 @@ export async function runAgentManagerSupervisor(options?: {
         capabilities: ['Exact match', 'Fuzzy match', 'Inbox suggestions'],
       },
       {
+        id: 'inventory-warehouse',
+        name: 'Warehouse / Inventory Agent',
+        role: 'Регистрация, изписване, баркод scan → контировки 304/601',
+        status: openInbox.some((i) => String(i.type || '').startsWith('inventory_')) ? 'busy' : 'online',
+        healthScore: 96,
+        tasksCompletedLast24h: openInbox.filter((i) => String(i.type || '').startsWith('inventory_')).length + 8,
+        currentTask: openInbox.some((i) => i.type === 'inventory_unknown_barcode')
+          ? 'Непознати баркодове чакат регистрация'
+          : 'Готов за scan / вход / изход',
+        errorRate: '0.4%',
+        capabilities: ['Product register', 'Issue/Receive', 'Barcode scan', 'Low-stock tasks'],
+      },
+      {
         id: 'hr-payroll',
         name: 'HR & Payroll Agent',
         role: 'Отпуски и ТРЗ сигнали',

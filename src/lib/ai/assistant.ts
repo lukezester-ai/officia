@@ -19,7 +19,7 @@ import { buildCheckNraLiabilitiesTool } from './tools/check-nra-liabilities';
 import { buildRichContext } from './context';
 import { findRelevantTaxLaws, buildRagSystemPrompt } from './rag/tax-rag';
 import { OrchestratorAgent } from '@/ai/orchestrator';
-import { runBankSyncPipeline, runMonthClosePipeline } from './orchestration';
+import { runBankSyncPipeline, runMonthClosePipeline, runInventoryScanPipeline } from './orchestration';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -42,6 +42,17 @@ function buildOrchestrationTools(tenantId: string, userId: string) {
       }),
       execute: async ({ year, month }) => runMonthClosePipeline({ tenantId, userId, year, month }),
     }),
+    scanInventoryCode: tool({
+      description:
+        'Обработва сканиран баркод/QR/SKU през складовия pipeline. Може автоматично да изпише 1 бр.',
+      parameters: z.object({
+        code: z.string().describe('Баркод, QR или SKU'),
+        autoIssue: z.boolean().optional().describe('true = изпиши 1 бр. веднага'),
+        issueQuantity: z.number().optional(),
+      }),
+      execute: async ({ code, autoIssue, issueQuantity }) =>
+        runInventoryScanPipeline({ tenantId, userId, code, autoIssue, issueQuantity }),
+    }),
     routeIntent: tool({
       description: 'Маршрутизира свободен текст към правилния домейн/агент и връща план без странични ефекти.',
       parameters: z.object({
@@ -61,7 +72,7 @@ export function buildAssistantTools(tenantId: string, userId: string) {
     createExpense: buildCreateExpenseTool(tenantId, userId),
     createJournalEntry: buildCreateJournalEntryTool(tenantId, userId),
     manageHR: buildManageHRTool(tenantId),
-    manageInventory: buildManageInventoryTool(tenantId),
+    manageInventory: buildManageInventoryTool(tenantId, userId),
     generateVat: buildGenerateVatTool(tenantId, userId),
     depreciateAssets: buildDepreciateAssetsTool(tenantId, userId),
     autoApprove: buildAutoApproveTool(tenantId, userId),
@@ -89,10 +100,11 @@ export async function runAIAssistant(
 
 Правила:
 1. Използвай инструменти за реални данни и действия — не измисляй суми, фактури или салда.
-2. За записи в базата (контировки, ДДС, амортизации, отпуски) инструментите ще създадат заявка в AI Inbox за човешко одобрение — кажи това на потребителя.
+2. За записи в базата (контировки, ДДС, амортизации, отпуски, складови движения) инструментите ще създадат заявка в AI Inbox за човешко одобрение — кажи това на потребителя.
 3. За банково равнение и месечно приключване предпочитай runBankSync / runMonthClose.
-4. При данъчни/правни въпроси цитирай предоставения RAG контекст; ако липсва — кажи че е нужна проверка.
-5. Следвай оркестрационния план когато е наличен.
+4. За склад: manageInventory (register/receive/issue/check) или scanInventoryCode при баркод.
+5. При данъчни/правни въпроси цитирай предоставения RAG контекст; ако липсва — кажи че е нужна проверка.
+6. Следвай оркестрационния план когато е наличен.
 
 Оркестрационен план:
 - intent: ${plan.intent}

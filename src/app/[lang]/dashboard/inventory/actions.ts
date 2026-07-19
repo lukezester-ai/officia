@@ -3,22 +3,24 @@
 import { db } from '@/lib/db/db';
 import { inventoryItems, inventoryMovements } from '@/lib/db/schema/inventory';
 import { companyDivisions } from '@/lib/db/schema/company_structure';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import {
+  runInventoryMovementPipeline,
+  runInventoryProductRegistered,
+  runInventoryScanPipeline,
+} from '@/lib/ai/orchestration';
 
 export async function getInventoryData() {
   try {
     const { tenantId } = await requireTenant();
     
-    // Fetch all items
     const items = await db.select().from(inventoryItems)
       .where(eq(inventoryItems.tenantId, tenantId));
       
-    // Fetch all movements to calculate quantities
     const movements = await db.select().from(inventoryMovements)
       .where(eq(inventoryMovements.tenantId, tenantId));
       
-    // Calculate stock levels
     let totalStockValue = 0;
     
     const enrichedItems = items.map(item => {
@@ -63,19 +65,37 @@ export async function getInventoryData() {
   }
 }
 
-export async function createInventoryItem(data: { sku: string; name: string; unitOfMeasure: string }) {
+export async function createInventoryItem(data: {
+  sku: string;
+  name: string;
+  unitOfMeasure: string;
+  barcode?: string;
+}) {
   try {
-    const { tenantId } = await requireTenant();
+    const { tenantId, userId } = await requireTenant();
     
-    await db.insert(inventoryItems).values({
+    const [item] = await db.insert(inventoryItems).values({
       tenantId,
       sku: data.sku,
       name: data.name,
+      barcode: data.barcode?.trim() || null,
       unitOfMeasure: data.unitOfMeasure,
-      costingMethod: 'weighted_average'
-    });
+      costingMethod: 'weighted_average',
+      itemType: 'goods',
+      quantity: '0',
+    }).returning();
+
+    const automation = await runInventoryProductRegistered({
+      tenantId,
+      userId,
+      itemId: item.id,
+      sku: item.sku,
+      name: item.name,
+      barcode: item.barcode,
+      unitOfMeasure: item.unitOfMeasure,
+    }).catch((err) => ({ success: false, error: err.message }));
     
-    return { success: true };
+    return { success: true, itemId: item.id, automation };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
@@ -86,11 +106,11 @@ export async function addInventoryMovement(data: {
   type: 'in' | 'out'; 
   quantity: number; 
   unitCost: number;
+  source?: 'manual' | 'scan' | 'invoice' | 'ai';
 }) {
   try {
-    const { tenantId } = await requireTenant();
+    const { tenantId, userId } = await requireTenant();
     
-    // Ensure a division exists
     const divisions = await db.select().from(companyDivisions).where(eq(companyDivisions.tenantId, tenantId)).limit(1);
     let divisionId = '';
     
@@ -104,7 +124,7 @@ export async function addInventoryMovement(data: {
       divisionId = divisions[0].id;
     }
     
-    await db.insert(inventoryMovements).values({
+    const [movement] = await db.insert(inventoryMovements).values({
       tenantId,
       itemId: data.itemId,
       divisionId: divisionId,
@@ -113,9 +133,41 @@ export async function addInventoryMovement(data: {
       unitCost: data.unitCost.toString(),
       totalCost: (data.quantity * data.unitCost).toString(),
       movementDate: new Date()
-    });
+    }).returning();
+
+    const automation = await runInventoryMovementPipeline({
+      tenantId,
+      userId,
+      movementId: movement.id,
+      itemId: data.itemId,
+      type: data.type,
+      quantity: data.quantity,
+      unitCost: data.unitCost,
+      source: data.source || 'manual',
+    }).catch((err) => ({ success: false, error: err.message }));
     
-    return { success: true };
+    return { success: true, movementId: movement.id, automation };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/** Server action for barcode/QR scans — wires into inventory_scan pipeline. */
+export async function processInventoryScan(data: {
+  code: string;
+  autoIssue?: boolean;
+  issueQuantity?: number;
+}) {
+  try {
+    const { tenantId, userId } = await requireTenant();
+    const result = await runInventoryScanPipeline({
+      tenantId,
+      userId,
+      code: data.code,
+      autoIssue: data.autoIssue,
+      issueQuantity: data.issueQuantity,
+    });
+    return result;
   } catch (error: any) {
     return { success: false, error: error.message };
   }

@@ -6,13 +6,17 @@ import {
   runBankSyncPipeline,
   runDocumentLifecyclePipeline,
   runMonthClosePipeline,
+  runInventoryScanPipeline,
+  runInventoryProductRegistered,
+  runInventoryMovementPipeline,
 } from '@/lib/ai/orchestration';
 
 /**
  * Unified orchestration endpoint for cross-agent automation.
  *
  * POST body:
- *  { action: 'plan' | 'execute' | 'document_lifecycle' | 'bank_sync' | 'month_close', ... }
+ *  { action: 'plan' | 'execute' | 'document_lifecycle' | 'bank_sync' | 'month_close'
+ *          | 'inventory_scan' | 'inventory_register' | 'inventory_movement', ... }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -63,6 +67,53 @@ export async function POST(req: NextRequest) {
         userId,
         year: body.year,
         month: body.month,
+      });
+      return NextResponse.json({ success: true, ...result });
+    }
+
+    if (action === 'inventory_scan') {
+      if (!body.code) {
+        return NextResponse.json({ success: false, error: 'Missing code' }, { status: 400 });
+      }
+      const result = await runInventoryScanPipeline({
+        tenantId,
+        userId,
+        code: body.code,
+        autoIssue: !!body.autoIssue,
+        issueQuantity: body.issueQuantity,
+      });
+      return NextResponse.json({ success: true, ...result });
+    }
+
+    if (action === 'inventory_register') {
+      if (!body.itemId || !body.sku || !body.name) {
+        return NextResponse.json({ success: false, error: 'Missing itemId/sku/name' }, { status: 400 });
+      }
+      const result = await runInventoryProductRegistered({
+        tenantId,
+        userId,
+        itemId: body.itemId,
+        sku: body.sku,
+        name: body.name,
+        barcode: body.barcode,
+        unitOfMeasure: body.unitOfMeasure,
+      });
+      return NextResponse.json({ success: true, ...result });
+    }
+
+    if (action === 'inventory_movement') {
+      if (!body.itemId || !body.type || !body.quantity) {
+        return NextResponse.json({ success: false, error: 'Missing itemId/type/quantity' }, { status: 400 });
+      }
+      const result = await runInventoryMovementPipeline({
+        tenantId,
+        userId,
+        movementId: body.movementId,
+        itemId: body.itemId,
+        type: body.type,
+        quantity: Number(body.quantity),
+        unitCost: Number(body.unitCost || 0),
+        source: body.source || 'manual',
       });
       return NextResponse.json({ success: true, ...result });
     }

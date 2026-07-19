@@ -8,7 +8,7 @@ import {
 } from '@/lib/ai/orchestration';
 
 export interface OrchestratorSubTask {
-  domain: 'accounting' | 'hr' | 'banking' | 'legal' | 'analyst' | 'documents' | 'tax' | 'orchestrator';
+  domain: 'accounting' | 'hr' | 'banking' | 'legal' | 'analyst' | 'documents' | 'tax' | 'orchestrator' | 'inventory';
   suggestedTool: string;
   requiresHumanReview: boolean;
   reason: string;
@@ -50,6 +50,31 @@ const routingRules: Array<{
     weight: 2,
   },
   {
+    domain: 'inventory',
+    tool: 'manageInventory',
+    keywords: [
+      'склад',
+      'складов',
+      'наличност',
+      'наличност',
+      'изписване',
+      'изпиши',
+      'заприход',
+      'заскладяване',
+      'артикул',
+      'barcode',
+      'баркод',
+      'sku',
+      'inventory',
+      'сток',
+      'стока',
+      'номенклатура',
+    ],
+    reason: 'Склад: регистрация, изписване, наличности или баркод.',
+    autoExecute: false,
+    weight: 3,
+  },
+  {
     domain: 'accounting',
     tool: 'createInvoice',
     keywords: ['invoice', 'faktura', 'фактура', 'осчетоводи', 'счетовод', 'контиров', 'статия'],
@@ -76,7 +101,7 @@ const routingRules: Array<{
   {
     domain: 'documents',
     tool: 'searchDocuments',
-    keywords: ['document', 'документ', 'архив', 'договор', 'receipt', 'касова', 'ocr', 'сканир'],
+    keywords: ['document', 'документ', 'архив', 'договор', 'receipt', 'касова', 'ocr'],
     reason: 'Документи / OCR / архив.',
     autoExecute: false,
     weight: 1,

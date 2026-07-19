@@ -8,14 +8,19 @@ export type AgentDomain =
   | 'analytics'
   | 'analyst'
   | 'legal'
-  | 'compliance';
+  | 'compliance'
+  | 'inventory';
 
 export type PipelineName =
   | 'document_lifecycle'
   | 'bank_sync'
   | 'month_close'
   | 'chat_route'
-  | 'supervisor_sweep';
+  | 'supervisor_sweep'
+  | 'inventory_register'
+  | 'inventory_issue'
+  | 'inventory_receipt'
+  | 'inventory_scan';
 
 export type AiEventType =
   | 'document.uploaded'
@@ -27,6 +32,11 @@ export type AiEventType =
   | 'banking.match_confirmed'
   | 'tax.vat_proposed'
   | 'hr.leave_proposed'
+  | 'inventory.product_registered'
+  | 'inventory.product_received'
+  | 'inventory.product_issued'
+  | 'inventory.code_scanned'
+  | 'inventory.stock_synced'
   | 'approval.queued'
   | 'approval.accepted'
   | 'approval.rejected'
