@@ -8,30 +8,54 @@ import { requireTenant } from '@/lib/auth/get-tenant';
 import { eq, desc } from 'drizzle-orm';
 import { TaskGenerator } from '@/workflows/task-generator';
 import { revalidatePath } from 'next/cache';
+import { runDocumentLifecyclePipeline } from '@/lib/ai/orchestration';
 
 export async function uploadAndAnalyzeDocument(formData: FormData) {
   try {
-    const { tenantId } = await requireTenant();
+    const { tenantId, userId } = await requireTenant();
     
     const file = formData.get('file') as File;
     const rawText = formData.get('rawText') as string;
-    const title = file && file.name ? file.name : 'Трудов Договор Иван Петров.pdf'; // Fallback for MVP
+    const ocrJson = formData.get('ocrJson') as string;
+    const title = file && file.name ? file.name : 'Документ.pdf';
 
     // 1. Създаваме запис за документа
     const [doc] = await db.insert(documents).values({
       tenantId,
       title,
-      type: 'contract',
+      type: 'invoice',
       status: 'pending_analysis',
+      contentExtracted: rawText || null,
     }).returning();
 
-    // 2. Стартираме AI Workflow
+    // 2. Legacy task suggestions workflow
     await TaskGenerator.processDocument(doc.id, tenantId, rawText);
+
+    // 3. Cross-agent pipeline: OCR → purchase draft → journal approval → bank match
+    let pipeline = null;
+    if (ocrJson) {
+      try {
+        const ocr = JSON.parse(ocrJson);
+        pipeline = await runDocumentLifecyclePipeline({
+          tenantId,
+          userId,
+          documentId: doc.id,
+          ocr: {
+            ...ocr,
+            extractedText: ocr.extractedText || rawText,
+          },
+        });
+      } catch (pipeErr: any) {
+        pipeline = { success: false, error: pipeErr.message };
+      }
+    }
 
     revalidatePath('/[lang]/dashboard/documents');
     revalidatePath('/[lang]/dashboard/tasks');
+    revalidatePath('/[lang]/dashboard/ai-inbox');
+    revalidatePath('/[lang]/dashboard/purchase-invoices');
 
-    return { success: true, documentId: doc.id };
+    return { success: true, documentId: doc.id, pipeline };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

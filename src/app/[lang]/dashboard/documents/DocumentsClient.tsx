@@ -60,16 +60,18 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
   async function runOcr() {
     if (!file) return;
     setStage('ocr');
+    let data: any = null;
     try {
-      const base64    = await fileToBase64(file);
-      const mimeType  = file.type || 'application/octet-stream';
-      const res       = await fetch('/api/ai/ocr', {
+      const base64 = await fileToBase64(file);
+      const mimeType = file.type || 'application/octet-stream';
+      // OCR only here — full cross-agent pipeline runs after document is saved
+      const res = await fetch('/api/ai/ocr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mimeType }),
+        body: JSON.stringify({ imageBase64: base64, mimeType, runPipeline: false }),
       });
       if (!res.ok) throw new Error(`OCR грешка: ${res.status}`);
-      const data = await res.json();
+      data = await res.json();
       setOcrResult(data);
       toast.success('OCR анализът завърши успешно!');
     } catch (e: any) {
@@ -78,15 +80,21 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
       return;
     }
 
-    // Auto-save after OCR
+    // Auto-save + start document_lifecycle pipeline across agents
     setStage('saving');
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('rawText', ocrResult?.extractedText ?? '');
+      fd.append('rawText', data?.extractedText ?? '');
+      fd.append('ocrJson', JSON.stringify(data ?? {}));
       const saveRes = await uploadAndAnalyzeDocument(fd);
       if (saveRes.success) {
-        toast.success('Документът е запазен и изпратен за AI анализ!');
+        const pipe = (saveRes as any).pipeline;
+        if (pipe?.success) {
+          toast.success('Документът е запазен. AI pipeline създаде чернова и заявка за контировка.');
+        } else {
+          toast.success('Документът е запазен и изпратен за AI анализ!');
+        }
         setStage('done');
         setFile(null);
         setPreview(null);
@@ -108,9 +116,14 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('rawText', ocrResult?.extractedText ?? '');
+      if (ocrResult) fd.append('ocrJson', JSON.stringify(ocrResult));
       const saveRes = await uploadAndAnalyzeDocument(fd);
       if (saveRes.success) {
-        toast.success('Документът е запазен!');
+        toast.success(
+          (saveRes as any).pipeline?.success
+            ? 'Запазено + AI pipeline между агентите е стартиран.'
+            : 'Документът е запазен!',
+        );
         setStage('done');
         setFile(null); setPreview(null); setOcrResult(null);
         onUploaded();
