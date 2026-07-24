@@ -1,7 +1,7 @@
 // src/app/api/nap/add/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { napIntegrations } from "@/db/schema/nap-integrations";
+import { db } from "@/lib/db/db";
+import { napIntegrations } from "@/lib/db/schema/nap_integrations";
 import { encryptApiKey } from "@/lib/nap/encryption";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,11 +18,18 @@ import { v4 as uuidv4 } from "uuid";
  * 2. Записва нов запис в `nap_integrations`.
  * 3. Връща ID‑то на новата интеграция.
  */
+import { requireTenant } from "@/lib/auth/get-tenant";
+
 export async function POST(req: Request) {
   try {
-    const { organizationId, eik, apiKey } = await req.json();
+    const { tenant, userId } = await requireTenant();
+    if (!tenant) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!organizationId || !eik || !apiKey) {
+    const { eik, apiKey } = await req.json();
+
+    if (!eik || !apiKey) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -34,17 +41,17 @@ export async function POST(req: Request) {
 
     // 2️⃣ Съхраняваме в базата
     const [record] = await db
-      .insertInto(napIntegrations)
+      .insert(napIntegrations)
       .values({
         id: uuidv4(),
-        organizationId,
+        organizationId: tenant.id,
         eik,
         encryptedApiKey: encrypted,
         encryptionIv: iv,
-        connectedByUserId: "system", // ще се замени от фронтенда с Clerk user‑id
+        connectedByUserId: userId,
         status: "active",
       })
-      .returningAll();
+      .returning();
 
     return NextResponse.json({ success: true, integrationId: record.id }, { status: 201 });
   } catch (err: any) {

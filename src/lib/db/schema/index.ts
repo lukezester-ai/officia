@@ -39,3 +39,4 @@ export * from './employment_contracts';
 export * from './attendance_records';
 export * from './contribution_rates';
 export * from './access';
+export * from './nap_integrations';

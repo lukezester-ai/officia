@@ -213,6 +213,7 @@ export default function WorkspaceSettingsPage() {
               <div className="flex items-center gap-4">
                 {logoUrl ? (
                   <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={logoUrl} alt="Лого" className="w-full h-full object-contain" />
                     <button
                       type="button"

@@ -43,6 +43,7 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
           </div>
           <div className="text-right">
             {(tenant as any).logoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={(tenant as any).logoUrl}
                 alt="Лого"

@@ -11,6 +11,7 @@ export default async function SettingsLayout({
   const tabs = [
     { href: `/${lang}/dashboard/settings/workspace`, label: 'Фирма и план' },
     { href: `/${lang}/dashboard/settings/team`, label: 'Екип и покани' },
+    { href: `/${lang}/dashboard/settings/integrations`, label: 'Интеграции' },
   ];
 
   return (

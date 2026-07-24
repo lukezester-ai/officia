@@ -47,7 +47,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-    {logClerkEnv()}
+    logClerkEnv();
+    return (
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
       <html lang="bg" className="dark" suppressHydrationWarning>
         <body className={`${firaSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>

@@ -16,7 +16,7 @@ export default function LazyMockup({ importFn, fallback = null }: LazyMockupProp
         if (entry.isIntersecting && !Component) {
           importFn()
             .then((mod) => setComponent(() => mod.default))
-            .catch(() => setComponent(() => () => <>{fallback}</>));
+            .catch(() => setComponent(() => function FallbackComponent() { return <>{fallback}</>; }));
           observer.disconnect();
         }
       });

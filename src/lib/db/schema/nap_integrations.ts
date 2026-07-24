@@ -1,13 +1,13 @@
 // Database Schema (Drizzle ORM) – nap-integrations.ts
 import { pgTable, uuid, text, timestamp, jsonb } from "drizzle-orm/pg-core";
-import { organizations } from "./organizations"; // existing organizations table
+import { tenants } from "./tenants"; // existing tenants table
 
 // Table for storing encrypted NAP API integrations per organization
 export const napIntegrations = pgTable("nap_integrations", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id")
     .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+    .references(() => tenants.id, { onDelete: "cascade" }),
 
   // Encrypted API key – never stored in plaintext
   encryptedApiKey: text("encrypted_api_key").notNull(),
