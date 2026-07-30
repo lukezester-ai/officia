@@ -1,11 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { auth } from '@clerk/nextjs/server';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2026-05-27.dahlia' as any,
-});
+import { stripe } from '@/lib/stripe';
 
 // Price IDs от Stripe Dashboard – настрои в Render Environment Variables
 const PRICE_IDS: Record<string, { monthly: string; annual: string }> = {

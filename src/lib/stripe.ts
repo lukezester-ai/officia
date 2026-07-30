@@ -1,7 +1,12 @@
 // @ts-nocheck
 import Stripe from 'stripe';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
+// Use a non-empty placeholder so Next.js page-data collection does not crash
+// when STRIPE_SECRET_KEY is not set in the build environment.
+const stripeSecretKey =
+  process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.length > 0
+    ? process.env.STRIPE_SECRET_KEY
+    : 'sk_test_placeholder';
 
 export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2026-05-27.dahlia' as any,
