@@ -8,7 +8,8 @@ import { notFound } from 'next/navigation';
 import { activateContractAction, terminateContractAction } from '../actions';
 import { getDictionary } from '@/lib/get-dictionary';
 
-export default async function ContractDetailsPage({ params }: { params: { lang: string, id: string } }) {
+export default async function ContractDetailsPage(props: { params: Promise<{ lang: string, id: string }> }) {
+  const params = await props.params;
   const dict = await getDictionary(params.lang as any);
   
   if (params.id === 'new') {

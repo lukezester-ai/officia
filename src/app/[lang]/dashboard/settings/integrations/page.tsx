@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function IntegrationsSettingsPage({ params }: { params: { lang: string } }) {
+export default function IntegrationsSettingsPage(props: { params: Promise<{ lang: string }> }) {
+  const params = use(props.params);
   const [eik, setEik] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
