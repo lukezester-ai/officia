@@ -10,7 +10,7 @@ export type Feature = {
 const ALL_FEATURES: Feature[] = [
   { key: 'readOnly', label: 'Read-only инструменти (справки, анализи)', tier: 0, requiredEnvVars: [], description: 'getFinancialSummary, searchDocuments, generateChart' },
   { key: 'aiChat', label: 'AI чат асистент', tier: 1, requiredEnvVars: ['ANTHROPIC_API_KEY'], description: 'Основен AI чат без извикване на инструменти' },
-  { key: 'aiTools', label: 'AI инструменти (създаване на фактури, ДДС, банково равнение)', tier: 2, requiredEnvVars: ['ANTHROPIC_API_KEY'], description: 'createInvoice, bankMatch, createExpense, createJournalEntry, generateVat, depreciateAssets, manageHR, manageInventory, processInbox, autoApprove' },
+  { key: 'aiTools', label: 'AI инструменти (създаване на фактури, ДДС, банково равнение)', tier: 2, requiredEnvVars: ['ANTHROPIC_API_KEY'], description: 'createInvoice, bankMatch, createExpense, createJournalEntry, generateVat, depreciateAssets, manageHR, manageInventory, processInbox, autoApprove, analyzeContract' },
   { key: 'complianceTools', label: 'Налогово-справочни инструменти', tier: 2, requiredEnvVars: ['ANTHROPIC_API_KEY'], description: 'checkNraStatus, checkNraLiabilities' },
   { key: 'voiceTranscription', label: 'Гласово разпознаване', tier: 3, requiredEnvVars: ['DEEPGRAM_API_KEY', 'OPENAI_API_KEY'], description: 'Deepgram и OpenAI Whisper транскрипция' },
   { key: 'embeddings', label: 'Embeddings за RAG', tier: 3, requiredEnvVars: ['VOYAGE_API_KEY'], description: 'Векторни embeddings за семантично търсене' },

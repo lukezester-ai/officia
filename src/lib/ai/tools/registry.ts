@@ -48,3 +48,4 @@ register('checkNraStatus', 'Проверява статус към НАП', () =
 register('checkNraLiabilities', 'Проверява задължения към НАП', () => import('./check-nra-liabilities').then(m => ({ default: m.buildCheckNraLiabilitiesTool })));
 register('getFinancialSummary', 'Извлича финансово резюме', () => import('./get-financial-summary').then(m => ({ default: m.buildGetFinancialSummaryTool })));
 register('searchDocuments', 'Търси документи в базата', () => import('./search-documents').then(m => ({ default: m.buildSearchDocumentsTool })));
+register('analyzeContract', 'Търсене и анализ на договори', () => import('./analyze-contract').then(m => ({ default: m.buildAnalyzeContractTool })));

@@ -1,28 +1,18 @@
-// @ts-nocheck
-import * as crypto from 'crypto';
-import * as https from 'https';
-import * as fs from 'fs';
+import { generateUblXml, UblInvoiceData } from './ubl-generator';
 
 interface NAPConfig {
   environment: 'test' | 'production';
   endpoint: string;
-  certificatePath: string;
-  keyPath: string;
-  keystorePassword?: string;
 }
 
 const configs: Record<'test' | 'production', NAPConfig> = {
   test: {
     environment: 'test',
     endpoint: 'https://ei-test.nap.bg/EPEP/InvoiceRegistration',
-    certificatePath: './certs/test-cert.p12',
-    keyPath: './certs/test-key.pem',
   },
   production: {
     environment: 'production',
     endpoint: 'https://ei.nap.bg/EPEP/InvoiceRegistration',
-    certificatePath: './certs/prod-cert.p12',
-    keyPath: './certs/prod-key.pem',
   }
 };
 
@@ -32,30 +22,39 @@ export interface NAPSendResponse {
   error?: string;
 }
 
+/**
+ * Изпраща фактура към НАП чрез e-Invoicing B2B/B2G портала.
+ * В реална среда тази функция изисква подписване на XML-а с КЕП (XAdES).
+ * Тъй като това е симулация, ние генерираме XML-а и симулираме мрежовия отговор.
+ */
 export async function sendInvoiceToNAP(
-  invoiceXml: string,
-  environment: 'test' | 'production'
+  invoiceData: UblInvoiceData,
+  environment: 'test' | 'production',
+  napApiKey?: string // В реална среда би било ПИН на сертификат или API Token
 ): Promise<NAPSendResponse> {
   const config = configs[environment];
   
-  // 1. Подписване на XML
-  const signedXml = await signXmlWithCertificate(invoiceXml, config.certificatePath, config.keystorePassword);
+  // 1. Генериране на UBL 2.1 XML
+  const invoiceXml = generateUblXml(invoiceData);
   
-  // 2. Изграждане на SOAP заявка (NAP изисква SOAP)
+  // 2. Подписване на XML (симулация)
+  const signedXml = await signXmlWithCertificate(invoiceXml, napApiKey);
+  
+  // 3. Изграждане на SOAP заявка (НАП изисква SOAP)
   const soapEnvelope = buildSoapEnvelope(signedXml);
   
-  // 3. Изпращане
-  const response = await sendSoapRequest(config.endpoint, soapEnvelope, config.certificatePath, config.keyPath);
+  // 4. Изпращане (симулация)
+  const response = await sendSoapRequest(config.endpoint, soapEnvelope);
   
-  // 4. Парсване на отговора
+  // 5. Парсване на отговора
   return parseNAPResponse(response);
 }
 
-async function signXmlWithCertificate(xml: string, certPath: string, password?: string): Promise<string> {
+async function signXmlWithCertificate(xml: string, apiKey?: string): Promise<string> {
   // Използваме библиотека като 'xml-crypto' или 'xadesjs'
   // Това е сложна операция - изисква XAdES подпис (стандарт на ETSI)
-  // За production препоръчваме интеграция с външен HSM (Hardware Security Module) или услуга за подпис
-  return xml; // Placeholder
+  // Тук връщаме оригиналния XML за целите на демонстрацията
+  return xml; 
 }
 
 function buildSoapEnvelope(xmlContent: string): string {
