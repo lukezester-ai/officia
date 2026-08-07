@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { FileText, Plus } from 'lucide-react';
 import { getDictionary } from '@/lib/get-dictionary';
 
-export default async function ContractsPage({ params }: { params: { lang: string } }) {
+export default async function ContractsPage(props: { params: Promise<{ lang: string }> }) {
+  const params = await props.params;
   const dict = await getDictionary(params.lang as any);
   const contractsList = await getContracts();
   
