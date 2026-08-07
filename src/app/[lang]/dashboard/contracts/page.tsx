@@ -1,6 +1,6 @@
 import { getContracts } from '@/lib/contracts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -19,11 +19,9 @@ export default async function ContractsPage(props: { params: Promise<{ lang: str
           <h1 className="text-3xl font-bold tracking-tight">Договори</h1>
           <p className="text-muted-foreground mt-2">Управлявайте всички договори, споразумения и анекси.</p>
         </div>
-        <Button asChild className="gap-2">
-          <Link href={`/${params.lang}/dashboard/contracts/new`}>
-            <Plus className="h-4 w-4" /> Нов договор
-          </Link>
-        </Button>
+        <Link href={`/${params.lang}/dashboard/contracts/new`} className={buttonVariants({ className: "gap-2" })}>
+          <Plus className="h-4 w-4" /> Нов договор
+        </Link>
       </div>
       
       <Card className="border shadow-sm">
@@ -35,9 +33,7 @@ export default async function ContractsPage(props: { params: Promise<{ lang: str
               </div>
               <h3 className="text-lg font-medium">Няма намерени договори</h3>
               <p className="text-muted-foreground mt-2 mb-4 max-w-sm">Все още не сте добавили договори в системата. Започнете като създадете първия си договор.</p>
-              <Button variant="outline" asChild>
-                <Link href={`/${params.lang}/dashboard/contracts/new`}>Създай договор</Link>
-              </Button>
+              <Link href={`/${params.lang}/dashboard/contracts/new`} className={buttonVariants({ variant: "outline" })}>Създай договор</Link>
             </div>
           ) : (
             <Table>
@@ -70,9 +66,7 @@ export default async function ContractsPage(props: { params: Promise<{ lang: str
                     <TableCell>{contract.startDate ? new Date(contract.startDate).toLocaleDateString('bg-BG') : '—'}</TableCell>
                     <TableCell>{contract.endDate ? new Date(contract.endDate).toLocaleDateString('bg-BG') : '—'}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/${params.lang}/dashboard/contracts/${contract.id}`}>Детайли</Link>
-                      </Button>
+                      <Link href={`/${params.lang}/dashboard/contracts/${contract.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>Детайли</Link>
                     </TableCell>
                   </TableRow>
                 ))}

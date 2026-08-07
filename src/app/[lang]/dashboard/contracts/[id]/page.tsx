@@ -1,6 +1,6 @@
 import { getContractById } from '@/lib/contracts';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, FileText, UserPlus, Upload, XCircle, AlertTriangle } from 'lucide-react';
@@ -16,9 +16,9 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-6">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/${params.lang}/dashboard/contracts`}><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
+          <Link href={`/${params.lang}/dashboard/contracts`} className={buttonVariants({ variant: "ghost", size: "icon" })}>
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
           <h1 className="text-3xl font-bold tracking-tight">Нов договор</h1>
         </div>
         <Card>
@@ -44,9 +44,9 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
     <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in zoom-in duration-300">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/${params.lang}/dashboard/contracts`}><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
+          <Link href={`/${params.lang}/dashboard/contracts`} className={buttonVariants({ variant: "ghost", size: "icon" })}>
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">{contract.title}</h1>
