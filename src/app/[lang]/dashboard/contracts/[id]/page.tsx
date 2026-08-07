@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, FileText, UserPlus, FileUp, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, FileText, UserPlus, Upload, XCircle, AlertTriangle } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { activateContractAction, terminateContractAction } from '../actions';
 import { getDictionary } from '@/lib/get-dictionary';
@@ -128,7 +128,7 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
                 <CardDescription>Качени файлове към договора</CardDescription>
               </div>
               <Button variant="outline" size="sm" className="gap-2">
-                <FileUp className="h-4 w-4" /> Качи версия
+                <Upload className="h-4 w-4" /> Качи версия
               </Button>
             </CardHeader>
             <CardContent>
