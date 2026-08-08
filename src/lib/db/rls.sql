@@ -66,7 +66,7 @@ CREATE POLICY jh_tenant_update ON journal_headers
   WITH CHECK (
     tenant_id = current_tenant_id()
     AND current_user_role() IN ('owner', 'senior_accountant')
-    AND NEW.status IN ('draft', 'posted', 'canceled')
+    AND status IN ('draft', 'posted', 'canceled')
   );
 
 -- DELETE: само собственик и senior счетоводител
