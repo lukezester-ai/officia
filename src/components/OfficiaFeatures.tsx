@@ -27,9 +27,9 @@ import {
 import { Cell, Pie, PieChart } from "recharts";
 
 const journalEntries = [
-  { id: "je-1", date: "15.01.2025", doc: "Ф-0012", desc: "Наем офис", debit: "1 200,00 лв", status: "Осчетоводено" },
-  { id: "je-2", date: "16.01.2025", doc: "Ф-0988", desc: "Електроенергия", debit: "245,50 лв", status: "Осчетоводено" },
-  { id: "je-3", date: "18.01.2025", doc: "БИ-021", desc: "Продажба софтуер", debit: "5 400,00 лв", status: "Осчетоводено" },
+  { id: "je-1", date: "15.01.2025", doc: "Ф-0012", desc: "Наем офис", debit: "1 200,00 лв", credit: "", status: "Осчетоводено" },
+  { id: "je-2", date: "16.01.2025", doc: "Ф-0988", desc: "Електроенергия", debit: "245,50 лв", credit: "", status: "Осчетоводено" },
+  { id: "je-3", date: "18.01.2025", doc: "БИ-021", desc: "Продажба софтуер", debit: "", credit: "5 400,00 лв", status: "Осчетоводено" },
 ];
 
 const vatData = [
@@ -79,6 +79,7 @@ function AccountingMockup() {
                   <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Документ</th>
                   <th className="hidden pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-600 md:table-cell">Описание</th>
                   <th className="pb-2 pr-3 text-right text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Дебит</th>
+                  <th className="pb-2 pr-3 text-right text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Кредит</th>
                   <th className="pb-2 text-center text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-600">Статус</th>
                 </tr>
               </thead>
@@ -88,7 +89,8 @@ function AccountingMockup() {
                     <td className="rounded-l py-2 pr-3 text-[9px] text-zinc-500">{entry.date}</td>
                     <td className="py-2 pr-3 text-[9px] font-medium text-zinc-200">{entry.doc}</td>
                     <td className="hidden py-2 pr-3 text-[9px] text-zinc-500 md:table-cell">{entry.desc}</td>
-                    <td className="py-2 pr-3 text-right text-[9px] text-zinc-300">{entry.debit}</td>
+                    <td className="py-2 pr-3 text-right text-[9px] text-zinc-300">{entry.debit || "—"}</td>
+                    <td className="py-2 pr-3 text-right text-[9px] text-zinc-300">{entry.credit || "—"}</td>
                     <td className="rounded-r py-2 text-center">
                       <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-semibold text-emerald-400">
                         <span className="inline-block h-1 w-1 rounded-full bg-emerald-500" />
@@ -118,7 +120,7 @@ function AccountingMockup() {
             </div>
             <div className="rounded-xl border border-purple-500/20 bg-purple-600/10 p-3">
               <span className="mb-1 block font-mono text-[8px] uppercase tracking-[0.08em] text-purple-400">За внасяне</span>
-              <span className="text-[11px] font-bold text-white">842,15 лв</span>
+              <span className="text-[11px] font-bold text-white">790,90 лв</span>
             </div>
           </div>
         </div>
@@ -198,7 +200,7 @@ function AIDocumentsMockup() {
               <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/20">
                 <Bot className="h-3 w-3 text-white" />
               </div>
-              <p className="text-[10px] leading-relaxed text-white/90">Искаш ли да осчетоводя тази фактура към сметка 601 (Материали)?</p>
+              <p className="text-[10px] leading-relaxed text-white/90">Искаш ли да осчетоводя тази фактура към сметка 602 (Разходи за наеми)?</p>
             </div>
             <div className="mt-2.5 flex gap-2">
               <button className="flex-1 rounded-lg bg-white py-1.5 text-[10px] font-bold text-purple-700">ДА</button>

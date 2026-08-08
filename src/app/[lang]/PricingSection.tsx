@@ -31,7 +31,7 @@ const PLANS = [
     cta: 'Започни безплатно',
     ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10 mt-auto',
     features: [
-      'До 30 фактури/месец',
+      'До 50 фактури/месец',
       'Основно счетоводство',
       'ДДС дневници (преглед)',
       '1 потребител',
