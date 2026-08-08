@@ -83,7 +83,7 @@ function escapeXml(unsafe: string): string {
 }
 
 // Mock of sending soap request
-async function sendSoapRequest(endpoint: string, envelope: string, certPath: string, keyPath: string): Promise<string> {
+async function sendSoapRequest(endpoint: string, envelope: string): Promise<string> {
     return "<response>success</response>";
 }
 

@@ -61,14 +61,14 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
         
         <div className="flex items-center gap-2">
           {isDraft && (
-            <form action={activateContractAction.bind(null, contract.id)}>
+            <form action={async (formData) => await activateContractAction(contract.id, formData)}>
               <Button type="submit" disabled={!canActivate} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                 <CheckCircle className="h-4 w-4" /> Активирай
               </Button>
             </form>
           )}
           {isActive && (
-            <form action={terminateContractAction.bind(null, contract.id)}>
+            <form action={async (formData) => await terminateContractAction(contract.id, formData)}>
               <Button type="submit" variant="destructive" className="gap-2">
                 <XCircle className="h-4 w-4" /> Прекрати
               </Button>
