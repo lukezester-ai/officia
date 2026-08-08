@@ -1,7 +1,7 @@
-import { db } from '@/lib/db/db';
 import { contracts, contractParties, contractVersions } from '@/lib/db/schema/contracts';
 import { eq, and } from 'drizzle-orm';
-import { getCurrentTenant } from '@/lib/tenant';
+import { getRequestRlsContext } from '@/lib/auth/rls-context';
+import { withTenantContext } from '@/lib/db/rls';
 
 export interface CreateContractInput {
   title: string;
@@ -18,63 +18,70 @@ export interface UpdateContractInput {
 }
 
 export async function createContract(input: CreateContractInput) {
-  const tenantId = await getCurrentTenant();
-  
-  const [newContract] = await db.insert(contracts).values({
-    tenantId,
-    title: input.title,
-    description: input.description,
-    startDate: input.startDate,
-    endDate: input.endDate,
-    status: 'draft',
-  }).returning();
+  const ctx = await getRequestRlsContext();
 
-  return newContract;
+  return withTenantContext(ctx, async (tx) => {
+    const [newContract] = await tx.insert(contracts).values({
+      tenantId: ctx.tenantId,
+      title: input.title,
+      description: input.description,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      status: 'draft',
+    }).returning();
+
+    return newContract;
+  });
 }
 
 export async function getContractById(id: string) {
-  const tenantId = await getCurrentTenant();
-  
-  const [contract] = await db.select()
-    .from(contracts)
-    .where(and(eq(contracts.id, id), eq(contracts.tenantId, tenantId)))
-    .limit(1);
-    
-  if (!contract) return null;
+  const ctx = await getRequestRlsContext();
 
-  const parties = await db.select()
-    .from(contractParties)
-    .where(eq(contractParties.contractId, id));
-    
-  const versions = await db.select()
-    .from(contractVersions)
-    .where(eq(contractVersions.contractId, id));
+  return withTenantContext(ctx, async (tx) => {
+    const [contract] = await tx.select()
+      .from(contracts)
+      .where(and(eq(contracts.id, id), eq(contracts.tenantId, ctx.tenantId)))
+      .limit(1);
 
-  const currentVersion = versions.find(v => v.isCurrent) || null;
+    if (!contract) return null;
 
-  return {
-    ...contract,
-    parties,
-    versions,
-    currentVersion,
-  };
+    const parties = await tx.select()
+      .from(contractParties)
+      .where(eq(contractParties.contractId, id));
+
+    const versions = await tx.select()
+      .from(contractVersions)
+      .where(eq(contractVersions.contractId, id));
+
+    return {
+      ...contract,
+      parties,
+      versions,
+      currentVersion: versions.find(v => v.isCurrent) || null,
+    };
+  });
 }
 
 export async function getContracts() {
-  const tenantId = await getCurrentTenant();
-  return db.select().from(contracts).where(eq(contracts.tenantId, tenantId));
+  const ctx = await getRequestRlsContext();
+
+  return withTenantContext(ctx, async (tx) => {
+    return tx.select().from(contracts).where(eq(contracts.tenantId, ctx.tenantId));
+  });
 }
 
 export async function updateContract(id: string, input: UpdateContractInput) {
-  const tenantId = await getCurrentTenant();
-  
-  const [updatedContract] = await db.update(contracts)
-    .set({
-      ...input,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(contracts.id, id), eq(contracts.tenantId, tenantId)))
-    .returning();
-    
-  return updatedContract;
+  const ctx = await getRequestRlsContext();
+
+  return withTenantContext(ctx, async (tx) => {
+    const [updatedContract] = await tx.update(contracts)
+      .set({
+        ...input,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(contracts.id, id), eq(contracts.tenantId, ctx.tenantId)))
+      .returning();
+
+    return updatedContract;
+  });
 }

@@ -165,6 +165,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
           {/* File info */}
           <div className="flex items-center gap-3">
             {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element -- blob URL превю на локално избран файл, не е remote image
               <img src={preview} alt="preview" className="w-16 h-16 rounded-lg object-cover border border-white/10" />
             ) : (
               <div className="w-16 h-16 rounded-lg bg-indigo-500/15 flex items-center justify-center border border-indigo-500/20">

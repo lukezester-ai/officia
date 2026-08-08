@@ -20,6 +20,9 @@ const eslintConfig = [
       "public/sw.js",
       "public/swe-worker*.js",
       "public/workbox-*.js",
+      "fix-currency.js",
+      "test-*.js",
+      "*.mjs"
     ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),

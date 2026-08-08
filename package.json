@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "test:rls": "node --test tests/integration/rls-isolation.test.mjs tests/integration/rls-ddl-contract.test.mjs",
     "ci": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
