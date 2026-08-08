@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "ci": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.84",

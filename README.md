@@ -28,10 +28,19 @@ Officia комбинира класическо счетоводство, фак
 
 ### Технологии
 - **Next.js 15** (App Router) + TypeScript + Tailwind + shadcn/ui
-- **Clerk** – автентикация и multi-tenant
-- **Drizzle ORM** + PostgreSQL
-- **Anthropic Claude** – AI за документи и анализ
+- **Clerk** – автентикация и multi-tenant (tenant-scoped RLS в PostgreSQL)
+- **Drizzle ORM** + PostgreSQL (миграции чрез `npm run db:*`)
+- **Anthropic Claude + OpenAI** – AI за документи, RAG и анализ
+- Stripe (абонаменти), PWA, e-Invoicing (UBL 2.1) / НАП интеграции
 - Docker + CI/CD
+
+### 🛠️ Разработка
+```bash
+npm run typecheck   # проверка на типовете (tsc --noEmit)
+npm run lint        # ESLint
+npm run ci          # lint + typecheck + build
+npm run db:studio   # Drizzle Studio (GUI за базата)
+```
 
 ---
 
@@ -47,16 +56,20 @@ cd officia
 # 2. Инсталирай зависимости
 npm install
 
-# 3. Настрой променливи (копирай .env.example → .env.local)
-cp .env.example .env.local
+# 3. Настрой променливите на средата в .env.local
+#    (виж "Променливи на средата" по-долу; за production .env.production)
 
 # 4. Стартирай базата (Docker)
 docker-compose up -d
 
-# 5. Приложи миграции
-npm run db:push
+# 5. Генерирай и приложи миграции (Drizzle)
+npm run db:generate
+npm run db:migrate
+# Или бърза синхронизация на схемата без миграционни файлове:
+# npm run db:push
 
-# 6. Стартирай
+# 6. Провери типовете и стартирай
+npm run typecheck
 npm run dev
 ```
 

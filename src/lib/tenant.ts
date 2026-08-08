@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { auth } from '@clerk/nextjs/server';
 import { clerkClient } from '@clerk/nextjs/server';
 
-export async function getCurrentTenant() {
+export async function getCurrentTenant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) {
     throw new Error('Unauthorized');
@@ -10,9 +9,9 @@ export async function getCurrentTenant() {
   
   const client = await clerkClient();
   const user = await client.users.getUser(userId);
-  const tenantId = user.publicMetadata.tenantId as string;
+  const tenantId = user.publicMetadata?.tenantId;
   
-  if (!tenantId) {
+  if (typeof tenantId !== 'string' || !tenantId) {
     throw new Error('User has no assigned tenant.');
   }
   
