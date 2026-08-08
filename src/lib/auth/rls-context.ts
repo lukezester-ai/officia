@@ -33,8 +33,9 @@ export const getRequestRlsContext = cache(async (): Promise<TenantContext> => {
     try {
       const client = await clerkClient();
       const user = await client.users.getUser(userId);
-      if (isRlsRole(user.publicMetadata?.role)) {
-        role = user.publicMetadata.role;
+      const rawRole = user.publicMetadata?.role;
+      if (typeof rawRole === 'string' && isRlsRole(rawRole)) {
+        role = rawRole;
       }
     } catch {
       role = null;
