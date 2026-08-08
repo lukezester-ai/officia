@@ -18,18 +18,16 @@ export async function updateContractAction(id: string, input: UpdateContractInpu
   return result;
 }
 
-export async function activateContractAction(id: string) {
-  const result = await contractService.activateContract(id);
+export async function activateContractAction(id: string, _: FormData) {
+  await contractService.activateContract(id);
   revalidatePath('/[lang]/dashboard/contracts/[id]', 'page');
   revalidatePath('/[lang]/dashboard/contracts', 'page');
-  return result;
 }
 
-export async function terminateContractAction(id: string) {
-  const result = await contractService.terminateContract(id);
+export async function terminateContractAction(id: string, _: FormData) {
+  await contractService.terminateContract(id);
   revalidatePath('/[lang]/dashboard/contracts/[id]', 'page');
   revalidatePath('/[lang]/dashboard/contracts', 'page');
-  return result;
 }
 
 export async function addPartyAction(contractId: string, input: AddPartyInput) {
