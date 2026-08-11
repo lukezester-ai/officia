@@ -24,6 +24,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import GlassCard from "@/components/GlassCard";
 import { Cell, Pie, PieChart } from "recharts";
 
 const journalEntries = [
@@ -335,9 +336,9 @@ function FeatureCard({ data }: { data: FeatureCardData }) {
           {data.mockup}
         </div>
         <div className="absolute bottom-4 right-4 transition-opacity duration-200 ease-out" style={{ opacity: hovered ? 1 : 0 }}>
-          <div className="rounded-full border border-white/20 bg-white/10 p-2 backdrop-blur-md transition-transform duration-200 ease-out" style={{ transform: hovered ? "translateX(3px)" : "translateX(0)" }}>
+          <GlassCard className="bg-zinc-950 border border-white/10 rounded-3xl p-8 hover:border-white/30 transition group">
             <ArrowRight className="h-4 w-4 text-white" />
-          </div>
+          </GlassCard>
         </div>
       </div>
     </motion.article>

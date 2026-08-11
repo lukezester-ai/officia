@@ -1,4 +1,5 @@
 # Officia – Интелигентният Офис Асистент
+[![CI](https://github.com/lukezester-ai/officia/actions/workflows/ci.yml/badge.svg)](https://github.com/lukezester-ai/officia/actions/workflows/ci.yml)
 
 **Модерен ERP + AI офис софтуер за малки и средни фирми в България.**
 

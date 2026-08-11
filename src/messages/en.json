@@ -1,0 +1,15 @@
+{
+  "Landing": {
+    "title": "Intelligent Office",
+    "subtitle": "Automate accounting, invoices and documents with AI. Specifically built for small and medium businesses in Bulgaria.",
+    "cta": "Start for free",
+    "viewDemo": "View demo"
+  },
+  "Navbar": {
+    "features": "Features",
+    "demo": "Demo",
+    "pricing": "Pricing",
+    "login": "Login",
+    "register": "Register"
+  }
+}
