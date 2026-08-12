@@ -5,6 +5,4 @@ services:
     installCommand: npm install
     buildCommand: npm run build
     startCommand: npm start
-    envVars:
-      - key: NEXT_DISABLE_ESLINT
-        value: "true"
+    envVars: []
