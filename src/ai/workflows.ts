@@ -11,20 +11,19 @@ import { aiInboxItems } from "../lib/db/schema/ai_inbox";
 import { journalEntries } from "../lib/db/schema/journal_entries";
 import { invoices } from "../lib/db/schema/invoices";
 import { eq, desc } from "drizzle-orm";
-import type { InferModel } from "drizzle-orm";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
-type AiInbox = InferModel<typeof aiInboxItems, "select">;
-type JournalEntry = InferModel<typeof journalEntries, "insert">;
-type Invoice = InferModel<typeof invoices, "select">;
+type JournalEntryInsert = InferInsertModel<typeof journalEntries>;
+type JournalEntrySelect = InferSelectModel<typeof journalEntries>;
 
 /**
  * Generate a journal entry from OCR‑extracted data.
  * @param ocrData - Raw OCR result containing line items.
  * @returns The created journal entry record.
  */
-export async function generateJournalEntryFromOCR(ocrData: string): Promise<JournalEntry> {
+export async function generateJournalEntryFromOCR(ocrData: string): Promise<JournalEntrySelect> {
   const parsed = JSON.parse(ocrData);
-  const entry: JournalEntry = {
+  const entry: JournalEntryInsert = {
     tenantId: parsed.tenantId ?? "00000000-0000-0000-0000-000000000000",
     journalNumber: `JRN-${Date.now()}`,
     entryDate: new Date(parsed.entryDate ?? Date.now()),
@@ -37,7 +36,7 @@ export async function generateJournalEntryFromOCR(ocrData: string): Promise<Jour
     sourceType: "journal",
     sourceId: String(created.id),
     title: created.journalNumber,
-    metaJson: JSON.stringify(entry),
+    metaJson: entry,
   });
   return created;
 }
@@ -77,7 +76,7 @@ export async function autoApprove(invoiceId: string): Promise<boolean> {
       sourceType: "invoice",
       sourceId: String(invoice.id),
       title: `Approval for invoice ${invoice.invoiceNumber}`,
-      metaJson: JSON.stringify({ invoiceId, approved: true }),
+      metaJson: { invoiceId, approved: true },
     });
     return true;
   }
