@@ -2,7 +2,7 @@
 import { ReportEngine } from "@/lib/accounting/report-engine";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import Link from "next/link";
-import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, ArrowLeft, TrendingDown, Minus } from "@/components/icons";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
 
 const NAMES: Record<string, string> = {

@@ -5,7 +5,7 @@ import { getEmployeesWithSalary } from './slip-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Calculator, Download, CheckCircle, Wallet, Landmark, TrendingDown, Users } from 'lucide-react';
+import { Calculator, Download, CheckCircle, Wallet, Landmark, TrendingDown, Users } from '@/components/icons';
 import { PayrollForecast } from '@/components/payroll/PayrollForecast';
 import { PayrollCalculator, AnomalyDetector } from '@/components/payroll/PayrollTools';
 import { BatchPaymentExport } from '@/components/payroll/BatchPaymentExport';

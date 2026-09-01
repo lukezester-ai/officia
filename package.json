@@ -4,12 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start -H 0.0.0.0",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --incremental false",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
     "test:rls": "node --test tests/integration/rls-isolation.test.mjs tests/integration/rls-ddl-contract.test.mjs",
-    "ci": "npm run lint && npm run typecheck && npm run build",
+    "ci": "npm run lint && npm run typecheck && npm test -- --runInBand && npm run test:rls && npm run build",
     "test": "jest"
   },
   "dependencies": {

@@ -4,6 +4,7 @@ import { runStatutoryDeadlineCronEngine } from '@/lib/calendar/deadline-rule-eng
 import { runMonthlyDepreciation } from '@/lib/accounting/depreciation-engine';
 import { runCurrencyRevaluation } from '@/lib/accounting/revaluation-engine';
 import { runAIWatchdog } from '@/lib/ai/watchdog-engine';
+import { requireBearerSecret } from '@/lib/api/security';
 
 /**
  * ТИКЕТ 6, ЕПИК 2, ЕПИК 3 и WATCHDOG: Cron API Endpoint за дедлайни, амортизации, преоценка и надзор.
@@ -11,6 +12,8 @@ import { runAIWatchdog } from '@/lib/ai/watchdog-engine';
  */
 export async function GET(req: Request) {
   try {
+    const unauthorized = requireBearerSecret(req, process.env.CRON_SECRET);
+    if (unauthorized) return unauthorized;
     const url = new URL(req.url);
     const tenantId = url.searchParams.get('tenantId') || undefined;
 

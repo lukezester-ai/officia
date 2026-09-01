@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from 'lucide-react';
+import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from '@/components/icons';
 import { getDashboardData } from './actions';
 import Link from 'next/link';
 import { getInvoices } from './invoices/actions';

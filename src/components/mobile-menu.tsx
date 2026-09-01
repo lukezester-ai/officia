@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
-import { LocaleSwitcher } from '@/components/LocaleSwitcher';
 
 export default function MobileMenu({ lang }: { lang: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,9 +25,6 @@ export default function MobileMenu({ lang }: { lang: string }) {
           <a href="#pricing" onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Цени</a>
           <a href="#social-proof" onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Възможности</a>
           <div className="h-px bg-white/10 my-1" />
-          <div className="py-1">
-            <LocaleSwitcher />
-          </div>
           <Link href={signInHref} onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Вход</Link>
           <Link href={signUpHref} onClick={() => setIsOpen(false)} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition-all px-4 py-3 rounded-xl font-semibold text-center text-base mt-2 shadow-lg shadow-violet-600/30">
             Започни безплатно

@@ -4,7 +4,7 @@ import { invoices } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, Printer, CheckCircle, Send, Clock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Printer, CheckCircle, Send, Clock, AlertTriangle } from "@/components/icons";
 import { updateInvoiceStatus, deleteInvoice } from "../actions";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {

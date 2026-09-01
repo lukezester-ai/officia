@@ -1,9 +1,12 @@
 // @ts-nocheck
 import { NextResponse } from 'next/server';
 import { matchTransactionWithAI, Transaction, Candidate } from '@/lib/ai/agents/matcher';
+import { requireApiUser } from '@/lib/api/security';
 
 export async function POST(req: Request) {
   try {
+    const { response } = await requireApiUser();
+    if (response) return response;
     const body = await req.json();
     const { transaction, candidates } = body as { transaction: Transaction, candidates: Candidate[] };
 

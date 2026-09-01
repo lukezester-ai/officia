@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Users, Plus, ChevronRight, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Users, Plus, ChevronRight, CheckCircle } from '@/components/icons';
 import Link from 'next/link';
 import { LeaveManagement } from '@/components/hr/LeaveManagement';
 

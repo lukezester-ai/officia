@@ -1,5 +1,5 @@
 import PracticeClient from './PracticeClient';
-import { Building2 } from 'lucide-react';
+import { Building2 } from '@/components/icons';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 

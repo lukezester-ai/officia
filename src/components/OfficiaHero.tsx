@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowRight, CheckCircle2, TrendingUp, Zap } from "lucide-react";
 import MobileMenu from "@/components/mobile-menu";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { cn } from "@/lib/utils";
 
 type MetricItem = {
@@ -136,7 +135,6 @@ export default function OfficiaHero({ lang }: { lang: string }) {
             <Link href={signUpHref} className="rounded-lg bg-gradient-to-b from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-700/30 transition-transform hover:scale-[1.02] active:scale-[0.98]">Започни безплатно</Link>
           </div>
           <MobileMenu lang={lang} />
-<LocaleSwitcher />
         </div>
       </nav>
 

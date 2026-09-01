@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { napIntegrations } from "@/lib/db/schema/nap-integrations";
 import { encryptApiKey } from "@/lib/nap/encryption";
+import { requireTenant } from "@/lib/auth/get-tenant";
 
 
 /**
@@ -20,9 +21,10 @@ import { encryptApiKey } from "@/lib/nap/encryption";
  */
 export async function POST(req: Request) {
   try {
-    const { organizationId, eik, apiKey } = await req.json();
+    const { tenantId, userId } = await requireTenant();
+    const { eik, apiKey } = await req.json();
 
-    if (!organizationId || !eik || !apiKey) {
+    if (!eik || !apiKey) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -37,11 +39,11 @@ export async function POST(req: Request) {
       .insert(napIntegrations)
       .values({
       id: crypto.randomUUID(),
-        organizationId,
+        organizationId: tenantId,
         eik,
         encryptedApiKey: encrypted,
         encryptionIv: iv,
-        connectedByUserId: "system",
+        connectedByUserId: userId,
         status: "active",
       })
       .returning();

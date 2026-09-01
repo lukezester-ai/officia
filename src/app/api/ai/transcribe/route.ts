@@ -2,8 +2,14 @@
 
 export const runtime = 'nodejs';
 
+import { rejectOversizedRequest, requireApiUser } from '@/lib/api/security';
+
 export async function POST(req: NextRequest) {
   try {
+    const { response: authResponse } = await requireApiUser();
+    if (authResponse) return authResponse;
+    const tooLarge = rejectOversizedRequest(req, 25 * 1024 * 1024);
+    if (tooLarge) return tooLarge;
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {

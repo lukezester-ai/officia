@@ -5,7 +5,7 @@ import { createPurchaseInvoice, getSuppliersForSelect } from './actions-read';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Bot, Sparkles } from 'lucide-react';
+import { Plus, Bot, Sparkles } from '@/components/icons';
 import { toast } from 'sonner';
 import { PurchaseInvoiceLines } from './_form-lines';
 

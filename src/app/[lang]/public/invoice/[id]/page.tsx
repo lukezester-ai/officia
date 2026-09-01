@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, CheckCircle, Download, FileText } from 'lucide-react';
+import { CreditCard, CheckCircle, Download, FileText } from '@/components/icons';
 import StripeCheckoutButton from './StripeCheckoutButton';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 

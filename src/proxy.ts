@@ -1,9 +1,7 @@
-// @ts-nocheck
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const locales = ['bg', 'en'];
 const defaultLocale = 'bg';
 
 const isProtectedRoute = createRouteMatcher([
@@ -23,15 +21,13 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
-  // Ако URL-ът е /en/... → пренасочваме към /bg/...
+  // Старите английски адреси се пренасочват към единствения поддържан език.
   if (pathname.startsWith('/en/') || pathname === '/en') {
     req.nextUrl.pathname = pathname.replace(/^\/en/, '/bg');
     return NextResponse.redirect(req.nextUrl);
   }
 
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
+  const pathnameHasLocale = pathname.startsWith('/bg/') || pathname === '/bg';
 
   if (!pathnameHasLocale) {
     // Винаги пренасочваме към /bg/

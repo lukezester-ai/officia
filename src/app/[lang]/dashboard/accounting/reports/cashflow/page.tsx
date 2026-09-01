@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Waves, ArrowLeft, TrendingUp, TrendingDown, Wallet, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { Waves, ArrowLeft, TrendingUp, TrendingDown, Wallet, ArrowDownToLine, ArrowUpFromLine } from "@/components/icons";
 import { ExportButtons } from "@/components/accounting/ExportButtons";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import { db } from "@/lib/db/db";

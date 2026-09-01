@@ -1,12 +1,13 @@
 // @ts-nocheck
 import { NextResponse } from 'next/server';
+import { requireBearerSecret } from '@/lib/api/security';
 
 export async function POST(req: Request) {
   try {
+    const unauthorized = requireBearerSecret(req, process.env.AI_WEBHOOK_SECRET);
+    if (unauthorized) return unauthorized;
     const body = await req.json();
     const { event, payload } = body;
-
-    // TODO: Защита на webhook (напр. проверка на signature)
 
     console.log("Received AI Webhook:", event);
 

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CheckCircle, AlertCircle, Clock, Plus, Zap, FileText } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, Plus, Zap, FileText } from '@/components/icons';
 
 import { AccountingActionButtons } from './_action-buttons';
 import { EntryActionButtons } from './_entry-actions';

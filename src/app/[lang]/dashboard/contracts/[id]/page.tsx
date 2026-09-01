@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, FileText, UserPlus, Upload, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, FileText, UserPlus, Upload, XCircle, AlertTriangle } from '@/components/icons';
 import { notFound } from 'next/navigation';
 import { activateContractAction, terminateContractAction } from '../actions';
 import { getDictionary } from '@/lib/get-dictionary';

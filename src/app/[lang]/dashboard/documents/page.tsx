@@ -3,7 +3,7 @@ import React from 'react';
 import DocumentsClient from './DocumentsClient';
 import { getDocuments } from './actions';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
+import { Upload } from '@/components/icons';
 
 export default async function DocumentsPage() {
   const res = await getDocuments();

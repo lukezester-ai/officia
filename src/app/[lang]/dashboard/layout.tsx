@@ -2,9 +2,13 @@
 import { Sidebar, MobileDashboardSidebar } from '@/components/dashboard/sidebar';
 import { getDictionary, Locale } from '@/lib/get-dictionary';
 import { UserButton } from '@clerk/nextjs';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search } from '@/components/icons';
 import AiAssistant from '@/components/ai/AiAssistant';
 import Link from 'next/link';
+
+// Dashboard pages read authenticated, tenant-scoped database state and must
+// never be executed while generating static build output.
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({
   children,

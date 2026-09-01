@@ -54,6 +54,7 @@ export async function POST(req: Request) {
 
     // 4. Подаване на подписания XML директно към НАП
     const napResponse = await napB2GClient.submitVatDeclaration(
+      tenantId,
       tenant.eik || '123456789',
       signedStatus.signedDocumentBase64
     );

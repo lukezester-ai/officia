@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History, Clock } from 'lucide-react';
+import { ArrowLeft, User, FileText, Calendar, Edit, Upload, History, Clock } from '@/components/icons';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 

@@ -20,7 +20,7 @@ export class NapB2GClient {
   private isSimulation: boolean;
 
   constructor() {
-    this.isSimulation = !process.env.NAP_B2G_PRODUCTION_URL;
+    this.isSimulation = process.env.ALLOW_INTEGRATION_SIMULATION === 'true';
   }
   
   async getIntegrationKey(organizationId: string): Promise<string | null> {
@@ -62,6 +62,10 @@ export class NapB2GClient {
       };
     }
 
+    if (!process.env.NAP_B2G_PRODUCTION_URL) {
+      return { success: false, error: 'Реалната НАП B2G интеграция не е конфигурирана.' };
+    }
+
     // Real production API call would construct MTOM/SOAP or REST payload depending on NAP spec
     // using the decrypted apiKey as Authorization header or signing key
     throw new Error('Real NAP B2G integration not implemented yet.');
@@ -76,6 +80,9 @@ export class NapB2GClient {
     
     if (this.isSimulation) {
       return { status: 'accepted', message: 'Декларацията е приета успешно.' };
+    }
+    if (!process.env.NAP_B2G_PRODUCTION_URL) {
+      throw new Error('Реалната НАП B2G интеграция не е конфигурирана.');
     }
     throw new Error('Real NAP B2G integration not implemented yet.');
   }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckCircle, XCircle, ThumbsUp } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, ThumbsUp } from '@/components/icons';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

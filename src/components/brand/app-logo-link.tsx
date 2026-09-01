@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 type AppLogoLinkProps = {

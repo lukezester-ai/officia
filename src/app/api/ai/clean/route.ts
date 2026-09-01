@@ -1,9 +1,12 @@
 // @ts-nocheck
 import { NextResponse } from 'next/server';
 import { runSystemCleanup } from '@/lib/ai/agents/cleaner';
+import { requireBearerSecret } from '@/lib/api/security';
 
 export async function POST(req: Request) {
   try {
+    const unauthorized = requireBearerSecret(req, process.env.CRON_SECRET);
+    if (unauthorized) return unauthorized;
     // В реална среда тук се проверява дали заявката идва от оторизиран Cron Job 
     // (напр. проверка на Authorization header или VERCEL_CRON_SECRET)
     

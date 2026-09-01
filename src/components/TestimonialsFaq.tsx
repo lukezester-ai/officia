@@ -1,4 +1,4 @@
-import { Star, ChevronDown, HelpCircle } from "lucide-react";
+import { Star, ChevronDown, HelpCircle } from "@/components/icons";
 
 const testimonials = [
   {

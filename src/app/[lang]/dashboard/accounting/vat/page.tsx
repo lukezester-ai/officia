@@ -3,7 +3,7 @@ import { db } from "@/lib/db/db";
 import { invoices } from "@/lib/db/schema";
 import { and, gte, lte, inArray } from "drizzle-orm";
 import Link from "next/link";
-import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calculator, Printer } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calculator, Printer } from "@/components/icons";
 import VatB2GClient from "./VatB2GClient";
 
 function getPeriodBounds(period: string) {

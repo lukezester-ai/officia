@@ -4,7 +4,7 @@ import { journalHeaders } from "@/lib/db/schema";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
-import { BookOpen, Plus, TrendingUp, ArrowUpDown, Zap } from "lucide-react";
+import { BookOpen, Plus, TrendingUp, ArrowUpDown, Zap } from "@/components/icons";
 
 export default async function JournalPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;

@@ -3,7 +3,7 @@ import React from 'react';
 import { getAssetsData } from './actions';
 import AssetsClient from './AssetsClient';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/components/icons';
 import Link from 'next/link';
 
 export default async function AssetsPage() {

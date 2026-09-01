@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Bot, ShieldCheck, Zap, AlertTriangle, CheckCircle2, 
   RefreshCw, Layers, Cpu, Clock, BarChart3, ShieldAlert
-} from 'lucide-react';
+} from '@/components/icons';
 import { toast } from 'sonner';
 import { getAgentManagerStatusAction } from './agent-manager-actions';
 import ReactMarkdown from 'react-markdown';

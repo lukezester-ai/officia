@@ -4,7 +4,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus } from '@/components/icons';
 import { getDictionary } from '@/lib/get-dictionary';
 
 export default async function ContractsPage(props: { params: Promise<{ lang: string }> }) {

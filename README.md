@@ -28,7 +28,7 @@ Officia комбинира класическо счетоводство, фак
   Красиви KPI-та, графики и бърз преглед на бизнеса.
 
 ### Технологии
-- **Next.js 15** (App Router) + TypeScript + Tailwind + shadcn/ui
+- **Next.js 16** (App Router) + TypeScript + Tailwind + shadcn/ui
 - **Clerk** – автентикация и multi-tenant (tenant-scoped RLS в PostgreSQL)
 - **Drizzle ORM** + PostgreSQL (миграции чрез `npm run db:*`)
 - **Anthropic Claude + OpenAI** – AI за документи, RAG и анализ
@@ -93,7 +93,7 @@ docker-compose up --build
 - Публичен Live Demo
 - Мобилно приложение (PWA вече е готово)
 - Експорт към Excel / PDF отчети
-- Многоезичност (BG/EN)
+- Изцяло български интерфейс
 - Интеграции с e-FACT, e-invoicing и др.
 
 ---

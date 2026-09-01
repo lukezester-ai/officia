@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
+import { ArrowRight, CheckCircle, Shield } from '@/components/icons';
 import OfficiaHero from '@/components/OfficiaHero';
 import OfficiaSocialProof from '@/components/OfficiaSocialProof';
 import PricingSection from './PricingSection';

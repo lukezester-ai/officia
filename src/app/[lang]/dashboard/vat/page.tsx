@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, AlertTriangle, TrendingDown, TrendingUp, DollarSign, FileText } from 'lucide-react';
+import { Download, AlertTriangle, TrendingDown, TrendingUp, DollarSign, FileText } from '@/components/icons';
 
 import { VatActions } from '@/components/dashboard/VatActions';
 

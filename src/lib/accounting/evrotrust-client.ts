@@ -15,8 +15,8 @@ export class CloudKEPClient {
   private isSimulation: boolean;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.EVROTRUST_API_KEY || 'sim-mode';
-    this.isSimulation = !process.env.EVROTRUST_API_KEY;
+    this.apiKey = apiKey || process.env.EVROTRUST_API_KEY || '';
+    this.isSimulation = process.env.ALLOW_INTEGRATION_SIMULATION === 'true';
   }
 
   /**
@@ -29,6 +29,8 @@ export class CloudKEPClient {
       // Return a mock transaction ID
       return { transactionId: `txn_${Date.now()}_sim`, success: true };
     }
+
+    if (!this.apiKey) throw new Error('Cloud KEP интеграцията не е конфигурирана.');
 
     // Real production API call would go here
     throw new Error('Real Evrotrust integration not implemented yet. Set EVROTRUST_API_KEY to blank to use simulation mode.');
@@ -61,6 +63,8 @@ export class CloudKEPClient {
         signatureId: `sig_${Date.now()}`
       };
     }
+
+    if (!this.apiKey) throw new Error('Cloud KEP интеграцията не е конфигурирана.');
 
     throw new Error('Real Evrotrust integration not implemented yet.');
   }
