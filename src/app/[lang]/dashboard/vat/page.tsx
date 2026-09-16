@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getVatData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,13 +9,42 @@ import { Download, AlertTriangle, TrendingDown, TrendingUp, DollarSign, FileText
 
 import { VatActions } from '@/components/dashboard/VatActions';
 
+interface VatData {
+  purchases: Array<{
+    id: string;
+    invoiceNumber: string | null;
+    issueDate?: string | null;
+    counterpartyName: string;
+    totalAmount?: string;
+    vatAmount?: string;
+  }>;
+  sales: Array<{
+    id: string;
+    invoiceNumber: string | null;
+    issueDate?: string | null;
+    counterpartyName: string | null;
+    totalAmount?: string;
+    vatAmount?: string;
+  }>;
+  problems: Array<{
+    invoiceNumber: string;
+    issue: string;
+    counterpartyName: string;
+  }>;
+  kpi: {
+    totalVatPurchases: number;
+    totalVatSales: number;
+    netVat: number;
+  };
+}
+
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default async function VatPage() {
   const res = await getVatData();
-  const data = res.success ? res.data : { purchases: [], sales: [], problems: [], kpi: { totalVatPurchases: 0, totalVatSales: 0, netVat: 0 } };
+  const data: VatData = res.success ? (res.data as VatData || { purchases: [], sales: [], problems: [], kpi: { totalVatPurchases: 0, totalVatSales: 0, netVat: 0 } }) : { purchases: [], sales: [], problems: [], kpi: { totalVatPurchases: 0, totalVatSales: 0, netVat: 0 } };
 
   return (
     <div className="space-y-6">

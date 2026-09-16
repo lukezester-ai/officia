@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getCounterparty360Data } from '../actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,6 +5,46 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building, Mail, Phone, MapPin, FileText, DollarSign, AlertCircle, TrendingUp, Calendar, Zap } from '@/components/icons';
 import Link from 'next/link';
+
+interface Counterparty {
+  name: string;
+  type: 'client' | 'supplier' | 'other';
+  eik?: string;
+  vatNumber?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  contactPerson?: string;
+}
+
+interface Financials {
+  totalVolume: number;
+  totalUnpaid: number;
+  overdueCount: number;
+}
+
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  status: string;
+  issueDate?: string;
+  totalAmount?: string;
+}
+
+interface Transaction {
+  id: string;
+  description: string;
+  date?: Date | string | null;
+  amount?: string;
+}
+
+interface Counterparty360Data {
+  counterparty: Counterparty;
+  financials: Financials;
+  invoices: Invoice[];
+  transactions: Transaction[];
+  aiNotes: string[];
+}
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -27,7 +66,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
     );
   }
 
-  const { counterparty, financials, invoices, transactions, aiNotes } = res.data;
+  const { counterparty, financials, invoices, transactions, aiNotes } = res.data as Counterparty360Data;
 
   return (
     <div className="space-y-6">

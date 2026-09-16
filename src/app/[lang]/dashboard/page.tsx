@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from '@/components/icons';
 import { getDashboardData } from './actions';
@@ -6,6 +5,28 @@ import Link from 'next/link';
 import { getInvoices } from './invoices/actions';
 import { getPurchaseInvoices } from './purchase-invoices/actions-read';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
+
+interface DashboardData {
+  needsReview?: {
+    invoices?: number;
+    transactions?: number;
+    documents?: number;
+    vatIssues?: number;
+  };
+  overviewStats?: {
+    inboxOpenItems?: number;
+    approvalsPending?: number;
+  };
+  aiRecommendations?: Array<{
+    id: string;
+    title: string;
+    description: string;
+  }>;
+  upcomingDeadlines?: {
+    dueInvoices?: number;
+    expiringDocs?: number;
+  };
+}
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -20,8 +41,8 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
     getPurchaseInvoices().catch(() => ({ success: false, data: [] })),
   ]);
 
-  const invoices: any[] = invRes.success ? (invRes as any).data : [];
-  const purchases: any[] = purRes.success ? (purRes as any).data : [];
+  const invoices: any[] = invRes.success ? invRes.data : [];
+  const purchases: any[] = purRes.success ? purRes.data : [];
 
   const revenue = invoices
     .filter(i => i.status === 'issued' || i.status === 'paid')
@@ -135,7 +156,7 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
               </div>
               AI Inbox
             </CardTitle>
-            {data?.overviewStats?.inboxOpenItems > 0 && (
+            {(data?.overviewStats?.inboxOpenItems ?? 0) > 0 && (
               <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full font-medium">
                 {data?.overviewStats?.inboxOpenItems} нови
               </span>
@@ -169,9 +190,9 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
               </div>
               Чакащи одобрения
             </CardTitle>
-            {data?.overviewStats?.approvalsPending > 0 && (
+            {((data?.overviewStats?.approvalsPending ?? 0) > 0) && (
               <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                {data.overviewStats.approvalsPending} чакащи
+                {data?.overviewStats?.approvalsPending} чакащи
               </span>
             )}
           </CardHeader>

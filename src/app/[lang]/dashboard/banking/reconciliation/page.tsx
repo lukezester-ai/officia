@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,21 +11,42 @@ import { ArrowLeft, CheckCircle, XCircle, Search, Link as LinkIcon, DollarSign, 
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+interface Transaction {
+  id: string;
+  date?: Date | string | null;
+  counterpartyName?: string | null;
+  description?: string | null;
+  amount?: string;
+  currency?: string | null;
+  matchStatus?: string | null;
+  matchedInvoiceId?: string | null;
+  matchConfidence?: number | null;
+}
+
+interface Candidate {
+  id: string;
+  type: 'invoice' | 'expense';
+  documentNumber: string;
+  counterpartyName: string;
+  totalAmount: number;
+  currency: string;
+}
+
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default function ReconciliationPage() {
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const [manualModalTx, setManualModalTx] = useState<any | null>(null);
-  const [candidates, setCandidates] = useState<any[]>([]);
+  const [manualModalTx, setManualModalTx] = useState<Transaction | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>('');
   const [manualSaving, setManualSaving] = useState(false);
 
-  const openManualModal = async (tx: any) => {
+  const openManualModal = async (tx: Transaction) => {
     setManualModalTx(tx);
     setSelectedCandidateId('');
     const res = await getAICandidates();
@@ -37,7 +57,7 @@ export default function ReconciliationPage() {
     if (!manualModalTx || !selectedCandidateId) return;
     setManualSaving(true);
     const cand = candidates.find(c => c.id === selectedCandidateId);
-    const res = await manualMatch(manualModalTx.id, selectedCandidateId, cand?.type || 'invoice');
+    const res = await manualMatch(manualModalTx.id, selectedCandidateId, (cand?.type as 'invoice' | 'expense') || 'invoice');
     if (res.success) {
       toast.success('Успешно ръчно свързване!');
       setManualModalTx(null);
@@ -51,7 +71,7 @@ export default function ReconciliationPage() {
   const load = async () => {
     setLoading(true);
     const res = await getTransactionsForReview();
-    if (res.success) setTransactions(res.data);
+    if (res.success) setTransactions(res.data as Transaction[]);
     setLoading(false);
   };
 
