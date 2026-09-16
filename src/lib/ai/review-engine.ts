@@ -3,7 +3,7 @@ import { invoices } from '../db/schema/invoices';
 import { aiInboxItems } from '../db/schema/ai_inbox';
 import { eq, and, ne } from 'drizzle-orm';
 
-export async function runReviewEngineForInvoice(invoiceId: number) {
+export async function runReviewEngineForInvoice(invoiceId: string) {
   try {
     const [inv] = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
     if (!inv) return;

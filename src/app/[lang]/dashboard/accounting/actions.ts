@@ -41,7 +41,7 @@ export async function postInvoiceToJournal(invoiceId: string, accountCode: strin
   try {
     const { requireTenant } = await import('@/lib/auth/get-tenant');
     const { tenantId } = await requireTenant();
-    const [inv] = await db.select().from(invoices).where(eq(invoices.id, invoiceId as any)).limit(1);
+    const [inv] = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
     if (!inv) return { success: false, error: 'Фактурата не е намерена' };
 
     const [header] = await db.insert(journalHeaders).values({
@@ -55,7 +55,7 @@ export async function postInvoiceToJournal(invoiceId: string, accountCode: strin
       aiStatus: 'verified',
     } as any).returning();
 
-    await db.update(invoices).set({ status: 'accounted' } as any).where(eq(invoices.id, invoiceId as any));
+    await db.update(invoices).set({ status: 'accounted' } as any).where(eq(invoices.id, invoiceId));
     revalidatePath('/', 'layout');
     return { success: true, data: header };
   } catch (error: any) {

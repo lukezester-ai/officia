@@ -5,8 +5,8 @@ import { db } from '@/lib/db/db';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { invoices } from '@/lib/db/schema/invoices';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
-import { eq, and, sql } from 'drizzle-orm';
 import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
+import { fetchVatPeriodDocuments, vatPeriodBounds } from '@/lib/tax/vat-period';
 
 export const buildGenerateVatTool = (tenantId: string, userId?: string) => tool({
   description: "Автоматичен генератор на ДДС дневници. Използвай го, когато потребителят иска да приключи месеца, да сметне ДДС-то или да генерира данъчни/ДДС дневници.",
@@ -16,28 +16,8 @@ export const buildGenerateVatTool = (tenantId: string, userId?: string) => tool(
   }),
   execute: async ({ year, month }) => {
      try {
-        const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
-        const endDate = new Date(year, month, 0).toISOString().split('T')[0];
-
-        // 1. Вземаме всички продажби за месеца (Дневник на продажбите)
-        const sales = await db.select()
-          .from(invoices)
-          .where(
-            and(
-              eq(invoices.tenantId, tenantId),
-              sql`${invoices.issueDate} >= ${startDate} AND ${invoices.issueDate} <= ${endDate}`
-            )
-          );
-
-        // 2. Вземаме всички покупки за месеца (Дневник на покупките)
-        const purchases = await db.select()
-          .from(purchaseInvoices)
-          .where(
-            and(
-              eq(purchaseInvoices.tenantId, tenantId),
-              sql`${purchaseInvoices.issueDate} >= ${startDate} AND ${purchaseInvoices.issueDate} <= ${endDate}`
-            )
-          );
+        const { start: startDate, end: endDate } = vatPeriodBounds(year, month);
+        const { sales, purchases } = await fetchVatPeriodDocuments(tenantId, startDate, endDate);
 
         if (sales.length === 0 && purchases.length === 0) {
            return { success: true, message: `Няма фактури за продажби или покупки за месец ${month}/${year}. Няма данни за генериране на ДДС дневници.` };

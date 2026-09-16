@@ -1,20 +1,9 @@
 // @ts-nocheck
-import { db } from "@/lib/db/db";
-import { invoices } from "@/lib/db/schema";
-import { and, gte, lte, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calculator, Printer } from "@/components/icons";
 import VatB2GClient from "./VatB2GClient";
-
-function getPeriodBounds(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  const start = new Date(year!, month! - 1, 1);
-  const end = new Date(year!, month!, 0);
-  return {
-    start: start.toISOString().split("T")[0]!,
-    end: end.toISOString().split("T")[0]!,
-  };
-}
+import { requireTenant } from "@/lib/auth/get-tenant";
+import { fetchVatPeriodDocuments, vatLineAmounts, vatPeriodBounds } from "@/lib/tax/vat-period";
 
 function currentPeriod() {
   const now = new Date();
@@ -52,34 +41,20 @@ export default async function VatPage({
   const { lang } = await params;
   const sp = await searchParams;
   const period = sp.period ?? currentPeriod();
-  const { start, end } = getPeriodBounds(period);
+  const [year, month] = period.split("-").map(Number);
+  const { start, end } = vatPeriodBounds(year!, month!);
+  const { tenantId } = await requireTenant();
+  const { sales: salesRows, salesTotals, purchaseTotals } = await fetchVatPeriodDocuments(
+    tenantId,
+    start,
+    end,
+  );
 
-  let salesRows: any[] = [];
-  try {
-    salesRows = await (db as any)
-      .select()
-      .from(invoices)
-      .where(
-        and(
-          inArray((invoices as any).status, ["sent", "paid"]),
-          gte((invoices as any).issueDate, start),
-          lte((invoices as any).issueDate, end)
-        )
-      );
-  } catch {}
-
-  const totalBase = salesRows.reduce(
-    (s: number, r: any) => s + parseFloat(String(r.subtotal ?? r.sub_total ?? "0")),
-    0
-  );
-  const totalVat = salesRows.reduce(
-    (s: number, r: any) => s + parseFloat(String(r.vatAmount ?? r.vat_amount ?? "0")),
-    0
-  );
-  const totalGross = salesRows.reduce(
-    (s: number, r: any) => s + parseFloat(String(r.total ?? "0")),
-    0
-  );
+  const totalBase = salesTotals.net;
+  const totalVat = salesTotals.vat;
+  const totalGross = salesTotals.gross;
+  const inputVat = purchaseTotals.vat;
+  const vatPayable = totalVat - inputVat;
 
   const prev = prevPeriod(period);
   const next = nextPeriod(period);
@@ -173,7 +148,7 @@ export default async function VatPage({
             },
             {
               label: "DDS za vnasvane",
-              value: totalVat,
+              value: vatPayable,
               color: "text-orange-400",
               border: "border-orange-500/20",
               bg: "bg-orange-950/30",
@@ -228,20 +203,22 @@ export default async function VatPage({
               </thead>
               <tbody className="divide-y divide-white/5">
                 {salesRows.map((r: any) => {
-                  const base = parseFloat(String(r.subtotal ?? r.sub_total ?? "0"));
-                  const vat = parseFloat(String(r.vatAmount ?? r.vat_amount ?? "0"));
-                  const gross = parseFloat(String(r.total ?? "0"));
+                  const { net: base, vat, gross } = vatLineAmounts(r);
                   const statusMap: Record<string, string> = {
                     draft: "text-zinc-400",
+                    issued: "text-blue-400",
                     sent: "text-blue-400",
+                    accounted: "text-violet-400",
                     paid: "text-emerald-400",
                     overdue: "text-red-400",
                   };
                   const statusLabel: Record<string, string> = {
-                    draft: "Chernova",
-                    sent: "Izpratena",
-                    paid: "Platena",
-                    overdue: "Zakasnyala",
+                    draft: "Чернова",
+                    issued: "Издадена",
+                    sent: "Изпратена",
+                    accounted: "Осчетоводена",
+                    paid: "Платена",
+                    overdue: "Закъсняла",
                   };
                   return (
                     <tr key={r.id} className="hover:bg-white/2 transition-colors">
@@ -249,7 +226,7 @@ export default async function VatPage({
                         {r.invoiceNumber ?? r.invoice_number}
                       </td>
                       <td className="px-5 py-3 text-xs text-zinc-300">
-                        {r.clientName ?? r.client_name}
+                        {r.counterpartyName ?? r.clientName ?? r.client_name}
                       </td>
                       <td className="px-5 py-3 text-xs text-zinc-400">
                         {r.issueDate ?? r.issue_date}
@@ -291,8 +268,8 @@ export default async function VatPage({
             {[
               { label: "Kolona 11 -- Danychna osnova izkhodyasht DDS", value: totalBase },
               { label: "Kolona 20 -- Izkhodyasht DDS (20%)", value: totalVat },
-              { label: "Kolona 30 -- Vkhodyasht DDS za prispadvane", value: 0 },
-              { label: "Kolona 50 -- DDS za vnasvane (+) / za vraztvane (-)", value: totalVat },
+              { label: "Kolona 30 -- Vkhodyasht DDS za prispadvane", value: inputVat },
+              { label: "Kolona 50 -- DDS za vnasvane (+) / za vraztvane (-)", value: vatPayable },
             ].map((row) => (
               <div key={row.label} className="flex justify-between items-center py-2 border-b border-white/5 print:border-zinc-200">
                 <span className="text-zinc-400 print:text-zinc-600">{row.label}</span>

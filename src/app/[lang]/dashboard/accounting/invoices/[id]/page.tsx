@@ -26,7 +26,7 @@ export default async function InvoiceDetailPage({
     const rows = await (db as any)
       .select()
       .from(invoices)
-      .where(eq((invoices as any).id, parseInt(id)))
+      .where(eq((invoices as any).id, id))
       .limit(1);
     inv = rows[0] ?? null;
   } catch {}

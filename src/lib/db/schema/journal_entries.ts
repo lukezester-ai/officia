@@ -14,8 +14,10 @@ export const journalHeaders = pgTable('journal_headers', {
   journalNumber: text('journal_number').unique().notNull(), // Напр. YYYY-NNNNN
   entryDate: timestamp('entry_date').notNull(),
   description: text('description'),
-  documentType: text('document_type'), // invoice, expense, payment
-  documentId: uuid('document_id'), // Референция към фактура/документ
+  documentType: text('document_type'), // sales_invoice, purchase_invoice, expense, payment
+  // UUID of invoices / purchase_invoices / documents / expenses — interpreted via documentType
+  documentId: uuid('document_id'),
+  reversedFromId: uuid('reversed_from_id'),
   status: journalStatusEnum('status').default('draft'),
   postedBy: uuid('posted_by').references(() => users.id),
   postedAt: timestamp('posted_at'),

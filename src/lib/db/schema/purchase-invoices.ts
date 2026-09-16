@@ -1,9 +1,9 @@
-// @ts-nocheck
-import { pgTable, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, uuid } from 'drizzle-orm/pg-core';
+import { tenants } from './tenants';
 
 export const purchaseInvoices = pgTable('purchase_invoices', {
-  id: text('id').primaryKey(),
-  tenantId: text('tenant_id').notNull(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   invoiceNumber: text('invoice_number').notNull(),
   issueDate: text('issue_date'),
   dueDate: text('due_date'),
@@ -22,8 +22,10 @@ export const purchaseInvoices = pgTable('purchase_invoices', {
 });
 
 export const purchaseInvoiceLines = pgTable('purchase_invoice_lines', {
-  id: text('id').primaryKey(),
-  invoiceId: text('invoice_id').notNull(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  invoiceId: uuid('invoice_id')
+    .notNull()
+    .references(() => purchaseInvoices.id, { onDelete: 'cascade' }),
   description: text('description').notNull(),
   quantity: text('quantity').notNull().default('1'),
   unitPrice: text('unit_price').notNull().default('0'),

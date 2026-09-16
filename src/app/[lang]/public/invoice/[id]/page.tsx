@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreditCard, CheckCircle, Download, FileText } from '@/components/icons';
 import StripeCheckoutButton from './StripeCheckoutButton';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
+import { parseUuidParam } from '@/lib/utils/ids';
 
 export default async function PublicInvoicePage({
   params,
@@ -18,9 +19,9 @@ export default async function PublicInvoicePage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const invoiceId = parseInt(id, 10);
-  
-  if (isNaN(invoiceId)) {
+  const invoiceId = parseUuidParam(id);
+
+  if (!invoiceId) {
     return notFound();
   }
 

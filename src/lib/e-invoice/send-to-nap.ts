@@ -82,12 +82,19 @@ function escapeXml(unsafe: string): string {
   });
 }
 
-// Mock of sending soap request
 async function sendSoapRequest(endpoint: string, envelope: string): Promise<string> {
-    return "<response>success</response>";
+  if (process.env.ALLOW_INTEGRATION_SIMULATION === 'true') {
+    return '<response simulated="true">pending</response>';
+  }
+  throw new Error(`НАП SOAP изпращането не е свързано (${endpoint}).`);
 }
 
-// Mock of parsing NAP response
 function parseNAPResponse(response: string): NAPSendResponse {
-    return { success: true, napRegistrationId: 'MOCK_NAP_ID_123' };
+  if (process.env.ALLOW_INTEGRATION_SIMULATION === 'true') {
+    return {
+      success: false,
+      error: 'Симулация: XML е подготвен, но не е изпратен към НАП и няма регистрационен номер.',
+    };
+  }
+  return { success: false, error: `Неразпознат отговор от НАП: ${response.slice(0, 180)}` };
 }

@@ -1,35 +1,32 @@
-// @ts-nocheck
-// Модул за комуникация с портала на НАП (B2G/B2B е-Фактуриране)
-
 export async function submitInvoiceToNRA(signedXml: string) {
-  console.log('Изпращане на фактура към сървърите на НАП (B2B портал)...');
-  
-  // Примерна POST заявка към endpoint на НАП
-  /*
-  const response = await fetch('https://api.nra.bg/e-invoice/submit', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/xml',
-      'Authorization': 'Bearer <Валиден_Тоукън_От_НАП>'
-    },
-    body: signedXml
-  });
-  */
-  
+  if (process.env.ALLOW_INTEGRATION_SIMULATION === 'true') {
+    return {
+      success: true,
+      referenceId: `NRA-SIM-${Date.now()}`,
+      status: 'RECEIVED',
+      simulated: true,
+    };
+  }
+
   return {
-    success: true,
-    referenceId: `NRA-${Date.now()}`,
-    status: 'RECEIVED' // Възможни: RECEIVED, ACCEPTED, REJECTED
+    success: false,
+    error: 'НАП e-invoice API не е свързан. Не се връща фалшив приемен номер.',
   };
 }
 
 export async function checkInvoiceStatus(referenceId: string) {
-  console.log(`Проверка на статус за фактура ${referenceId} в НАП...`);
-  
-  // Примерна GET заявка към НАП за статуса на подадената фактура
+  if (process.env.ALLOW_INTEGRATION_SIMULATION === 'true') {
+    return {
+      referenceId,
+      status: 'PENDING',
+      nraMessage: 'Симулация: статусът не е потвърден от НАП.',
+      simulated: true,
+    };
+  }
+
   return {
     referenceId,
-    status: 'ACCEPTED',
-    nraMessage: 'Фактурата е валидирана и приета успешно.'
+    status: 'UNKNOWN',
+    nraMessage: 'Проверката към НАП не е конфигурирана.',
   };
 }

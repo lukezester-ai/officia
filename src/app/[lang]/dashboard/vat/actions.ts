@@ -2,48 +2,89 @@
 
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
-import { eq, desc } from 'drizzle-orm';
+import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
+import { requireTenant } from '@/lib/auth/get-tenant';
+import { desc, and, eq, inArray, isNull, ne, or } from 'drizzle-orm';
+import {
+  VAT_PURCHASE_STATUSES,
+  VAT_SALES_STATUSES,
+  vatLineAmounts,
+} from '@/lib/tax/vat-period';
 
 export async function getVatData() {
   try {
-    const allInvoices = await db.select().from(invoices).orderBy(desc(invoices.issueDate));
-    
-    // We will separate them into purchases (incoming) and sales (outgoing)
-    const purchases = allInvoices.filter(i => i.type === 'purchase');
-    const sales = allInvoices.filter(i => i.type === 'sale');
+    const { tenantId } = await requireTenant();
 
-    // Calculate totals
-    const totalVatPurchases = purchases.reduce((sum, i) => sum + parseFloat(i.vatAmount || '0'), 0);
-    const totalVatSales = sales.reduce((sum, i) => sum + parseFloat(i.vatAmount || '0'), 0);
+    const sales = await db
+      .select()
+      .from(invoices)
+      .where(
+        and(
+          eq(invoices.tenantId, tenantId),
+          inArray(invoices.status, [...VAT_SALES_STATUSES]),
+          or(isNull(invoices.type), ne(invoices.type, 'purchase')),
+        ),
+      )
+      .orderBy(desc(invoices.issueDate));
 
-    const netVat = totalVatSales - totalVatPurchases; // If > 0, to pay. If < 0, to refund.
+    const purchases = await db
+      .select()
+      .from(purchaseInvoices)
+      .where(
+        and(
+          eq(purchaseInvoices.tenantId, tenantId),
+          inArray(purchaseInvoices.status, [...VAT_PURCHASE_STATUSES]),
+        ),
+      )
+      .orderBy(desc(purchaseInvoices.issueDate));
 
-    // AI Auditor Logic - find problems
+    const totalVatPurchases = purchases.reduce((sum, i) => sum + vatLineAmounts(i).vat, 0);
+    const totalVatSales = sales.reduce((sum, i) => sum + vatLineAmounts(i).vat, 0);
+    const netVat = totalVatSales - totalVatPurchases;
+
     const problems = [];
-    
-    for (const inv of allInvoices) {
-      if (parseFloat(inv.vatAmount || '0') > 0 && !inv.counterpartyEik) {
+
+    for (const inv of sales) {
+      if (vatLineAmounts(inv).vat > 0 && !inv.counterpartyEik) {
         problems.push({
           invoiceId: inv.id,
           invoiceNumber: inv.invoiceNumber,
           counterpartyName: inv.counterpartyName,
-          issue: 'Начислено ДДС, но липсва ЕИК на контрагента.'
+          issue: 'Начислено ДДС, но липсва ЕИК на контрагента.',
         });
       }
     }
 
-    return { 
-      success: true, 
+    for (const inv of purchases) {
+      if (vatLineAmounts(inv).vat > 0 && !inv.supplierEik) {
+        problems.push({
+          invoiceId: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          counterpartyName: inv.supplierName,
+          issue: 'Данъчен кредит, но липсва ЕИК на доставчика.',
+        });
+      }
+    }
+
+    return {
+      success: true,
       data: {
-        purchases,
+        purchases: purchases.map((p) => ({
+          id: p.id,
+          invoiceNumber: p.invoiceNumber,
+          issueDate: p.issueDate,
+          counterpartyName: p.supplierName,
+          totalAmount: p.totalAmount,
+          vatAmount: p.vatAmount,
+        })),
         sales,
         kpi: {
           totalVatPurchases,
           totalVatSales,
-          netVat
+          netVat,
         },
-        problems
-      }
+        problems,
+      },
     };
   } catch (error: any) {
     return { success: false, error: error.message };

@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 export interface MatchSuggestion {
   transaction: any;
   type: 'invoice' | 'expense';
-  matchId: string | number;
+  matchId: string;
   confidence: number;
   reason: string;
   target: any;

@@ -1,22 +1,52 @@
-// @ts-nocheck
-// Генерира справка за ДДС (декларация по ЗДДС) – формуляри VIES, VAT 3, VIES intracommunity
-export async function generateVATReport(tenantId: string, month: number, year: number) {
-  console.log(`Генериране на ДДС справка за фирма ${tenantId} за ${month}/${year}...`);
+import {
+  fetchVatPeriodDocuments,
+  vatPeriodBounds,
+} from '@/lib/tax/vat-period';
 
-  // TODO: Изчислява:
-  // - Данъчен кредит (ДДС от доставки)
-  // - Данъчно задължение (ДДС от продажби)
-  // - ДДС за внасяне/възстановяване
-  // - Вътреобщностни доставки/придобивания (VAT 3, VIES)
-  // - Справка по чл. 124, 125 от ЗДДС
-  
-  // Връща JSON, който директно се трансформира в XML за НАП
+export async function generateVATReport(tenantId: string, month: number, year: number) {
+  if (!tenantId) {
+    throw new Error('Липсва tenant за ДДС справката.');
+  }
+  if (month < 1 || month > 12) {
+    throw new Error('Невалиден месец за ДДС справка.');
+  }
+
+  const { start, end } = vatPeriodBounds(year, month);
+  const { sales, purchases, salesTotals, purchaseTotals } =
+    await fetchVatPeriodDocuments(tenantId, start, end);
+
+  const vatPayable = salesTotals.vat - purchaseTotals.vat;
+  const viesData = [
+    ...sales.map((row) => ({
+      documentNumber: row.invoiceNumber,
+      vatNumber: row.counterpartyVat,
+    })),
+    ...purchases.map((row) => ({
+      documentNumber: row.invoiceNumber,
+      vatNumber: row.supplierVat,
+    })),
+  ].filter((row) => typeof row.vatNumber === 'string' && /^[A-Z]{2}/i.test(row.vatNumber) && !row.vatNumber.toUpperCase().startsWith('BG'));
+
   return {
-    period: { month, year },
+    period: { month, year, start, end },
     tenantId,
-    salesVat: 0.00, // ДДС от продажби (Дневник на продажбите)
-    purchasesVat: 0.00, // ДДС от покупки (Дневник на покупките)
-    viesData: [],
-    xmlReadyData: {} // Структура готова за конвертиране към XML по стандарта на НАП
+    salesCount: sales.length,
+    purchasesCount: purchases.length,
+    salesVat: round2(salesTotals.vat),
+    purchasesVat: round2(purchaseTotals.vat),
+    salesNet: round2(salesTotals.net),
+    purchasesNet: round2(purchaseTotals.net),
+    vatPayable: round2(vatPayable),
+    viesData,
+    xmlReadyData: {
+      box11: round2(salesTotals.net),
+      box20: round2(salesTotals.vat),
+      box30: round2(purchaseTotals.vat),
+      box50: round2(vatPayable),
+    },
   };
+}
+
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
 }

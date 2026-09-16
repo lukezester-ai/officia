@@ -45,15 +45,15 @@ export async function uploadBankStatement(parsedTransactions: any[]) {
   return { success: true, count: toInsert.length };
 }
 
-export async function confirmMatch(transactionId: string, matchType: 'invoice' | 'expense', matchId: string | number) {
+export async function confirmMatch(transactionId: string, matchType: 'invoice' | 'expense', matchId: string) {
   if (matchType === 'invoice') {
     await db.update(bankTransactions)
-      .set({ isReconciled: true, matchedInvoiceId: matchId as number })
+      .set({ isReconciled: true, matchedInvoiceId: matchId })
       .where(eq(bankTransactions.id, transactionId));
       
     await db.update(invoices)
       .set({ status: 'paid' })
-      .where(eq(invoices.id, matchId as number));
+      .where(eq(invoices.id, matchId));
   } else {
     await db.update(bankTransactions)
       .set({ isReconciled: true, matchedExpenseId: matchId as string })

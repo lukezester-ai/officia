@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { isUuid } from '@/lib/utils/ids';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -35,24 +36,21 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const invoiceIdStr = session.metadata?.invoiceId;
 
-    if (invoiceIdStr) {
-      const invoiceId = parseInt(invoiceIdStr, 10);
-      
-      // Update invoice to paid
+    if (invoiceIdStr && isUuid(invoiceIdStr)) {
       await db.update(invoices).set({
         status: 'paid',
         stripePaymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : session.id
-      }).where(eq(invoices.id, invoiceId));
+      }).where(eq(invoices.id, invoiceIdStr));
       
-      console.log(`✅ Invoice ${invoiceId} marked as paid successfully via Stripe webhook.`);
-    } else {
+      console.log(`✅ Invoice ${invoiceIdStr} marked as paid successfully via Stripe webhook.`);
+    } else if (!invoiceIdStr) {
       // Auto-issue an invoice for plan checkout / subscription when someone declares payment
       const amount = session.amount_total ? (session.amount_total / 100).toFixed(2) : (session.metadata?.billing === 'annual' ? '290.00' : '29.00');
       const newInvoiceNumber = `SUB-${Date.now().toString().slice(-6)}`;
       
       await db.insert(invoices).values({
-        tenantId: session.metadata?.tenantId || null,
-        userId: session.metadata?.userId || null,
+        tenantId: isUuid(session.metadata?.tenantId) ? session.metadata?.tenantId : null,
+        userId: isUuid(session.metadata?.userId) ? session.metadata?.userId : null,
         invoiceNumber: newInvoiceNumber,
         type: 'sale',
         clientName: session.customer_details?.name || session.customer_details?.email || 'Абонат Officia ERP',
@@ -81,10 +79,9 @@ export async function POST(req: Request) {
     const stripeInvoice = event.data.object as Stripe.Invoice;
     const invoiceIdStr = stripeInvoice.metadata?.invoiceId;
 
-    if (invoiceIdStr) {
-      const invoiceId = parseInt(invoiceIdStr, 10);
-      await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, invoiceId));
-      console.log(`✅ Invoice ${invoiceId} marked as paid via invoice.paid webhook.`);
+    if (invoiceIdStr && isUuid(invoiceIdStr)) {
+      await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, invoiceIdStr));
+      console.log(`✅ Invoice ${invoiceIdStr} marked as paid via invoice.paid webhook.`);
     } else if (stripeInvoice.billing_reason === 'subscription_cycle') {
       const amount = (stripeInvoice.amount_paid / 100).toFixed(2);
       const newInvoiceNumber = `SUB-${Date.now().toString().slice(-6)}`;

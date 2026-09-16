@@ -46,7 +46,7 @@ export async function getPendingApprovals() {
 /**
  * ЕПИК 5: Одобряване на фактура
  */
-export async function approveInvoice(id: number) {
+export async function approveInvoice(id: string) {
   try {
     const { tenantId } = await requireTenant();
     if (!tenantId) throw new Error('Неоторизиран достъп');
@@ -71,7 +71,7 @@ export async function approveInvoice(id: number) {
 /**
  * ЕПИК 5: Отхвърляне на фактура
  */
-export async function rejectInvoice(id: number, reason: string = 'Отхвърлена от управител') {
+export async function rejectInvoice(id: string, reason: string = 'Отхвърлена от управител') {
   try {
     const { tenantId } = await requireTenant();
     if (!tenantId) throw new Error('Неоторизиран достъп');

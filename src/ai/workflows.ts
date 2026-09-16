@@ -63,13 +63,13 @@ export async function forecastCashFlow(periods: number = 12): Promise<number[]> 
  * Returns true when the invoice was approved.
  */
 export async function autoApprove(invoiceId: string): Promise<boolean> {
-  const inv = await db.select().from(invoices).where(eq(invoices.id, Number(invoiceId))).limit(1);
+  const inv = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
   if (!inv.length) return false;
   const invoice = inv[0];
   const vendorName = invoice.clientName ?? invoice.counterpartyName ?? "";
   const trustedVendors = ["Vendor A", "Vendor B"];
   if (Number(invoice.amount) < 5000 && trustedVendors.includes(vendorName)) {
-    await db.update(invoices).set({ status: "approved" }).where(eq(invoices.id, Number(invoiceId)));
+    await db.update(invoices).set({ status: "approved" }).where(eq(invoices.id, invoiceId));
     await db.insert(aiInboxItems).values({
       tenantId: invoice.tenantId ?? "00000000-0000-0000-0000-000000000000",
       type: "approval",

@@ -33,7 +33,7 @@ export default function ReconciliationClient({ initialSuggestions }: { initialSu
     reader.readAsText(file);
   };
 
-  const handleConfirm = async (txId: string, type: 'invoice'|'expense', matchId: string|number) => {
+  const handleConfirm = async (txId: string, type: 'invoice'|'expense', matchId: string) => {
     toast.promise(confirmMatch(txId, type, matchId), {
       loading: 'Равняване...',
       success: () => {

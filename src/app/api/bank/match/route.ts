@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     await db.update(bankTransactions)
       .set({ 
         isReconciled: true,
-        matchedInvoiceId: matchId ? Number(matchId) || matchId : null
+        matchedInvoiceId: matchId || null
       } as any)
       .where(eq(bankTransactions.id, bankTxId));
 

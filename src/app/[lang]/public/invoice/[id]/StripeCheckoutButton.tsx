@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function StripeCheckoutButton({ invoiceId, amount }: { invoiceId: number, amount: string | number }) {
+export default function StripeCheckoutButton({ invoiceId, amount }: { invoiceId: string, amount: string | number }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCheckout = async () => {

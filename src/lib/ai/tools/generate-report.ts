@@ -9,13 +9,9 @@ export const generateReportTool = tool({
     period: z.string().describe("Период за отчета (напр. 2024-05 или 2024-Q1)"),
   }),
   execute: async ({ reportType, period }) => {
-    console.log("Generating report:", { reportType, period });
-    
-    // Mock response
     return {
-      success: true,
-      reportUrl: `/reports/download?type=${reportType}&period=${period}`,
-      message: `Отчетът ${reportType} за период ${period} е генериран успешно и е готов за изтегляне.`,
+      success: false,
+      message: `Не генерирам фиктивен файл за ${reportType} (${period}). Отворете модула Отчети / ДДС в таблото за реални данни.`,
     };
   },
 });

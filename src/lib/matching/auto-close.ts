@@ -22,7 +22,7 @@ export async function autoCloseMatchedDocument(transactionId: string): Promise<{
     // 1. Check if matched to Sales Invoice
     if (tx.matchedInvoiceId) {
       const invId = String(tx.matchedInvoiceId);
-      await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, invId as any));
+      await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, invId));
       closedType = 'invoice';
       closedId = invId;
 

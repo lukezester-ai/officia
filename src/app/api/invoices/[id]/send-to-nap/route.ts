@@ -5,12 +5,13 @@ import { eq } from 'drizzle-orm';
 import { sendInvoiceToNAP } from '@/lib/e-invoice/send-to-nap';
 import { UblInvoiceData } from '@/lib/e-invoice/ubl-generator';
 import { napB2GClient } from '@/lib/accounting/nap-b2g-client';
+import { parseUuidParam } from '@/lib/utils/ids';
 
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
-    const invoiceId = parseInt(params.id, 10);
-    if (isNaN(invoiceId)) {
+    const invoiceId = parseUuidParam(params.id);
+    if (!invoiceId) {
       return NextResponse.json({ error: 'Invalid invoice ID' }, { status: 400 });
     }
 

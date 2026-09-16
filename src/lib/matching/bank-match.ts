@@ -1,7 +1,8 @@
 import { db } from '../db/db';
 import { bankTransactions } from '../db/schema/bank_transactions';
+import { bankAccounts } from '../db/schema/bank_accounts';
 import { invoices } from '../db/schema/invoices';
-import { eq, and, or, ilike, desc } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { autoCloseMatchedDocument } from './auto-close';
 
 export async function runMatchEngineForTransaction(transactionId: string) {
@@ -9,18 +10,21 @@ export async function runMatchEngineForTransaction(transactionId: string) {
     const [tx] = await db.select().from(bankTransactions).where(eq(bankTransactions.id, transactionId)).limit(1);
     if (!tx || tx.isReconciled || tx.matchedInvoiceId) return { success: false, reason: 'Transaction not eligible' };
 
-    // Find candidate invoices based on exact amount match
-    // Only search unpaid invoices (issued or draft)
+    const [account] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, tx.accountId)).limit(1);
+    if (!account?.tenantId) return { success: false, reason: 'Bank account has no tenant' };
+
     const txAmount = parseFloat(tx.amount || '0');
-    // Only looking for positive amounts (incoming payments) to match with Sales Invoices
     if (txAmount <= 0) return { success: false, reason: 'Only processing incoming payments for sales invoices currently' };
 
     const candidates = await db.select().from(invoices)
       .where(
-        or(
-          eq(invoices.status, 'issued'),
-          eq(invoices.status, 'draft')
-        )
+        and(
+          eq(invoices.tenantId, account.tenantId),
+          or(
+            eq(invoices.status, 'issued'),
+            eq(invoices.status, 'sent'),
+          ),
+        ),
       );
 
     let bestMatch = null;

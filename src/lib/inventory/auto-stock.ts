@@ -138,7 +138,7 @@ export async function syncStockFromPurchaseInvoice(purchaseInvoiceId: string, te
 export async function syncStockFromSalesInvoice(invoiceId: string, tenantId: string): Promise<{ success: boolean; movementsAdded: number; error?: string }> {
   try {
     return await db.transaction(async (tx) => {
-      const [invoice] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId as any));
+      const [invoice] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId));
       if (!invoice) return { success: false, movementsAdded: 0, error: 'Фактурата не е намерена' };
 
       // Изпълнява се САМО ако статусът е издадена (issued / paid)
@@ -146,7 +146,7 @@ export async function syncStockFromSalesInvoice(invoiceId: string, tenantId: str
         return { success: true, movementsAdded: 0 };
       }
 
-      const lines = await tx.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId as any));
+      const lines = await tx.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId));
       if (!lines || lines.length === 0) return { success: true, movementsAdded: 0 };
 
       const divisionId = await getDefaultDivision(tenantId, tx);
@@ -177,7 +177,7 @@ export async function syncStockFromSalesInvoice(invoiceId: string, tenantId: str
         // Проверяваме дали вече няма запис за изписване от тази фактура
         const [existingMovement] = await tx.select().from(inventoryMovements).where(
           and(
-            eq(inventoryMovements.referenceId, invoiceId as any),
+            eq(inventoryMovements.referenceId, invoiceId),
             eq(inventoryMovements.itemId, item.id)
           )
         );
@@ -200,7 +200,7 @@ export async function syncStockFromSalesInvoice(invoiceId: string, tenantId: str
             unitCost: unitPrice.toFixed(4),
             totalCost: total.toFixed(2),
             movementDate: invoice.issueDate ? new Date(invoice.issueDate) : new Date(),
-            referenceId: invoiceId as any,
+            referenceId: invoiceId,
           });
           added++;
         }

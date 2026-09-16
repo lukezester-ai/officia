@@ -11,7 +11,7 @@ export const stripe = new Stripe(stripeSecretKey, {
   }
 });
 
-export const getStripeSessionUrl = async (invoiceId: number, amount: number, currency: string = 'eur', customerEmail?: string, invoiceNumber?: string) => {
+export const getStripeSessionUrl = async (invoiceId: string, amount: number, currency: string = 'eur', customerEmail?: string, invoiceNumber?: string) => {
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     customer_email: customerEmail,
@@ -38,7 +38,7 @@ export const getStripeSessionUrl = async (invoiceId: number, amount: number, cur
     success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/public/invoice/${invoiceId}?success=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/public/invoice/${invoiceId}?canceled=true`,
     metadata: {
-      invoiceId: invoiceId.toString(),
+      invoiceId,
     },
   });
 

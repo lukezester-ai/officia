@@ -212,8 +212,8 @@ ALTER TABLE purchase_invoice_lines ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS purchase_invoice_lines_tenant_scope ON purchase_invoice_lines;
 CREATE POLICY purchase_invoice_lines_tenant_scope ON purchase_invoice_lines
   FOR ALL
-  USING (EXISTS (SELECT 1 FROM purchase_invoices p WHERE p.id = purchase_invoice_lines.invoice_id AND p.tenant_id = current_tenant_id()::text))
-  WITH CHECK (EXISTS (SELECT 1 FROM purchase_invoices p WHERE p.id = purchase_invoice_lines.invoice_id AND p.tenant_id = current_tenant_id()::text));
+  USING (EXISTS (SELECT 1 FROM purchase_invoices p WHERE p.id = purchase_invoice_lines.invoice_id AND p.tenant_id = current_tenant_id()))
+  WITH CHECK (EXISTS (SELECT 1 FROM purchase_invoices p WHERE p.id = purchase_invoice_lines.invoice_id AND p.tenant_id = current_tenant_id()));
 
 -- payroll_slip_items -> payroll_runs
 ALTER TABLE payroll_slip_items ENABLE ROW LEVEL SECURITY;

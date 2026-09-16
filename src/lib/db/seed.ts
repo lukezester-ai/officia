@@ -35,13 +35,14 @@ async function seed() {
 
     // 4. Create Invoices
     const [invoice] = await db.insert(invoices).values({
-
+      tenantId: tenant.id,
       userId: user.id,
       invoiceNumber: 'INV-2026-0001',
       clientName: 'TechCorp Bulgaria EOOD',
       amount: '2400.00',
-      issueDate: new Date('2026-06-01'),
-      dueDate: new Date('2026-06-15'),
+      totalAmount: '2400.00',
+      issueDate: '2026-06-01',
+      dueDate: '2026-06-15',
       status: 'paid',
     }).returning();
     console.log('✅ Created invoice:', invoice.invoiceNumber);
@@ -52,6 +53,8 @@ async function seed() {
       journalNumber: 'JRN-2026-001',
       entryDate: new Date('2026-06-15'),
       description: 'Плащане по фактура INV-2026-0001',
+      documentType: 'sales_invoice',
+      documentId: invoice.id,
       status: 'posted',
       postedBy: user.id,
     }).returning();

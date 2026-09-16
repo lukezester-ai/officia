@@ -25,14 +25,14 @@ export default function ApprovalClient() {
     setLoading(false);
   };
 
-  const handleApprove = async (id: number) => {
+  const handleApprove = async (id: string) => {
     setActionLoading('approve');
     await approveInvoice(id);
     setInvoices(prev => prev.filter(inv => inv.id !== id));
     setActionLoading(null);
   };
 
-  const handleReject = async (id: number) => {
+  const handleReject = async (id: string) => {
     setActionLoading('reject');
     await rejectInvoice(id, 'Отхвърлена през мобилния портал');
     setInvoices(prev => prev.filter(inv => inv.id !== id));

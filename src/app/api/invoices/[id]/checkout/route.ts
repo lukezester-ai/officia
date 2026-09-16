@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { getStripeSessionUrl } from '@/lib/stripe';
 import { auth } from '@clerk/nextjs/server';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
+import { parseUuidParam } from '@/lib/utils/ids';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -12,8 +13,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const { id: invoiceIdParam } = await params;
-    const invoiceId = parseInt(invoiceIdParam, 10);
-    if (isNaN(invoiceId)) {
+    const invoiceId = parseUuidParam(invoiceIdParam);
+    if (!invoiceId) {
       return new NextResponse("Invalid Invoice ID", { status: 400 });
     }
 
@@ -42,7 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       amount, 
       'eur', // Change to BGN or other if needed dynamically
       undefined, 
-      invoice.invoiceNumber || invoiceId.toString()
+      invoice.invoiceNumber || invoiceId
     );
 
     // Update invoice with intent ID and sync normalized totalAmount

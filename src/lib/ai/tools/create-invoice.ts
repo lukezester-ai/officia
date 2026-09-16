@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { db } from '@/lib/db/db';
 import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
 import { counterparties } from '@/lib/db/schema/counterparties';
+import { users } from '@/lib/db/schema/users';
 import { eq, and, ilike } from 'drizzle-orm';
+import { isUuid } from '@/lib/utils/ids';
 
 export const buildCreateInvoiceTool = (tenantId: string, userId: string) => tool({
   description: "Създава нова продажна фактура към клиент. Използвай този инструмент, когато потребителят иска да издаде фактура.",
@@ -67,9 +69,19 @@ export const buildCreateInvoiceTool = (tenantId: string, userId: string) => tool
       // 3. Записваме фактурата (Генерираме случаен 10-цифрен номер за MVP)
       const randomNum = Math.floor(1000000000 + Math.random() * 9000000000).toString();
       
+      let internalUserId: string | null = isUuid(userId) ? userId : null;
+      if (!internalUserId) {
+        const [mappedUser] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.clerkId, userId))
+          .limit(1);
+        internalUserId = mappedUser?.id ?? null;
+      }
+
       const [newInvoice] = await db.insert(invoices).values({
         tenantId,
-        userId,
+        userId: internalUserId,
         invoiceNumber: randomNum,
         type: 'sale',
         clientName: counterparty.name,
