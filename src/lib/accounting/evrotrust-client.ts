@@ -33,7 +33,7 @@ export class CloudKEPClient {
     if (!this.apiKey) throw new Error('Cloud KEP интеграцията не е конфигурирана.');
 
     // Real production API call would go here
-    throw new Error('Real Evrotrust integration not implemented yet. Set EVROTRUST_API_KEY to blank to use simulation mode.');
+    throw new Error('Real Evrotrust integration not implemented yet.');
   }
 
   /**

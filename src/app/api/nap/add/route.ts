@@ -1,59 +1,40 @@
-// src/app/api/nap/add/route.ts
-import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { napIntegrations } from "@/lib/db/schema/nap-integrations";
-import { encryptApiKey } from "@/lib/nap/encryption";
-import { requireTenant } from "@/lib/auth/get-tenant";
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { napIntegrations } from '@/lib/db/schema/nap-integrations';
+import { encryptApiKey } from '@/lib/nap/encryption';
+import { requireTenant } from '@/lib/auth/get-tenant';
+import { withRateLimit } from '@/lib/api/rate-limit';
 
-
-/**
- * POST /api/nap/add
- * Тялото трябва да съдържа:
- * {
- *   "organizationId": "uuid",
- *   "eik": "string",
- *   "apiKey": "plain‑text‑NAP‑key"
- * }
- *
- * 1. Криптира API‑ключа с AES‑256‑GCM.
- * 2. Записва нов запис в `nap_integrations`.
- * 3. Връща ID‑то на новата интеграция.
- */
 export async function POST(req: Request) {
+  return withRateLimit(req, () => addNapIntegration(req));
+}
+
+async function addNapIntegration(req: Request) {
   try {
     const { tenantId, userId } = await requireTenant();
     const { eik, apiKey } = await req.json();
 
     if (!eik || !apiKey) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1️⃣ Криптираме предоставения API‑ключ
     const { encrypted, iv } = encryptApiKey(apiKey);
-
-    // 2️⃣ Съхраняваме в базата
     const [record] = await db
       .insert(napIntegrations)
       .values({
-      id: crypto.randomUUID(),
+        id: crypto.randomUUID(),
         organizationId: tenantId,
         eik,
         encryptedApiKey: encrypted,
         encryptionIv: iv,
         connectedByUserId: userId,
-        status: "active",
+        status: 'active',
       })
       .returning();
 
     return NextResponse.json({ success: true, integrationId: record.id }, { status: 201 });
   } catch (err: any) {
-    console.error("[NAP Add] error", err);
-    return NextResponse.json(
-      { error: "Unexpected error", details: err.message },
-      { status: 500 }
-    );
+    console.error('[NAP Add] error', err);
+    return NextResponse.json({ error: 'Unexpected error', details: err.message }, { status: 500 });
   }
 }

@@ -4,13 +4,14 @@ import { requireTenant } from '@/lib/auth/get-tenant';
 import { db } from '@/lib/db/db';
 import { taxDeclarations } from '@/lib/db/schema/tax_declarations';
 import { tenants } from '@/lib/db/schema/tenants';
+import { users } from '@/lib/db/schema/users';
 import { eq, and } from 'drizzle-orm';
 import { cloudKepClient } from '@/lib/accounting/evrotrust-client';
 import { napB2GClient } from '@/lib/accounting/nap-b2g-client';
 
 export async function POST(req: Request) {
   try {
-    const { tenantId } = await requireTenant();
+    const { tenantId, user } = await requireTenant();
     if (!tenantId) {
       return NextResponse.json({ success: false, error: 'Неоторизиран достъп' }, { status: 401 });
     }
@@ -27,15 +28,22 @@ export async function POST(req: Request) {
 
     const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
     if (!tenant) throw new Error('Фирмата не е намерена');
+    if (!tenant.bulstat) {
+      return NextResponse.json({ success: false, error: 'Липсва ЕИК/БУЛСТАТ на фирмата.' }, { status: 400 });
+    }
 
-    // 1. Generate XML Content (Simulation)
-    // В реална среда тук се извиква generateVatXml(tenantId, periodYear, periodMonth)
+    const [signer] = user?.id
+      ? await db.select().from(users).where(eq(users.id, user.id)).limit(1)
+      : [];
+    if (!signer?.phone) {
+      return NextResponse.json({ success: false, error: 'Липсва телефон за КЕП подпис на управителя.' }, { status: 400 });
+    }
+
     const xmlContentBase64 = Buffer.from(`<VatDeclaration><Period>${period}</Period></VatDeclaration>`).toString('base64');
 
-    // 2. Изпращане за Cloud KEP Подпис към телефона на управителя
     const kepResponse = await cloudKepClient.sendDocumentForSignature(
       xmlContentBase64,
-      tenant.phone || '0888000000',
+      signer.phone,
       `ДДС Декларация ${period}`
     );
 
@@ -43,19 +51,15 @@ export async function POST(req: Request) {
       throw new Error('Грешка при комуникация с Evrotrust');
     }
 
-    // 3. Симулация на изчакване (Потребителят натиска "Подпиши" на телефона)
-    // В реална среда UI-ът ще poll-ва статуса, но тук симулираме синхронно за демото
-    await new Promise(resolve => setTimeout(resolve, 2500));
     const signedStatus = await cloudKepClient.checkSignatureStatus(kepResponse.transactionId);
 
     if (signedStatus.status !== 'signed' || !signedStatus.signedDocumentBase64) {
       throw new Error('Документът не беше подписан от управителя.');
     }
 
-    // 4. Подаване на подписания XML директно към НАП
     const napResponse = await napB2GClient.submitVatDeclaration(
       tenantId,
-      tenant.eik || '123456789',
+      tenant.bulstat,
       signedStatus.signedDocumentBase64
     );
 

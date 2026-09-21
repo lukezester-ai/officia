@@ -2,8 +2,8 @@
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
-import { accountPlan } from '@/lib/db/schema/account_plan';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { findOrCreateAccount } from '@/lib/accounting/accounts';
 
 /**
  * Тикет 1: Auto-journal при одобрена Е-фактура.
@@ -20,7 +20,7 @@ export async function approveEInvoiceWithAutoJournal(
   try {
     return await db.transaction(async (tx) => {
       // 1. Изтегляме фактурата в рамките на транзакцията
-      const [invoice] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId));
+      const [invoice] = await tx.select().from(invoices).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
       if (!invoice) {
         throw new Error(`Фактура № ${invoiceId} не е намерена.`);
       }
@@ -32,7 +32,7 @@ export async function approveEInvoiceWithAutoJournal(
           einvoiceStatus: 'error',
           errorReason: errorText,
           updatedAt: new Date(),
-        }).where(eq(invoices.id, invoiceId));
+        }).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
 
         return { success: false, errorReason: errorText };
       }
@@ -43,32 +43,17 @@ export async function approveEInvoiceWithAutoJournal(
         einvoiceStatus: 'approved',
         errorReason: null,
         updatedAt: new Date(),
-      }).where(eq(invoices.id, invoiceId));
+      }).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
 
       // 4. Проверяваме дали вече няма създаден journal запис
-      const [existingJournal] = await tx.select().from(journalHeaders).where(eq(journalHeaders.documentId, invoiceId));
+      const [existingJournal] = await tx.select().from(journalHeaders).where(and(eq(journalHeaders.documentId, invoiceId), eq(journalHeaders.tenantId, tenantId)));
       if (existingJournal) {
         return { success: true, journalId: existingJournal.id };
       }
 
-      // 5. Намираме или създаваме сметките от сметкоплана (411, 701, 4532)
-      const accounts = await tx.select().from(accountPlan).where(eq(accountPlan.tenantId, tenantId));
-      const findOrCreateAcc = async (code: string, name: string, type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense') => {
-        const found = accounts.find(a => a.code === code);
-        if (found) return found.id;
-        const [created] = await tx.insert(accountPlan).values({
-          tenantId,
-          code,
-          name,
-          type,
-          isActive: true,
-        }).returning();
-        return created.id;
-      };
-
-      const acc411 = await findOrCreateAcc('411', 'Клиенти (Вземания по продажби)', 'asset');
-      const acc701 = await findOrCreateAcc('701', 'Приходи от продажби на услуги и стоки', 'revenue');
-      const acc4532 = await findOrCreateAcc('4532', 'Начислен ДДС за продажбите', 'liability');
+      const acc411 = await findOrCreateAccount(tenantId, '411', tx);
+      const acc701 = await findOrCreateAccount(tenantId, '701', tx);
+      const acc4532 = await findOrCreateAccount(tenantId, '4532', tx);
 
       const journalNumber = `J-EINV-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
       const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();

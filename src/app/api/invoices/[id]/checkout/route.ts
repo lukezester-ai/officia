@@ -6,8 +6,13 @@ import { getStripeSessionUrl } from '@/lib/stripe';
 import { auth } from '@clerk/nextjs/server';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 import { parseUuidParam } from '@/lib/utils/ids';
+import { withRateLimit } from '@/lib/api/rate-limit';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  return withRateLimit(req, () => createCheckout(req, params));
+}
+
+async function createCheckout(req: Request, params: Promise<{ id: string }>) {
   try {
     const { userId } = await auth();
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });

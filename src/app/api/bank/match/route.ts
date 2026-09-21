@@ -5,8 +5,13 @@ import { autoCloseMatchedDocument } from '@/lib/matching/auto-close';
 import { and, eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { withRateLimit } from '@/lib/api/rate-limit';
 
 export async function POST(req: NextRequest) {
+  return withRateLimit(req, () => matchBank(req));
+}
+
+async function matchBank(req: NextRequest) {
   try {
     const { tenantId } = await requireTenant();
     const { bankTxId, journalLineId, invoiceId } = await req.json();

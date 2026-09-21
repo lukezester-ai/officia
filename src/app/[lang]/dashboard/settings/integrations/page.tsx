@@ -23,15 +23,10 @@ export default function IntegrationsSettingsPage(props: { params: Promise<{ lang
     setIsLoading(true);
     
     try {
-      // In a real app we'd get the organizationId from the auth context (Clerk/getCurrentTenant)
-      // For this UI, we mock the organizationId
-      const orgId = "00000000-0000-0000-0000-000000000000"; 
-      
       const response = await fetch('/api/nap/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          organizationId: orgId,
           eik,
           apiKey
         })

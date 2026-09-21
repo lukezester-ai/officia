@@ -1,15 +1,9 @@
-// @ts-nocheck
-// Отговаря за разделянето на документи на парчета (chunks) 
-// и създаването на техни вектори чрез embedding модел
+import { embedBatch } from '@/lib/ai/embeddings';
 
-export async function embedDocumentContent(content: string): Promise<{ chunks: string[], embeddings: number[][] }> {
-  console.log("Embedding document content...");
-  
-  // Примерно логическо разделяне на текста (chunking)
-  const chunks = content.match(/.{1,1000}/g) || [];
-  
-  // TODO: Извикване на OpenAI embeddings API или алтернатива
-  const embeddings = chunks.map(() => new Array(1536).fill(0.1)); // Mock
-  
+export async function embedDocumentContent(content: string): Promise<{ chunks: string[]; embeddings: number[][] }> {
+  const text = content?.trim();
+  if (!text) throw new Error('Празен документ за embedding.');
+  const chunks = text.match(/[\s\S]{1,1000}/g) || [text];
+  const embeddings = await embedBatch(chunks);
   return { chunks, embeddings };
 }

@@ -1,43 +1,28 @@
 // @ts-nocheck
 import { db } from '@/lib/db/db';
-import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
-import { purchaseInvoices, purchaseInvoiceLines } from '@/lib/db/schema/purchase-invoices';
+import { invoices } from '@/lib/db/schema/invoices';
+import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
-import { accountPlan } from '@/lib/db/schema/account_plan';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { findOrCreateAccount } from '@/lib/accounting/accounts';
 
 /**
  * Ensures a double-entry journal entry is created in Счетоводство when an Invoice (Е-фактура / Одобрена) is issued.
  */
 export async function ensureAutoJournalForInvoice(invoiceId: string, tenantId: string): Promise<{ success: boolean; journalId?: string; error?: string }> {
   try {
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
+    if (!tenantId) return { success: false, error: 'Липсва tenant' };
+    const [invoice] = await db.select().from(invoices).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
     if (!invoice) return { success: false, error: 'Фактурата не е намерена' };
 
-    // Check if journal header already exists for this invoice
-    const [existing] = await db.select().from(journalHeaders).where(eq(journalHeaders.documentId, invoiceId));
+    const [existing] = await db.select().from(journalHeaders).where(and(eq(journalHeaders.documentId, invoiceId), eq(journalHeaders.tenantId, tenantId)));
     if (existing) {
       return { success: true, journalId: existing.id };
     }
 
-    // Fetch accounts or use fallback UUIDs if needed, or lookup from accountPlan table
-    const accounts = await db.select().from(accountPlan).where(eq(accountPlan.tenantId, tenantId));
-    const findOrCreateAccount = async (code: string, name: string, type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense') => {
-      const found = accounts.find(a => a.code === code);
-      if (found) return found.id;
-      const [created] = await db.insert(accountPlan).values({
-        tenantId,
-        code,
-        name,
-        type,
-        isActive: true,
-      }).returning();
-      return created.id;
-    };
-
-    const acc411 = await findOrCreateAccount('411', 'Клиенти (Вземания по продажби)', 'asset');
-    const acc701 = await findOrCreateAccount('701', 'Приходи от продажби на услуги и стоки', 'revenue');
-    const acc4532 = await findOrCreateAccount('4532', 'Начислен ДДС за продажбите', 'liability');
+    const acc411 = await findOrCreateAccount(tenantId, '411');
+    const acc701 = await findOrCreateAccount(tenantId, '701');
+    const acc4532 = await findOrCreateAccount(tenantId, '4532');
 
     const journalNumber = `J-INV-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 90 + 10)}`;
     const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();
@@ -103,31 +88,18 @@ export async function ensureAutoJournalForInvoice(invoiceId: string, tenantId: s
  */
 export async function ensureAutoJournalForPurchaseInvoice(purchaseInvoiceId: string, tenantId: string): Promise<{ success: boolean; journalId?: string; error?: string }> {
   try {
-    const [purchase] = await db.select().from(purchaseInvoices).where(eq(purchaseInvoices.id, purchaseInvoiceId));
+    if (!tenantId) return { success: false, error: 'Липсва tenant' };
+    const [purchase] = await db.select().from(purchaseInvoices).where(and(eq(purchaseInvoices.id, purchaseInvoiceId), eq(purchaseInvoices.tenantId, tenantId)));
     if (!purchase) return { success: false, error: 'Фактурата за покупка не е намерена' };
 
-    const [existing] = await db.select().from(journalHeaders).where(eq(journalHeaders.documentId, purchaseInvoiceId));
+    const [existing] = await db.select().from(journalHeaders).where(and(eq(journalHeaders.documentId, purchaseInvoiceId), eq(journalHeaders.tenantId, tenantId)));
     if (existing) {
       return { success: true, journalId: existing.id };
     }
 
-    const accounts = await db.select().from(accountPlan).where(eq(accountPlan.tenantId, tenantId));
-    const findOrCreateAccount = async (code: string, name: string, type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense') => {
-      const found = accounts.find(a => a.code === code);
-      if (found) return found.id;
-      const [created] = await db.insert(accountPlan).values({
-        tenantId,
-        code,
-        name,
-        type,
-        isActive: true,
-      }).returning();
-      return created.id;
-    };
-
-    const acc601 = await findOrCreateAccount('601', 'Разходи за външни услуги и материали', 'expense');
-    const acc4531 = await findOrCreateAccount('4531', 'Начислен ДДС за покупки (Данъчен кредит)', 'asset');
-    const acc401 = await findOrCreateAccount('401', 'Доставчици (Задължения)', 'liability');
+    const acc601 = await findOrCreateAccount(tenantId, '601');
+    const acc4531 = await findOrCreateAccount(tenantId, '4531');
+    const acc401 = await findOrCreateAccount(tenantId, '401');
 
     const journalNumber = `J-PUR-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 90 + 10)}`;
     const issueDate = purchase.issueDate ? new Date(purchase.issueDate) : new Date();

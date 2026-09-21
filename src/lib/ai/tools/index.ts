@@ -1,37 +1,19 @@
-// @ts-nocheck
-import { buildCreateInvoiceTool } from './create-invoice';
-import { buildGetFinancialSummaryTool } from './get-financial-summary';
-import { buildSearchDocumentsTool } from './search-documents';
-import { buildBankMatchTool } from './bank-match';
-import { buildCreateExpenseTool } from './create-expense';
-import { buildCreateJournalEntryTool } from './create-journal-entry';
-import { buildManageHRTool } from './manage-hr';
-import { buildManageInventoryTool } from './manage-inventory';
-import { buildGenerateVatTool } from './generate-vat';
-import { buildDepreciateAssetsTool } from './depreciate-assets';
-import { buildAutoApproveTool } from './auto-approve';
-import { buildProcessInboxTool } from './process-inbox';
-import { buildGenerateChartTool } from './generate-chart';
-import { buildCheckNraStatusTool } from './check-nra-status';
-import { buildCheckNraLiabilitiesTool } from './check-nra-liabilities';
+export const toolCatalog = [
+  { name: 'createInvoice', description: 'Създава нова продажна фактура към клиент' },
+  { name: 'getFinancialSummary', description: 'Извлича финансово резюме' },
+  { name: 'searchDocuments', description: 'Търси документи в базата' },
+  { name: 'bankMatch', description: 'Автоматично банково равнение' },
+  { name: 'createExpense', description: 'Създава нов разход' },
+  { name: 'createJournalEntry', description: 'Създава нова счетоводна статия' },
+  { name: 'manageHR', description: 'Управление на човешки ресурси' },
+  { name: 'manageInventory', description: 'Управление на складови наличности' },
+  { name: 'generateVat', description: 'Генерира ДДС дневник и справка' },
+  { name: 'depreciateAssets', description: 'Изчислява амортизация на ДМА' },
+  { name: 'autoApprove', description: 'Автоматично одобрение на документи' },
+  { name: 'processInbox', description: 'Обработва AI входящата кутия' },
+  { name: 'generateChart', description: 'Генерира графики и визуализации' },
+  { name: 'checkNraStatus', description: 'Проверява статус към НАП' },
+  { name: 'checkNraLiabilities', description: 'Проверява задължения към НАП' },
+];
 
-// Dummy instantiated tools just to get their descriptions for the API endpoint
-const dummyId = '00000000-0000-0000-0000-000000000000';
-
-export const tools = {
-  createInvoice: buildCreateInvoiceTool(dummyId, dummyId),
-  getFinancialSummary: buildGetFinancialSummaryTool(dummyId),
-  searchDocuments: buildSearchDocumentsTool(dummyId),
-  bankMatch: buildBankMatchTool(dummyId),
-  createExpense: buildCreateExpenseTool(dummyId, dummyId),
-  createJournalEntry: buildCreateJournalEntryTool(dummyId, dummyId),
-  manageHR: buildManageHRTool(dummyId),
-  manageInventory: buildManageInventoryTool(dummyId),
-  generateVat: buildGenerateVatTool(dummyId, dummyId),
-  depreciateAssets: buildDepreciateAssetsTool(dummyId, dummyId),
-  autoApprove: buildAutoApproveTool(dummyId, dummyId),
-  processInbox: buildProcessInboxTool(dummyId),
-  generateChart: buildGenerateChartTool(),
-  checkNraStatus: buildCheckNraStatusTool(),
-  checkNraLiabilities: buildCheckNraLiabilitiesTool(),
-};
+export const tools = toolCatalog;

@@ -38,9 +38,9 @@ async function getDefaultDivision(tenantId: string, tx: any = db) {
   const [newDiv] = await tx.insert(companyDivisions).values({
     tenantId,
     name: "Централен Склад",
-    type: "warehouse"
   }).returning();
-  return newDiv ? newDiv.id : '00000000-0000-0000-0000-000000000000';
+  if (!newDiv?.id) throw new Error('Не може да се създаде складова единица.');
+  return newDiv.id;
 }
 
 /**
@@ -50,7 +50,7 @@ async function getDefaultDivision(tenantId: string, tx: any = db) {
 export async function syncStockFromPurchaseInvoice(purchaseInvoiceId: string, tenantId: string): Promise<{ success: boolean; movementsAdded: number; error?: string }> {
   try {
     return await db.transaction(async (tx) => {
-      const [invoice] = await tx.select().from(purchaseInvoices).where(eq(purchaseInvoices.id, purchaseInvoiceId));
+      const [invoice] = await tx.select().from(purchaseInvoices).where(and(eq(purchaseInvoices.id, purchaseInvoiceId), eq(purchaseInvoices.tenantId, tenantId)));
       if (!invoice) return { success: false, movementsAdded: 0, error: 'Фактурата не е намерена' };
 
       // Изтегляме всички редове от фактурата
@@ -138,7 +138,7 @@ export async function syncStockFromPurchaseInvoice(purchaseInvoiceId: string, te
 export async function syncStockFromSalesInvoice(invoiceId: string, tenantId: string): Promise<{ success: boolean; movementsAdded: number; error?: string }> {
   try {
     return await db.transaction(async (tx) => {
-      const [invoice] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId));
+      const [invoice] = await tx.select().from(invoices).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
       if (!invoice) return { success: false, movementsAdded: 0, error: 'Фактурата не е намерена' };
 
       // Изпълнява се САМО ако статусът е издадена (issued / paid)

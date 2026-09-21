@@ -1,42 +1,31 @@
-// @ts-nocheck
-import { authenticator } from 'otplib';
+import { generateSecret, generateURI, verify } from 'otplib';
 import * as qrcode from 'qrcode';
 import { eq } from 'drizzle-orm';
 import { users } from '../db/schema/users';
-
-// Mock DB wrapper (докато не импортираме реалната връзка)
-const db = {
-  update: (table: any) => ({
-    set: (data: any) => ({
-      where: async (condition: any) => { return true; }
-    })
-  }),
-  select: () => ({
-    from: (table: any) => ({
-      where: (condition: any) => ({
-        get: async () => ({ id: 'mock', twoFactorSecret: 'mock_secret' })
-      })
-    })
-  })
-};
+import { db } from '../db/db';
 
 export async function enable2FA(userId: string): Promise<{ secret: string; qrCode: string }> {
-  const secret = authenticator.generateSecret();
-  const otpauth = authenticator.keyuri(userId, 'Officia', secret);
+  const secret = generateSecret();
+  const otpauth = generateURI({
+    issuer: 'Officia',
+    label: userId,
+    secret,
+  });
   const qrCode = await qrcode.toDataURL(otpauth);
-  
+
   await db.update(users)
     .set({ twoFactorSecret: secret, twoFactorEnabled: false })
     .where(eq(users.id, userId));
-  
+
   return { secret, qrCode };
 }
 
 export async function verify2FA(userId: string, token: string): Promise<boolean> {
-  const user: any = await db.select().from(users).where(eq(users.id, userId)).get();
-  if (!user.twoFactorSecret) return false;
-  
-  const isValid = authenticator.verify({ token, secret: user.twoFactorSecret });
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user?.twoFactorSecret) return false;
+
+  const result = await verify({ token, secret: user.twoFactorSecret });
+  const isValid = Boolean(result?.valid);
   if (isValid) {
     await db.update(users)
       .set({ twoFactorEnabled: true })
