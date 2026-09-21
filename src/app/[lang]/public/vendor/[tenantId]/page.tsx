@@ -2,6 +2,8 @@ import { getPublicTenantInfo } from './actions';
 import VendorUploadClient from './VendorUploadClient';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function VendorPortalPage({ params }: { params: Promise<{ tenantId: string }> }) {
   const { tenantId } = await params;
   

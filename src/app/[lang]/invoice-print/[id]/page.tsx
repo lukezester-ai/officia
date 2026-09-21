@@ -5,6 +5,8 @@ import { PrintButton } from './print-button';
 import { Metadata } from 'next';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Фактура (PDF Печат)',
 };

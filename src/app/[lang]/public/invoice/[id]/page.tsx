@@ -10,6 +10,8 @@ import StripeCheckoutButton from './StripeCheckoutButton';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 import { parseUuidParam } from '@/lib/utils/ids';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PublicInvoicePage({
   params,
   searchParams,

@@ -37,18 +37,28 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-
-  return (
-    <ClerkProvider>
-      <html lang={locale} className="dark" suppressHydrationWarning>
-        <body className={`${firaSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>
-          <Providers locale={locale} messages={messages}>
-            {children}
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+  let locale = "bg";
+  let messages: Record<string, unknown> = {};
+  try {
+    locale = await getLocale();
+    messages = await getMessages();
+  } catch {
+    messages = (await import("../messages/bg.json")).default;
+  }
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const tree = (
+    <html lang={locale} className="dark" suppressHydrationWarning>
+      <body className={`${firaSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>
+        <Providers locale={locale} messages={messages}>
+          {children}
+        </Providers>
+      </body>
+    </html>
   );
+
+  if (!clerkPublishableKey) {
+    return tree;
+  }
+
+  return <ClerkProvider publishableKey={clerkPublishableKey}>{tree}</ClerkProvider>;
 }

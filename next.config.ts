@@ -4,6 +4,13 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  // Render currently runs `npx next build` (Turbopack). Cap static workers so
+  // "Collecting page data" does not open dozens of Postgres pools and hang.
+  experimental: {
+    cpus: 4,
+    staticGenerationMaxConcurrency: 1,
+    staticGenerationMinPagesPerWorker: 200,
+  },
   webpack(config) {
     // OneDrive workspaces can have very limited local disk; persistent webpack
     // cache is redundant in CI and can exceed the available space.
