@@ -1,4 +1,3 @@
-// @ts-nocheck
 export interface LegalAnalysisResult {
   intent: 'contract_review' | 'risk_assessment' | 'unknown';
   parties?: string[];

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { TAX_KNOWLEDGE_BASE, TaxLawArticle } from './knowledge-base';
 
 /**

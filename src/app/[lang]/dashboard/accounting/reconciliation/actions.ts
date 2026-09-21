@@ -1,31 +1,19 @@
-// @ts-nocheck
 "use server";
 
 import { db } from "@/lib/db/db";
 import { bankTransactions } from "@/lib/db/schema/bank_transactions";
 import { invoices } from "@/lib/db/schema/invoices";
 import { bankAccounts } from "@/lib/db/schema/bank_accounts";
-import { tenants } from "@/lib/db/schema/tenants";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { autoCloseMatchedDocument } from "@/lib/matching/auto-close";
+import { requireTenant } from "@/lib/auth/get-tenant";
 
 export async function uploadBankStatement(parsedTransactions: any[]) {
-  const tenant = await db.query.tenants.findFirst();
-  let account = await db.query.bankAccounts.findFirst();
+  const { tenantId } = await requireTenant();
+  const [account] = await db.select().from(bankAccounts).where(eq(bankAccounts.tenantId, tenantId)).limit(1);
 
-  if (!account && tenant) {
-    const res = await db.insert(bankAccounts).values({
-      tenantId: tenant.id,
-      accountName: "Main Bank Account",
-      iban: "BG12 UNCR 1234 5678 9012 34",
-      currency: "EUR",
-      balance: "0",
-    }).returning();
-    account = res[0];
-  }
-
-  if (!account) return { success: false, error: "No bank account or tenant found" };
+  if (!account) return { success: false, error: "Няма банкова сметка за този tenant." };
 
   const toInsert = parsedTransactions.map(tx => ({
     accountId: account!.id,

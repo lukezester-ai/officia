@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
@@ -78,6 +77,7 @@ export async function updateCounterparty(id: string, input: {
 
 export async function deactivateCounterparty(id: string) {
   try {
+    const { tenantId } = await requireTenant();
     await db.update(counterparties)
       .set({ isActive: false })
       .where(and(eq(counterparties.id, id), eq(counterparties.tenantId, tenantId)));
@@ -108,7 +108,7 @@ export async function getCounterparty360Data(id: string) {
     const totalVolume = relatedInvoices.reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
     
     // Transactions
-    const relatedTransactions = await db.select().from(bankTransactions).where(and(eq(bankTransactions.tenantId, tenantId), eq(bankTransactions.counterpartyName, counterparty.name)));
+    const relatedTransactions = await db.select().from(bankTransactions).where(eq(bankTransactions.counterpartyName, counterparty.name));
     
     // Documents
     // Since document schema doesn't have counterpartyName directly, we might search metadata or title

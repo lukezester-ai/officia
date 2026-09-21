@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { pgTable, text, uuid, timestamp, numeric, date } from 'drizzle-orm/pg-core';
+﻿import { pgTable, text, uuid, timestamp, numeric, date } from 'drizzle-orm/pg-core';
 
 export const exchangeRates = pgTable('exchange_rates', {
   id: uuid('id').primaryKey().defaultRandom(),

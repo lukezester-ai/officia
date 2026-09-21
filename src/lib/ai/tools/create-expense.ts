@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -6,7 +5,7 @@ import { expenses } from '@/lib/db/schema/expenses';
 
 export const buildCreateExpenseTool = (tenantId: string, userId: string) => tool({
   description: "Отчита нов фирмен разход (касова бележка, гориво, консумативи, абонаменти и др.). Използвай го задължително, когато потребителят прикачи снимка на касова бележка или директно поиска да се запише разход.",
-  parameters: z.object({
+  inputSchema: z.object({
     description: z.string().describe("Описание на разхода (напр. 'Гориво Shell', 'Офис столове', 'Абонамент')"),
     amount: z.number().describe("Обща сума на разхода"),
     category: z.string().describe("Категория (напр. 'Транспорт', 'Офис', 'Софтуер', 'Услуги', 'Други')"),

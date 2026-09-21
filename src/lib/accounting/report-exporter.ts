@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
@@ -54,7 +53,7 @@ export class ReportExporter {
       // Auto-fit columns
       ws.columns.forEach(col => {
         let maxLen = col.header ? col.header.length : 10;
-        col.eachCell({ includeEmpty: false }, cell => {
+        col.eachCell?.({ includeEmpty: false }, cell => {
           if (cell.value && cell.value.toString().length > maxLen) {
             maxLen = cell.value.toString().length;
           }

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/db';
 import { invoices, invoiceLines } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getStripeSessionUrl } from '@/lib/stripe';
-import { auth } from '@clerk/nextjs/server';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 import { parseUuidParam } from '@/lib/utils/ids';
 import { withRateLimit } from '@/lib/api/rate-limit';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return withRateLimit(req, () => createCheckout(req, params));
@@ -14,8 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
 async function createCheckout(req: Request, params: Promise<{ id: string }>) {
   try {
-    const { userId } = await auth();
-    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+    const { tenantId } = await requireTenant();
 
     const { id: invoiceIdParam } = await params;
     const invoiceId = parseUuidParam(invoiceIdParam);
@@ -23,8 +22,7 @@ async function createCheckout(req: Request, params: Promise<{ id: string }>) {
       return new NextResponse("Invalid Invoice ID", { status: 400 });
     }
 
-    // Get invoice and lines
-    const invoiceRecord = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
+    const invoiceRecord = await db.select().from(invoices).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId))).limit(1);
     if (!invoiceRecord || invoiceRecord.length === 0) {
       return new NextResponse("Invoice not found", { status: 404 });
     }
@@ -56,11 +54,15 @@ async function createCheckout(req: Request, params: Promise<{ id: string }>) {
       stripePaymentIntentId: id,
       paymentUrl: url,
       totalAmount: amount.toString()
-    }).where(eq(invoices.id, invoiceId));
+    }).where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
 
     return NextResponse.json({ url });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[STRIPE_CHECKOUT_ERROR]', error);
+    const msg = String(error?.message || '');
+    if (msg.includes('Not authenticated') || msg.includes('Unauthorized')) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

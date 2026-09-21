@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getPayrollData } from './actions';
 import { getEmployeesWithSalary } from './slip-actions';

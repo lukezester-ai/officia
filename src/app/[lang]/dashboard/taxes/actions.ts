@@ -44,6 +44,7 @@ export async function generateProfitTaxAction(year: number) {
 
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { employees } from '@/lib/db/schema/employees';
+import { tenants } from '@/lib/db/schema/tenants';
 import { generateFullBatchNapZip } from '@/lib/accounting/nap-export';
 import { and } from 'drizzle-orm';
 
@@ -55,7 +56,12 @@ export async function exportBatchDeclarationsAction(
   month: number
 ): Promise<{ success: boolean; zipBase64?: string; error?: string }> {
   try {
-    const { tenantId, tenant } = await requireTenant();
+    const { tenantId } = await requireTenant();
+    const [company] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+    const eik = company?.vatNumber || company?.bulstat;
+    if (!eik) {
+      return { success: false, error: 'Липсва ЕИК/ДДС номер на фирмата за НАП експорт.' };
+    }
 
     const vatRecords = await db
       .select()
@@ -83,38 +89,40 @@ export async function exportBatchDeclarationsAction(
       type: r.type,
       periodYear: r.periodYear,
       periodMonth: r.periodMonth,
-      entryDate: r.documentDate || new Date().toISOString(),
-      documentNumber: r.documentNumber || '',
+      entryDate: r.entryDate || r.invoiceDate || new Date().toISOString(),
+      documentNumber: r.documentNumber || r.invoiceNumber || '',
       counterpartyName: r.counterpartyName || '',
       counterpartyVat: r.counterpartyVat || '',
-      invoiceNumber: r.documentNumber || '',
-      invoiceDate: r.documentDate || '',
+      invoiceNumber: r.invoiceNumber || r.documentNumber || '',
+      invoiceDate: r.invoiceDate || r.entryDate || '',
       netAmount: parseFloat(r.netAmount || '0'),
       vatAmount: parseFloat(r.vatAmount || '0'),
       totalAmount: parseFloat(r.netAmount || '0') + parseFloat(r.vatAmount || '0'),
       vatRate: parseFloat(r.vatRate || '20'),
     }));
 
-    const formattedEmps = emps.map((e: any) => {
-      const gross = parseFloat(e.salary || '0');
-      const insBase = Math.min(gross, 3750);
-      return {
-        pin: e.egn || '0000000000',
-        firstName: e.firstName || '',
-        lastName: e.lastName || '',
-        grossSalary: gross,
-        insuranceBase: insBase,
-        dooEmp: insBase * 0.079,
-        dzpoEmp: insBase * 0.028,
-        zoEmp: insBase * 0.022,
-        ddfl: Math.max(0, gross - insBase * 0.129) * 0.10,
-      };
-    });
+    const formattedEmps = emps
+      .filter((e: any) => e.egn)
+      .map((e: any) => {
+        const gross = parseFloat(e.salary || '0');
+        const insBase = Math.min(gross, 3750);
+        return {
+          pin: e.egn,
+          firstName: e.firstName || '',
+          lastName: e.lastName || '',
+          grossSalary: gross,
+          insuranceBase: insBase,
+          dooEmp: insBase * 0.079,
+          dzpoEmp: insBase * 0.028,
+          zoEmp: insBase * 0.022,
+          ddfl: Math.max(0, gross - insBase * 0.129) * 0.10,
+        };
+      });
 
     const zipBuffer = await generateFullBatchNapZip(
       formattedVat as any,
       formattedEmps,
-      (tenant as any)?.vatNumber || 'BG123456789',
+      eik,
       year,
       month
     );

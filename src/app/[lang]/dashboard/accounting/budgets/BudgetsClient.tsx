@@ -1,5 +1,4 @@
 "use client";
-// @ts-nocheck
 
 import { useState, useEffect, useCallback, useTransition } from "react";
 import { getBudgets, createBudget, deleteBudget } from "./budget-actions";

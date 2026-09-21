@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

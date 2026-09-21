@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/lib/db/schema/memories.ts
 // pgvector-based memory table for AI assistant client isolation
 

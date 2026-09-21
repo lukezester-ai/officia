@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
@@ -42,8 +41,14 @@ export async function ensureAutoJournalForInvoice(invoiceId: string, tenantId: s
     const vat = parseFloat(invoice.vatAmount || '0') || 0;
     const total = parseFloat(invoice.totalAmount || '0') || (net + vat);
 
-    const linesToInsert = [
-      // DR 411 - Вземане от клиент (Total)
+    const linesToInsert: {
+      journalId: string;
+      accountId: string;
+      entryType: 'debit' | 'credit';
+      amount: string;
+      analyticalCode: string | null;
+      description: string;
+    }[] = [
       {
         journalId: header.id,
         accountId: acc411,
@@ -119,8 +124,14 @@ export async function ensureAutoJournalForPurchaseInvoice(purchaseInvoiceId: str
     const vat = parseFloat(purchase.vatAmount || '0') || 0;
     const total = parseFloat(purchase.totalAmount || '0') || (net + vat);
 
-    const linesToInsert = [
-      // DR 601 - Разход (Net)
+    const linesToInsert: {
+      journalId: string;
+      accountId: string;
+      entryType: 'debit' | 'credit';
+      amount: string;
+      analyticalCode: string | null;
+      description: string;
+    }[] = [
       {
         journalId: header.id,
         accountId: acc601,

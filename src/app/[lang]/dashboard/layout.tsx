@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Sidebar, MobileDashboardSidebar } from '@/components/dashboard/sidebar';
 import { getDictionary, Locale } from '@/lib/get-dictionary';
 import { UserButton } from '@clerk/nextjs';

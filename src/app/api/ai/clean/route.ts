@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { runSystemCleanup } from '@/lib/ai/agents/cleaner';
 import { requireBearerSecret } from '@/lib/api/security';

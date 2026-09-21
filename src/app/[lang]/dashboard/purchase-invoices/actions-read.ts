@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 import { db } from '@/lib/db/db';
 import { purchaseInvoices, purchaseInvoiceLines } from '@/lib/db/schema/purchase-invoices';

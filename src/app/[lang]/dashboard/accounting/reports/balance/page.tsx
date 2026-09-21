@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ReportEngine } from "@/lib/accounting/report-engine";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import Link from "next/link";

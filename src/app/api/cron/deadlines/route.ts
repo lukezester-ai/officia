@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { runStatutoryDeadlineCronEngine } from '@/lib/calendar/deadline-rule-engine';
 import { runMonthlyDepreciation } from '@/lib/accounting/depreciation-engine';

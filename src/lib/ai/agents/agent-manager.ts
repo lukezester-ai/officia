@@ -1,10 +1,10 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
 import { invoices } from '@/lib/db/schema/invoices';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { runLedgerAudit } from '@/lib/ai/audit/ledger-audit';
+import { and, eq } from 'drizzle-orm';
 
 export interface MonitoredAgentStatus {
   id: string;
@@ -62,7 +62,14 @@ export async function runAgentManagerSupervisor(): Promise<AgentManagerReport> {
     ]);
 
     // Изпълняваме бърз вътрешен одит чрез Ledger Auditor агента
-    const auditRes = await runLedgerAudit().catch(() => ({ success: false, anomaliesFound: 0, anomalies: [] }));
+    const auditRes = await runLedgerAudit().catch(() => ({
+      success: false,
+      totalChecked: 0,
+      anomaliesFound: 0,
+      anomalies: [] as const,
+      auditNarrative: '',
+      timestamp: new Date().toISOString(),
+    }));
     const anomaliesCount = auditRes.anomaliesFound || 0;
 
     const interventionsLog: Array<{

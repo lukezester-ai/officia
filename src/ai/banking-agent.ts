@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-export interface BankingAnalysisResult {
+﻿export interface BankingAnalysisResult {
   intent: 'reconciliation' | 'categorization' | 'anomaly_detection' | 'unknown';
   transactionsProcessed?: number;
   anomaliesFound?: string[];

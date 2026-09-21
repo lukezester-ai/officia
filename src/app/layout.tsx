@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { Metadata, Viewport } from "next";
 import { getLocale, getMessages } from 'next-intl/server';
 import { ClerkProvider } from '@clerk/nextjs';

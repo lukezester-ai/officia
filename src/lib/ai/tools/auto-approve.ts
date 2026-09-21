@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -9,7 +8,7 @@ import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
 export const buildAutoApproveTool = (tenantId: string, userId: string) => tool({
   description: "Автоматичен HR Мениджър. Сканира чакащите молби за отпуска, проверява за конфликти (застъпващи се отпуски в същия отдел) и автоматично ги одобрява, ако няма проблем. Използвай го, когато потребителят иска да разгледа/одобри молбите за отпуск.",
-  parameters: z.object({
+  inputSchema: z.object({
      run: z.boolean().optional().describe("Трябва да е true за стартиране"),
   }),
   execute: async () => {
@@ -80,7 +79,7 @@ export const buildAutoApproveTool = (tenantId: string, userId: string) => tool({
               and(
                 eq(leaveRequests.tenantId, tenantId),
                 eq(leaveRequests.status, 'approved'),
-                eq(employees.department, req.department),
+                eq(employees.department, req.department as string),
                 // Логика за застъпване на периоди: StartA <= EndB AND EndA >= StartB
                 sql`${leaveRequests.startDate} <= ${req.endDate}`,
                 sql`${leaveRequests.endDate} >= ${req.startDate}`

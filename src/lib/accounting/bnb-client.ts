@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * БНБ (Българска народна банка) Exchange Rate Client
  * Retrieves official daily exchange rates for foreign currencies against BGN.

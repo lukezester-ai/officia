@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { pgTable, text, uuid, timestamp, numeric, date, integer, boolean } from 'drizzle-orm/pg-core';
 
 export const vatJournals = pgTable('vat_journals', {

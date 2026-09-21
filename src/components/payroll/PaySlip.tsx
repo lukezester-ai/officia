@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import React from 'react';
@@ -191,7 +190,7 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                 {calc.effectiveGross !== calc.grossSalary && (
                   <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm">
                     <span className="text-zinc-400 font-medium">Ефективна осигурителна база (след отпуски):</span>
-                    <span className="text-indigo-300 font-bold tabular-nums">{fmtBGN(calc.effectiveGross)}</span>
+                    <span className="text-indigo-300 font-bold tabular-nums">{fmtBGN(calc.effectiveGross ?? calc.grossSalary)}</span>
                   </div>
                 )}
               </div>

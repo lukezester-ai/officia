@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NAP B2G (Business-to-Government) API Client
  * Handles the direct submission of signed XML documents to the Bulgarian Tax Agency.

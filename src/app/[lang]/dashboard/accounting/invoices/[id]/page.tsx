@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from "@/lib/db/db";
 import { invoices } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

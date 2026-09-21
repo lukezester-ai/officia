@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import DocumentsClient from './DocumentsClient';
 import { getDocuments } from './actions';

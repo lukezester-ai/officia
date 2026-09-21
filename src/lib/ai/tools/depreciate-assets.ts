@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -10,7 +9,7 @@ import { queueAiApprovalRequest } from '@/lib/ai/automation/approval-queue';
 
 export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => tool({
   description: "Изчислява и начислява месечни амортизации на всички Дълготрайни материални активи (ДМА). Използвай го, когато потребителят иска да начисли амортизациите за месеца.",
-  parameters: z.object({
+  inputSchema: z.object({
     year: z.number().describe("Година (напр. 2024)"),
     month: z.number().describe("Месец (от 1 до 12)"),
   }),
@@ -102,8 +101,8 @@ export const buildDepreciateAssetsTool = (tenantId: string, userId: string) => t
 
        // 3. Fallback за Сметки
        // В случай, че активът няма зададени счетоводни сметки, търсим системните по подразбиране (603 и 241)
-       const defaultExpenseAccount = await db.query.accountPlan.findFirst({ where: and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, '603')) });
-       const defaultAmortAccount = await db.query.accountPlan.findFirst({ where: and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, '241')) });
+       const [defaultExpenseAccount] = await db.select().from(accountPlan).where(and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, '603'))).limit(1);
+       const [defaultAmortAccount] = await db.select().from(accountPlan).where(and(eq(accountPlan.tenantId, tenantId), eq(accountPlan.accountNumber, '241'))).limit(1);
 
        for (const line of linesToInsert) {
            if (!line.accountId) {

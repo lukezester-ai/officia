@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Калкулатор за работни заплати (България)
  * Осигурителни вноски за 2024/2025 - Трета категория труд (родени след 1959 г.)
@@ -43,6 +42,9 @@ export interface PayrollBreakdown {
   // Максимален осигурителен доход (таван)
   maxInsuranceBase: number;
   insuranceBase: number; // действителна осигурителна основа (ограничена до тавана)
+  adjustments?: PayrollAdjustments;
+  effectiveGross?: number;
+  sickLeaveCompEmployer?: number;
 }
 
 // Осигурителни ставки 2024/2025

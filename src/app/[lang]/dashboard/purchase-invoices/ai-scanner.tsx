@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -30,57 +29,72 @@ export function AiScannerDialog({ onScanned }: { onScanned: () => void }) {
     "Генериране на счетоводни статии...",
   ];
 
-  const handleSimulateScan = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file?: File) => {
+    if (!file) return;
     setStep(1);
     setScanning(true);
-    
-    // Simulate AI extraction steps
-    let currentStep = 0;
-    const interval = setInterval(() => {
-      currentStep++;
-      if (currentStep >= stepsText.length) {
-        clearInterval(interval);
-        completeScan();
-      } else {
-        // Just force re-render with new step index in a real app, 
-        // here we just wait it out
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Неуспешно четене на файла'));
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch('/api/ai/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: dataUrl, mimeType: file.type || 'image/jpeg' }),
+      });
+      const extracted = await res.json();
+      if (!res.ok) {
+        throw new Error(extracted.error || 'OCR не успя');
       }
-    }, 800);
-  };
-
-  const completeScan = async () => {
-    const mockData = {
-      supplierName: "Телелинк Бизнес Сървисис ЕАД",
-      supplierEik: "175314204",
-      invoiceNumber: "1000045291",
-      issueDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
-      netAmount: "1250.00",
-      vatAmount: "250.00",
-      totalAmount: "1500.00",
-    };
-    setExtractedData(mockData);
-    setStep(2);
-    setScanning(false);
+      const net = Number(extracted.totalAmount || 0);
+      setExtractedData({
+        supplierName: extracted.counterpartyName || '',
+        supplierEik: extracted.supplierEik || '',
+        invoiceNumber: extracted.invoiceNumber || '',
+        issueDate: extracted.date && extracted.date !== 'Unknown' ? extracted.date : new Date().toISOString().split('T')[0],
+        dueDate: '',
+        netAmount: net ? (net / 1.2).toFixed(2) : '0',
+        vatAmount: net ? (net - net / 1.2).toFixed(2) : '0',
+        totalAmount: net ? net.toFixed(2) : '0',
+        lines: extracted.lineItems || [],
+      });
+      setStep(2);
+    } catch (err: any) {
+      toast.error(err.message || 'OCR не успя');
+      setStep(0);
+    } finally {
+      setScanning(false);
+    }
   };
 
   const handleSave = async () => {
     if (!extractedData) return;
     
+    const lines = Array.isArray(extractedData.lines) && extractedData.lines.length > 0
+      ? extractedData.lines.map((l: any) => ({
+          description: l.description || 'Артикул',
+          quantity: Number(l.quantity) || 1,
+          unitPrice: Number(l.unitPrice || l.total) || 0,
+          vatRate: 20,
+        }))
+      : [{
+          description: extractedData.supplierName || 'Сканиран ред',
+          quantity: 1,
+          unitPrice: parseFloat(extractedData.netAmount) || 0,
+          vatRate: 20,
+        }];
     const res = await createPurchaseInvoice({
       supplierName: extractedData.supplierName,
       supplierEik: extractedData.supplierEik,
       invoiceNumber: extractedData.invoiceNumber,
       issueDate: extractedData.issueDate,
       dueDate: extractedData.dueDate,
-      lines: [
-        {
-          description: "IT equipment by contract",
-          quantity: 1,
-          unitPrice: parseFloat(extractedData.netAmount) || 0,
-          vatRate: 20,
-        },
-      ],
+      lines,
     });
 
     if (res.success) {
@@ -122,10 +136,17 @@ export function AiScannerDialog({ onScanned }: { onScanned: () => void }) {
 
         <div className="py-6">
           {step === 0 && (
-            <div 
-              onClick={handleSimulateScan}
+            <div
+              onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-white/10 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-fuchsia-500/50 hover:bg-fuchsia-500/5 transition-all group"
             >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform group-hover:bg-fuchsia-500/20 group-hover:text-fuchsia-400">
                 <UploadCloud size={32} />
               </div>
@@ -163,7 +184,7 @@ export function AiScannerDialog({ onScanned }: { onScanned: () => void }) {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Успешно извличане</h3>
-                  <p className="text-xs text-emerald-400 font-medium">99.8% AI Увереност</p>
+                  <p className="text-xs text-emerald-400 font-medium">Данните са извлечени от документа</p>
                 </div>
               </div>
 

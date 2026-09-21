@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
@@ -73,7 +72,14 @@ export async function approveEInvoiceWithAutoJournal(
       const vat = parseFloat(invoice.vatAmount || '0') || 0;
       const total = parseFloat(invoice.totalAmount || invoice.amount || '0') || (net + vat);
 
-      const lines = [
+      const lines: {
+        journalId: string;
+        accountId: string;
+        entryType: 'debit' | 'credit';
+        amount: string;
+        analyticalCode: string;
+        description: string;
+      }[] = [
         {
           journalId: header.id,
           accountId: acc411,

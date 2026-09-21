@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Evrotrust / B-Trust Cloud KEP (Квалифициран Електронен Подпис) Simulation Adapter.
  * This client simulates sending an XML document to a mobile device for remote signing.

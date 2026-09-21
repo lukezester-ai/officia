@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
 import { invoices } from '@/lib/db/schema/invoices';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
 
 export interface AuditAnomaly {
@@ -35,13 +34,16 @@ export async function runLedgerAudit(): Promise<AuditReportResult> {
   try {
     const { tenantId } = await requireTenant();
 
-    const [headers, lines, salesInvs, purchInvs, vatRecs] = await Promise.all([
+    const [headers, salesInvs, purchInvs, vatRecs] = await Promise.all([
       db.select().from(journalHeaders).where(eq(journalHeaders.tenantId, tenantId)).catch(() => []),
-      db.select().from(journalLines).catch(() => []),
       db.select().from(invoices).where(eq(invoices.tenantId, tenantId)).catch(() => []),
       db.select().from(purchaseInvoices).where(eq(purchaseInvoices.tenantId, tenantId)).catch(() => []),
       db.select().from(vatJournals).where(eq(vatJournals.tenantId, tenantId)).catch(() => []),
     ]);
+    const headerIds = headers.map((h) => h.id);
+    const lines = headerIds.length
+      ? await db.select().from(journalLines).where(inArray(journalLines.journalId, headerIds)).catch(() => [])
+      : [];
 
     const anomalies: AuditAnomaly[] = [];
     const totalChecked = headers.length + salesInvs.length + purchInvs.length;
@@ -53,11 +55,11 @@ export async function runLedgerAudit(): Promise<AuditReportResult> {
       let creditTotal = 0;
 
       for (const l of hLines) {
-        if (l.entryType === 'debit' || l.debitAmount || l.debitAccount) {
-          debitTotal += parseFloat(l.amount || l.debitAmount || '0');
+        if (l.entryType === 'debit') {
+          debitTotal += parseFloat(l.amount || '0');
         }
-        if (l.entryType === 'credit' || l.creditAmount || l.creditAccount) {
-          creditTotal += parseFloat(l.amount || l.creditAmount || '0');
+        if (l.entryType === 'credit') {
+          creditTotal += parseFloat(l.amount || '0');
         }
       }
 
@@ -75,7 +77,7 @@ export async function runLedgerAudit(): Promise<AuditReportResult> {
 
       // Проверка за липсващи счетоводни сметки
       for (const l of hLines) {
-        if (!l.accountId && !l.debitAccount && !l.creditAccount) {
+        if (!l.accountId) {
           anomalies.push({
             id: `missing-acc-${l.id}`,
             documentRef: h.journalNumber || `№ ${h.id.slice(0, 8)}`,

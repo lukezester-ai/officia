@@ -1,5 +1,4 @@
 "use client";
-// @ts-nocheck
 import { useState } from "react";
 import { Plus, FileText, Building2, Receipt, ShoppingCart } from "lucide-react";
 import Link from "next/link";

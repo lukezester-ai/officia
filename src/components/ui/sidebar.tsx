@@ -1,5 +1,4 @@
 "use client"
-// @ts-nocheck
 
 import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"

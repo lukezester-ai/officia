@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { runAgentManagerSupervisor, AgentManagerReport } from '@/lib/ai/agents/agent-manager';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 import { db } from '@/lib/db/db';
 import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
@@ -32,18 +31,22 @@ export async function approvePurchaseInvoice(id: string) {
     
     if (!inv.vatPosted) {
       const d = new Date(inv.issueDate || new Date());
+      const dateStr = inv.issueDate || d.toISOString().split('T')[0];
       await db.insert(vatJournals).values({
         tenantId: tenant.id,
-        type: 'purchase',
+        type: 'purchases',
         periodYear: d.getFullYear(),
         periodMonth: d.getMonth() + 1,
+        entryDate: dateStr,
+        invoiceDate: dateStr,
         documentNumber: inv.invoiceNumber,
-        documentDate: inv.issueDate || new Date().toISOString().split('T')[0],
+        invoiceNumber: inv.invoiceNumber,
         counterpartyName: inv.supplierName,
         counterpartyVat: inv.supplierVat || '',
         netAmount: inv.netAmount || '0',
-        vatRate: '20',
+        vatRate: 20,
         vatAmount: inv.vatAmount || '0',
+        totalAmount: inv.totalAmount || '0',
       });
       await db.update(purchaseInvoices)
         .set({ vatPosted: true })

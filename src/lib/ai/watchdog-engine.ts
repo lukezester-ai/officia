@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
 import { expenses } from '@/lib/db/schema/expenses';
@@ -50,7 +49,7 @@ export async function runAIWatchdog(tenantId: string): Promise<{ success: boolea
 
     // Правило Б: Потенциално дублирани фактури
     // Фактури със същата сума към същия контрагент, издадени в рамките на малък период от време.
-    const groupedByAmountAndVendor = {};
+    const groupedByAmountAndVendor: Record<string, typeof recentInvoices> = {};
     for (const inv of recentInvoices) {
       if (!inv.totalAmount || parseFloat(inv.totalAmount) === 0) continue;
       if (!inv.counterpartyName) continue;

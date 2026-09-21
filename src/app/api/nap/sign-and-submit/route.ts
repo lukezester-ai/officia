@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { db } from '@/lib/db/db';

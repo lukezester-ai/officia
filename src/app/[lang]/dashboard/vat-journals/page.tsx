@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { getVatJournals, createVatJournal, deleteVatJournal } from './actions';
 import { Card, CardContent } from '@/components/ui/card';

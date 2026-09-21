@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Link from "next/link";
 import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calculator, Printer } from "@/components/icons";
 import VatB2GClient from "./VatB2GClient";

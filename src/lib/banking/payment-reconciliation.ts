@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { invoices } from '@/lib/db/schema/invoices';

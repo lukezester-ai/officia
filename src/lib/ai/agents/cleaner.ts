@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 

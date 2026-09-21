@@ -1,17 +1,34 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
-import { tenants } from '@/lib/db/schema/tenants';
-import { eq, desc } from 'drizzle-orm';
+import { invoices } from '@/lib/db/schema/invoices';
+import { expenses } from '@/lib/db/schema/expenses';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { autoCloseMatchedDocument } from '@/lib/matching/auto-close';
+import { requireTenant } from '@/lib/auth/get-tenant';
+
+async function ownedAccountIds(tenantId: string) {
+  const accounts = await db.select({ id: bankAccounts.id }).from(bankAccounts).where(eq(bankAccounts.tenantId, tenantId));
+  return accounts.map((a) => a.id);
+}
+
+async function assertOwnedTransaction(txId: string, tenantId: string) {
+  const [row] = await db
+    .select({ id: bankTransactions.id })
+    .from(bankTransactions)
+    .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+    .where(and(eq(bankTransactions.id, txId), eq(bankAccounts.tenantId, tenantId)))
+    .limit(1);
+  if (!row) throw new Error('Транзакцията не принадлежи на този tenant.');
+}
 
 export async function getBankAccounts() {
   try {
-    const data = await db.select().from(bankAccounts).orderBy(desc(bankAccounts.createdAt));
+    const { tenantId } = await requireTenant();
+    const data = await db.select().from(bankAccounts).where(eq(bankAccounts.tenantId, tenantId)).orderBy(desc(bankAccounts.createdAt));
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message, data: [] };
@@ -20,9 +37,18 @@ export async function getBankAccounts() {
 
 export async function getBankTransactions(accountId?: string) {
   try {
-    const data = accountId
-      ? await db.select().from(bankTransactions).where(eq(bankTransactions.accountId, accountId)).orderBy(desc(bankTransactions.date)).limit(50)
-      : await db.select().from(bankTransactions).orderBy(desc(bankTransactions.date)).limit(50);
+    const { tenantId } = await requireTenant();
+    const ids = await ownedAccountIds(tenantId);
+    if (ids.length === 0) return { success: true, data: [] };
+    if (accountId && !ids.includes(accountId)) {
+      return { success: false, error: 'Няма достъп до тази сметка', data: [] };
+    }
+    const data = await db
+      .select()
+      .from(bankTransactions)
+      .where(inArray(bankTransactions.accountId, accountId ? [accountId] : ids))
+      .orderBy(desc(bankTransactions.date))
+      .limit(50);
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message, data: [] };
@@ -31,11 +57,9 @@ export async function getBankTransactions(accountId?: string) {
 
 export async function createBankAccount(accountData: any) {
   try {
-    const [tenant] = await db.select().from(tenants).limit(1);
-    if (!tenant) return { success: false, error: 'Липсва конфигурация за компанията' };
-
+    const { tenantId } = await requireTenant();
     const [newAccount] = await db.insert(bankAccounts).values({
-      tenantId: tenant.id,
+      tenantId,
       institutionName: accountData.name,
       iban: accountData.iban,
       balance: accountData.balance || '0.00',
@@ -51,6 +75,8 @@ export async function createBankAccount(accountData: any) {
 
 export async function reconcileTransaction(id: string) {
   try {
+    const { tenantId } = await requireTenant();
+    await assertOwnedTransaction(id, tenantId);
     await db.update(bankTransactions).set({ isReconciled: true }).where(eq(bankTransactions.id, id));
     revalidatePath('/', 'layout');
     return { success: true };
@@ -58,10 +84,14 @@ export async function reconcileTransaction(id: string) {
     return { success: false, error: error.message };
   }
 }
+
 export async function getTransactionsForReview() {
   try {
+    const { tenantId } = await requireTenant();
+    const ids = await ownedAccountIds(tenantId);
+    if (ids.length === 0) return { success: true, data: [] };
     const data = await db.select().from(bankTransactions)
-      .where(eq(bankTransactions.reviewRequired, true))
+      .where(and(eq(bankTransactions.reviewRequired, true), inArray(bankTransactions.accountId, ids)))
       .orderBy(desc(bankTransactions.date));
     return { success: true, data };
   } catch (error: any) {
@@ -71,14 +101,16 @@ export async function getTransactionsForReview() {
 
 export async function acceptMatch(id: string) {
   try {
-    await db.update(bankTransactions).set({ 
-      matchStatus: 'confirmed', 
+    const { tenantId } = await requireTenant();
+    await assertOwnedTransaction(id, tenantId);
+    await db.update(bankTransactions).set({
+      matchStatus: 'confirmed',
       isReconciled: true,
-      reviewRequired: false 
+      reviewRequired: false
     }).where(eq(bankTransactions.id, id));
-    
+
     await autoCloseMatchedDocument(id);
-    
+
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -88,13 +120,15 @@ export async function acceptMatch(id: string) {
 
 export async function rejectMatch(id: string) {
   try {
-    await db.update(bankTransactions).set({ 
+    const { tenantId } = await requireTenant();
+    await assertOwnedTransaction(id, tenantId);
+    await db.update(bankTransactions).set({
       matchStatus: 'rejected',
       matchedInvoiceId: null,
       matchedExpenseId: null,
-      reviewRequired: true 
+      reviewRequired: true
     }).where(eq(bankTransactions.id, id));
-    
+
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -104,6 +138,8 @@ export async function rejectMatch(id: string) {
 
 export async function manualMatch(txId: string, documentId: string, documentType: 'invoice' | 'expense') {
   try {
+    const { tenantId } = await requireTenant();
+    await assertOwnedTransaction(txId, tenantId);
     await db.update(bankTransactions).set({
       matchStatus: 'confirmed',
       isReconciled: true,
@@ -119,19 +155,13 @@ export async function manualMatch(txId: string, documentId: string, documentType
   }
 }
 
-
 export async function getAICandidates() {
   try {
-    const { invoices } = await import('@/lib/db/schema/invoices');
-    const { expenses } = await import('@/lib/db/schema/expenses');
-
-    // Fetch unpaid/open invoices (sales)
+    const { tenantId } = await requireTenant();
     const openInvoices = await db.select().from(invoices)
-      .where(eq(invoices.status, 'unpaid')); // using standard status if any
-
-    // Fetch unpaid/open expenses
+      .where(and(eq(invoices.tenantId, tenantId), eq(invoices.status, 'unpaid')));
     const openExpenses = await db.select().from(expenses)
-      .where(eq(expenses.status, 'pending'));
+      .where(eq(expenses.tenantId, tenantId));
 
     const candidates = [
       ...openInvoices.map(inv => ({
@@ -146,11 +176,11 @@ export async function getAICandidates() {
       ...openExpenses.map(exp => ({
         id: exp.id.toString(),
         type: 'expense' as const,
-        counterpartyName: exp.vendorName || 'Unknown',
+        counterpartyName: exp.description || 'Unknown',
         totalAmount: parseFloat(exp.amount || '0'),
-        currency: exp.currency || 'EUR',
-        documentNumber: exp.documentNumber || String(exp.id),
-        date: exp.date ? new Date(exp.date).toISOString() : undefined
+        currency: 'BGN',
+        documentNumber: String(exp.id),
+        date: exp.expenseDate ? new Date(exp.expenseDate).toISOString() : undefined
       }))
     ];
 
@@ -160,56 +190,25 @@ export async function getAICandidates() {
   }
 }
 
-export async function seedMockBankingData(bankName: string = 'UniCredit Bulbank') {
+export async function seedMockBankingData(_bankName: string = 'UniCredit Bulbank') {
+  if (process.env.ALLOW_INTEGRATION_SIMULATION !== 'true') {
+    return {
+      success: false,
+      error: 'Отвореното банкиране (PSD2) не е свързано. Не се създават фалшиви сметки и транзакции.',
+    };
+  }
   try {
-    const [tenant] = await db.select().from(tenants).limit(1);
-    if (!tenant) return { success: false, error: 'Липсва конфигурация за компанията' };
-
+    const { tenantId } = await requireTenant();
     const [newAccount] = await db.insert(bankAccounts).values({
-      tenantId: tenant.id,
-      institutionName: bankName,
-      iban: `BG12${bankName.substring(0, 4).toUpperCase()}12345678901234`,
-      balance: '15042.50',
+      tenantId,
+      institutionName: _bankName,
+      iban: null,
+      balance: '0.00',
       currency: 'BGN',
     }).returning();
-
-    // Insert mock transactions
-    await db.insert(bankTransactions).values([
-      {
-        accountId: newAccount.id,
-        amount: '1200.00',
-        currency: 'BGN',
-        date: new Date(),
-        description: 'ОПЛАЩАНЕ ПО ФАКТУРА 0000000123',
-        counterpartyName: 'МЕГА ТРЕЙД ООД',
-        counterpartyIban: 'BG99SOMF99999999999999',
-        isReconciled: false,
-      },
-      {
-        accountId: newAccount.id,
-        amount: '-45.00',
-        currency: 'BGN',
-        date: new Date(),
-        description: 'АБОНАМЕНТ ТЕЛЕКОМ АД',
-        counterpartyName: 'ТЕЛЕКОМ АД',
-        counterpartyIban: 'BG11TELC11111111111111',
-        isReconciled: false,
-      },
-      {
-        accountId: newAccount.id,
-        amount: '-250.00',
-        currency: 'BGN',
-        date: new Date(Date.now() - 86400000),
-        description: 'ПОКУПКА КАНЦЕЛАРСКИ МАТЕРИАЛИ',
-        counterpartyName: 'ОФИС СУПЕРСТОР',
-        isReconciled: false,
-      }
-    ]);
-
     revalidatePath('/', 'layout');
     return { success: true, data: newAccount };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
-

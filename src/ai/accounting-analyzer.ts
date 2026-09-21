@@ -1,4 +1,7 @@
-// @ts-nocheck
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateObject } from 'ai';
+import { z } from 'zod';
+
 export interface AccountingAnalysisResult {
   invoiceNumber: string;
   issueDate: string;
@@ -15,10 +18,6 @@ export interface AccountingAnalysisResult {
   notes: string;
 }
 
-import { anthropicClient } from './anthropic-client';
-import { z } from 'zod';
-
-// Zod schema matching the TypeScript interface
 const AccountingSchema = z.object({
   invoiceNumber: z.string(),
   issueDate: z.string(),
@@ -39,30 +38,16 @@ const AccountingSchema = z.object({
 
 export class AccountingAnalyzer {
   static async analyzeText(text: string): Promise<AccountingAnalysisResult> {
-    const prompt = `
-Extract the following fields from the Bulgarian invoice text and return them as JSON matching the provided schema:
-- invoiceNumber
-- issueDate (YYYY-MM-DD)
-- supplierName
-- supplierEik
-- supplierVat
-- lines[] { description, quantity, unitPrice, vatRate }
-- suggestedAccount (suggested chart-of-accounts code)
-- notes (optional free-text)
-
-Invoice text:
-"""${text}"""
-    `;
-    try {
-      const result = await anthropicClient.generateObject({
-        model: process.env.ANTHROPIC_MODEL,
-        schema: AccountingSchema,
-        prompt,
-      });
-      return result as AccountingAnalysisResult;
-    } catch (err) {
-      console.error('Anthropic call failed', err);
-      throw new Error('Анализът на фактурата не успя. Не се връщат измислени данни.');
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('Анализът на фактурата не е конфигуриран (ANTHROPIC_API_KEY).');
     }
+    const { object } = await generateObject({
+      model: anthropic(process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest'),
+      schema: AccountingSchema,
+      prompt: `Extract invoice fields from this Bulgarian invoice text as JSON.
+Invoice text:
+"""${text}"""`,
+    });
+    return object;
   }
 }

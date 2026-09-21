@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -9,7 +8,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 
 export const buildBankMatchTool = (tenantId: string) => tool({
   description: "Автоматично сканира всички несъпоставени (unreconciled) банкови транзакции и ги засича с отворени неплатени фактури. Използвай го, когато потребителят попита дали има платени фактури или поиска банково засичане.",
-  parameters: z.object({
+  inputSchema: z.object({
     confidenceThreshold: z.number().optional().default(0.80).describe("Минимален праг за съвпадение (0-1). По подразбиране е 0.80.")
   }),
   execute: async ({ confidenceThreshold }) => {

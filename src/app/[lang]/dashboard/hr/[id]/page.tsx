@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';

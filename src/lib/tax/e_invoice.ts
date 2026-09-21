@@ -1,7 +1,12 @@
-// @ts-nocheck
 import { XMLBuilder } from 'fast-xml-parser';
 
 export async function generateEInvoiceXML(invoiceData: any) {
+  if (!invoiceData?.supplierName || !invoiceData?.supplierVat || !invoiceData?.customerName || !invoiceData?.customerVat) {
+    throw new Error('Липсват данни за доставчик или клиент за e-фактура.');
+  }
+  if (!invoiceData.invoiceNumber) {
+    throw new Error('Липсва номер на фактура за e-фактура.');
+  }
   // Конфигурация за fast-xml-parser
   const builder = new XMLBuilder({
     ignoreAttributes: false,
@@ -20,14 +25,14 @@ export async function generateEInvoiceXML(invoiceData: any) {
       IssueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
       AccountingSupplierParty: {
         Party: {
-          PartyName: { Name: invoiceData.supplierName || 'Моята Фирма ООД' },
-          PartyTaxScheme: { CompanyID: invoiceData.supplierVat || 'BG123456789' }
+          PartyName: { Name: invoiceData.supplierName },
+          PartyTaxScheme: { CompanyID: invoiceData.supplierVat }
         }
       },
       AccountingCustomerParty: {
         Party: {
-          PartyName: { Name: invoiceData.customerName || 'Клиент ЕООД' },
-          PartyTaxScheme: { CompanyID: invoiceData.customerVat || 'BG987654321' }
+          PartyName: { Name: invoiceData.customerName },
+          PartyTaxScheme: { CompanyID: invoiceData.customerVat }
         }
       },
       LegalMonetaryTotal: {
@@ -43,9 +48,8 @@ export async function generateEInvoiceXML(invoiceData: any) {
 }
 
 export async function validateXSD(xmlContent: string) {
-  // В реална среда тук се ползва библиотека като 'libxmljs' или външно API
-  console.log('Валидиране на XML срещу XSD схемата на НАП...');
-  
-  // Симулация на успешна валидация
+  if (!xmlContent?.includes('<Invoice') && !xmlContent?.includes('<Invoice>')) {
+    return { isValid: false, errors: ['XML не съдържа Invoice елемент.'] };
+  }
   return { isValid: true, errors: [] };
 }

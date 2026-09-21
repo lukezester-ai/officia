@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getInventoryData, createInventoryItem, addInventoryMovement } from './actions';

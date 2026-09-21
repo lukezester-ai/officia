@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use server';
 
 import { db } from '@/lib/db/db';
@@ -6,7 +5,7 @@ import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { counterparties } from '@/lib/db/schema/counterparties';
 import { tenants } from '@/lib/db/schema/tenants';
-import { eq, desc } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { requireTenant } from '@/lib/auth/get-tenant';
@@ -34,7 +33,9 @@ export const getInvoices = cache(async () => {
 
 export async function getInvoiceWithLines(id: string) {
   try {
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant', data: null };
+    const [invoice] = await db.select().from(invoices).where(and(eq(invoices.id, id), eq(invoices.tenantId, tenant.id)));
     if (!invoice) return { success: false, error: 'Не е намерена', data: null };
     const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, id));
     return { success: true, data: { ...invoice, lines } };
@@ -104,7 +105,7 @@ export async function createInvoice(input: {
           description: l.description,
           quantity: l.quantity.toString(),
           unitPrice: l.unitPrice.toString(),
-          vatRate: l.vatRate,
+          vatRate: String(l.vatRate),
           lineNet: l.lineNet.toString(),
           lineVat: l.lineVat.toString(),
           lineTotal: l.lineTotal.toString(),
@@ -125,29 +126,33 @@ export async function issueInvoice(id: string) {
     const tenant = await getTenant();
     if (!tenant) return { success: false, error: 'Липсва Tenant' };
 
-    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    const [invoice] = await db.select().from(invoices).where(and(eq(invoices.id, id), eq(invoices.tenantId, tenant.id)));
     if (!invoice) return { success: false, error: 'Не е намерена' };
 
-    await db.update(invoices).set({ status: 'issued' }).where(eq(invoices.id, id));
+    await db.update(invoices).set({ status: 'issued' }).where(and(eq(invoices.id, id), eq(invoices.tenantId, tenant.id)));
     await ensureAutoJournalForInvoice(id, tenant.id);
     await syncStockFromSalesInvoice(id, tenant.id);
 
     if (!invoice.vatPosted) {
-      const issueDate = new Date(invoice.issueDate);
+      const issueDate = invoice.issueDate ? new Date(invoice.issueDate) : new Date();
+      const issueDateStr = invoice.issueDate || issueDate.toISOString().split('T')[0];
       await db.insert(vatJournals).values({
         tenantId: tenant.id,
         type: 'sales',
         periodYear: issueDate.getFullYear(),
         periodMonth: issueDate.getMonth() + 1,
+        entryDate: issueDateStr,
+        invoiceDate: issueDateStr,
         documentNumber: invoice.invoiceNumber,
-        documentDate: invoice.issueDate,
+        invoiceNumber: invoice.invoiceNumber,
         counterpartyName: invoice.counterpartyName,
         counterpartyVat: invoice.counterpartyVat || '',
         netAmount: invoice.netAmount || '0',
-        vatRate: '20',
+        vatRate: 20,
         vatAmount: invoice.vatAmount || '0',
+        totalAmount: invoice.totalAmount || invoice.total || '0',
       });
-      await db.update(invoices).set({ vatPosted: true }).where(eq(invoices.id, id));
+      await db.update(invoices).set({ vatPosted: true }).where(and(eq(invoices.id, id), eq(invoices.tenantId, tenant.id)));
     }
 
     revalidatePath('/', 'layout');
@@ -159,7 +164,9 @@ export async function issueInvoice(id: string) {
 
 export async function markInvoicePaid(id: string) {
   try {
-    await db.update(invoices).set({ status: 'paid' }).where(eq(invoices.id, id));
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant' };
+    await db.update(invoices).set({ status: 'paid' }).where(and(eq(invoices.id, id), eq(invoices.tenantId, tenant.id)));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {
@@ -169,7 +176,9 @@ export async function markInvoicePaid(id: string) {
 
 export async function cancelInvoice(id: string) {
   try {
-    await db.update(invoices).set({ status: 'cancelled' }).where(eq(invoices.id, id));
+    const tenant = await getTenant();
+    if (!tenant) return { success: false, error: 'Липсва Tenant' };
+    await db.update(invoices).set({ status: 'cancelled' }).where(and(eq(invoices.id, id), eq(invoices.tenantId, tenant.id)));
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error: any) {

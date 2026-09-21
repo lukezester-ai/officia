@@ -30,9 +30,7 @@ export async function getReportsData() {
     }
 
     const cfoInsights = [
-      { type: 'risk', text: 'Разходите за "Външни услуги" са нараснали с 15% спрямо миналия месец.' },
-      { type: 'opportunity', text: 'Времето за плащане от клиенти е средно 12 дни, което е отлично.' },
-      { type: 'alert', text: `Имате ${unpaidPurchases.length} неплатени фактури към доставчици, чакащи одобрение.` }
+      { type: 'alert', text: `Имате ${unpaidPurchases.length} неплатени фактури към доставчици.` }
     ];
 
     const { documents } = await import('@/lib/db/schema/documents');
@@ -49,8 +47,8 @@ export async function getReportsData() {
     const transactionsCount = allTx.length;
     const reconciledCount = allTx.filter(t => t.isReconciled || t.matchStatus === 'confirmed').length;
 
-    const ocrRate = docsCount > 0 ? Math.round((analyzedDocsCount / docsCount) * 100) : (allInvoices.length > 0 ? 94 : 0);
-    const matchRate = transactionsCount > 0 ? Math.round((reconciledCount / transactionsCount) * 100) : (allInvoices.length > 0 ? 91 : 0);
+    const ocrRate = docsCount > 0 ? Math.round((analyzedDocsCount / docsCount) * 100) : 0;
+    const matchRate = transactionsCount > 0 ? Math.round((reconciledCount / transactionsCount) * 100) : 0;
 
     return { 
       success: true, 
@@ -67,8 +65,8 @@ export async function getReportsData() {
         analyzedDocsCount,
         transactionsCount,
         reconciledCount,
-        ocrRate: ocrRate || 92,
-        matchRate: matchRate || 88,
+        ocrRate,
+        matchRate,
         allDocs: allDocs.slice(0, 10).map(d => ({
           id: d.id,
           title: d.title || 'Документ',
@@ -79,6 +77,10 @@ export async function getReportsData() {
       }
     };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, data: {
+      revenue: 0, expenses: 0, profit: 0, totalUnpaidSales: 0, totalUnpaidPurchases: 0, overdueCount: 0,
+      cfoSummary: '', cfoInsights: [] as { type: string; text: string }[],
+      docsCount: 0, analyzedDocsCount: 0, transactionsCount: 0, reconciledCount: 0, ocrRate: 0, matchRate: 0, allDocs: [],
+    } };
   }
 }

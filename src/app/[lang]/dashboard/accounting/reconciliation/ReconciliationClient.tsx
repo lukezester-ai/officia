@@ -1,5 +1,4 @@
 "use client";
-// @ts-nocheck
 
 import React, { useState } from 'react';
 import { Upload, Check, X, BrainCircuit, Receipt, ArrowRight, CheckCircle2 } from 'lucide-react';

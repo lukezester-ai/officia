@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-export interface AnalystAnalysisResult {
+﻿export interface AnalystAnalysisResult {
   intent: 'financial_summary' | 'expense_report' | 'unknown';
   metrics?: {
     revenue: number;

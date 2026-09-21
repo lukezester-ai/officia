@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { payrollRuns, payrollSlipItems } from '@/lib/db/schema/payroll_runs';
 import { employees } from '@/lib/db/schema/employees';

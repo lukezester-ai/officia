@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -9,7 +8,7 @@ import { eq, and, sql } from 'drizzle-orm';
 
 export const buildGetFinancialSummaryTool = (tenantId: string) => tool({
   description: "Връща обобщена финансова информация (приходи, разходи, печалба) за зададен период. Използвай го, когато потребителят попита за приходи, разходи или печалба.",
-  parameters: z.object({
+  inputSchema: z.object({
     period: z.enum(["month", "quarter", "year", "custom"]).describe("Период за обобщението (напр. month за текущия месец)"),
     startDate: z.string().optional().describe("Начална дата (YYYY-MM-DD), задължителна ако period e custom"),
     endDate: z.string().optional().describe("Крайна дата (YYYY-MM-DD), задължителна ако period e custom"),

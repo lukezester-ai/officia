@@ -6,50 +6,38 @@ import { aiInboxItems } from '@/lib/db/schema/ai_inbox';
 import { invoices } from '@/lib/db/schema/invoices';
 import { eq, sql } from 'drizzle-orm';
 import { predict30DayCashflow } from '@/lib/ai/cashflow-predictor';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function getPracticeOverview() {
   try {
-    // В реална среда тук се прави проверка дали потребителят има роля "Агенция/Админ"
-    // За MVP взимаме всички фирми в системата
-    const allTenants = await db.select().from(tenants);
-    
-    const overviewData = [];
+    const { tenantId } = await requireTenant();
+    const [t] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+    if (!t) return { success: false, error: 'Липсва tenant' };
 
-    for (const t of allTenants) {
-      // Брой отворени AI Аномалии
-      const alertsResult = await db.select({ count: sql<number>`count(*)` })
-        .from(aiInboxItems)
-        .where(
-          sql`${aiInboxItems.tenantId} = ${t.id} AND ${aiInboxItems.status} = 'open'`
-        );
-      const alertsCount = alertsResult[0]?.count || 0;
+    const alertsResult = await db.select({ count: sql<number>`count(*)` })
+      .from(aiInboxItems)
+      .where(sql`${aiInboxItems.tenantId} = ${t.id} AND ${aiInboxItems.status} = 'open'`);
+    const invoicesResult = await db.select({ count: sql<number>`count(*)` })
+      .from(invoices)
+      .where(sql`${invoices.tenantId} = ${t.id} AND ${invoices.status} = 'draft'`);
 
-      // Брой чакащи фактури (draft/pending)
-      const invoicesResult = await db.select({ count: sql<number>`count(*)` })
-        .from(invoices)
-        .where(
-          sql`${invoices.tenantId} = ${t.id} AND ${invoices.status} = 'draft'`
-        );
-      const pendingInvoices = invoicesResult[0]?.count || 0;
+    const cashflowRes = await predict30DayCashflow(t.id);
+    let cashflowStatus = 'unknown';
+    if (cashflowRes.success && cashflowRes.data) {
+      cashflowStatus = cashflowRes.data.status;
+    }
 
-      // Cashflow Прогноза (Healthy, Warning, Critical)
-      const cashflowRes = await predict30DayCashflow(t.id);
-      let cashflowStatus = 'unknown';
-      if (cashflowRes.success && cashflowRes.data) {
-        cashflowStatus = cashflowRes.data.status;
-      }
-
-      overviewData.push({
+    return {
+      success: true,
+      data: [{
         id: t.id,
         name: t.name,
         bulstat: t.bulstat,
-        alertsCount,
-        pendingInvoices,
+        alertsCount: alertsResult[0]?.count || 0,
+        pendingInvoices: invoicesResult[0]?.count || 0,
         cashflowStatus
-      });
-    }
-
-    return { success: true, data: overviewData };
+      }]
+    };
   } catch (error: any) {
     console.error('[Practice Overview Error]', error);
     return { success: false, error: error.message };

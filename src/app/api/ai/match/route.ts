@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { matchTransactionWithAI, Transaction, Candidate } from '@/lib/ai/agents/matcher';
 import { requireApiUser } from '@/lib/api/security';

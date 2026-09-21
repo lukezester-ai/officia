@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -9,7 +8,7 @@ import { eq, and, or, ilike, gte, lte } from 'drizzle-orm';
 
 export const buildManageHRTool = (tenantId: string) => tool({
   description: "Асистент за Човешки ресурси и Задачи. Използвай го, когато потребителят пита кой е в отпуска, търси служител или иска да създаде/възложи задача на някого.",
-  parameters: z.object({
+  inputSchema: z.object({
     action: z.enum(['check_leaves', 'create_task', 'find_employee']).describe("Действие: проверка на отпуски, създаване на задача или търсене на служител"),
     taskTitle: z.string().optional().describe("Заглавие/описание на задачата (само за create_task)"),
     assigneeName: z.string().optional().describe("Име на служител (за търсене или възлагане на задача)"),

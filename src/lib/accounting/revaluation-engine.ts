@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
@@ -31,7 +30,14 @@ export async function runCurrencyRevaluation(tenantId: string, month: string, ye
     let revaluationsCount = 0;
     let totalImpact = 0;
     const journalHeaderId = uuidv4();
-    const jLinesToInsert = [];
+    const jLinesToInsert: Array<{
+      journalId: string;
+      accountId: string;
+      entryType: 'debit' | 'credit';
+      amount: string;
+      description?: string;
+      currency?: string;
+    }> = [];
 
     // За всяка сметка дърпаме курса на БНБ към края на месеца
     for (const account of foreignAccounts) {

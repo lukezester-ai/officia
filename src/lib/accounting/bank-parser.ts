@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Papa from 'papaparse';
 
 export interface ParsedTransaction {

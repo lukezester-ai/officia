@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
-import { eq } from 'drizzle-orm';
+import { tenants } from '@/lib/db/schema/tenants';
+import { and, eq } from 'drizzle-orm';
 import { sendInvoiceToNAP } from '@/lib/e-invoice/send-to-nap';
 import { UblInvoiceData } from '@/lib/e-invoice/ubl-generator';
 import { napB2GClient } from '@/lib/accounting/nap-b2g-client';
 import { parseUuidParam } from '@/lib/utils/ids';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
   try {
+    const { tenantId } = await requireTenant();
     const params = await props.params;
     const invoiceId = parseUuidParam(params.id);
     if (!invoiceId) {
@@ -18,7 +21,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     const [invoice] = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.id, invoiceId))
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)))
       .limit(1);
 
     if (!invoice) {
@@ -40,16 +43,21 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
       return NextResponse.json({ error: 'Не е намерена активна НАП интеграция за тази организация. Моля, добавете ключ в настройките.' }, { status: 403 });
     }
 
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+    if (!tenant?.name || !tenant.bulstat) {
+      return NextResponse.json({ error: 'Липсват име и ЕИК на фирмата в настройките.' }, { status: 400 });
+    }
+
     const ublData: UblInvoiceData = {
       invoiceNumber: invoice.invoiceNumber || `INV-${invoice.id}`,
       issueDate: invoice.issueDate || new Date(),
       dueDate: invoice.dueDate || invoice.issueDate || new Date(),
       currency: 'BGN',
       supplier: {
-        name: 'Моята Фирма ООД', // В реална среда се взима от Tenant профила
-        vatNumber: 'BG123456789',
-        companyId: '123456789',
-        address: 'гр. София, ул. Примерна 1'
+        name: tenant.name,
+        vatNumber: tenant.vatNumber || `BG${tenant.bulstat}`,
+        companyId: tenant.bulstat,
+        address: tenant.address || '',
       },
       customer: {
         name: invoice.clientName || invoice.counterpartyName || 'Неизвестен Клиент',
@@ -78,13 +86,13 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
       // Обновяване на статуса на фактурата
       await db.update(invoices)
         .set({ einvoiceStatus: 'approved' })
-        .where(eq(invoices.id, invoiceId));
+        .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
         
       return NextResponse.json({ success: true, message: 'Успешно изпратена фактура към НАП (e-Invoicing).' });
     } else {
       await db.update(invoices)
         .set({ einvoiceStatus: 'error', errorReason: result.error || 'Unknown error' })
-        .where(eq(invoices.id, invoiceId));
+        .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
         
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

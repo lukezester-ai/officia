@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { aiInboxItems } from '@/lib/db/schema/ai_inbox';
 import { vatJournals } from '@/lib/db/schema/vat_journals';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { processDocumentImage } from '@/lib/ai/agents/ocr';
 import { rejectOversizedRequest, requireApiUser } from '@/lib/api/security';

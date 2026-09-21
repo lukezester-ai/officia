@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { invoices } from '@/lib/db/schema/invoices';
@@ -17,17 +16,9 @@ export interface MatchSuggestion {
 export class ReconciliationEngine {
   static async suggestMatches(tenantId: string): Promise<MatchSuggestion[]> {
     // 1. Fetch unreconciled transactions
-    const unreconciled = await db.query.bankTransactions.findMany({
-      where: eq(bankTransactions.isReconciled, false)
-    });
-
-    // 2. Fetch open invoices & expenses
-    const openInvoices = await db.query.invoices.findMany({
-      where: eq(invoices.status, 'draft') // In a real app this would be 'sent' or 'open'
-    });
-    const openExpenses = await db.query.expenses.findMany({
-      where: eq(expenses.tenantId, tenantId)
-    });
+    const unreconciled = await db.select().from(bankTransactions).where(eq(bankTransactions.isReconciled, false));
+    const openInvoices = await db.select().from(invoices).where(eq(invoices.status, 'draft'));
+    const openExpenses = await db.select().from(expenses).where(eq(expenses.tenantId, tenantId));
 
     const suggestions: MatchSuggestion[] = [];
 
@@ -39,7 +30,7 @@ export class ReconciliationEngine {
         for (const inv of openInvoices) {
           const invTotal = parseFloat(inv.total || '0');
           if (invTotal === txAmount) {
-            const hasInvNumber = tx.description?.includes(inv.invoiceNumber);
+            const hasInvNumber = Boolean(inv.invoiceNumber && tx.description?.includes(inv.invoiceNumber));
             suggestions.push({
               transaction: tx,
               type: 'invoice',

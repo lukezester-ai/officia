@@ -32,24 +32,17 @@ export function BankConnectModal({
     
     setIsConnecting(true);
     const bankName = BANKS.find(b => b.id === selectedBank)?.name || 'Unknown Bank';
+    const res = await seedMockBankingData(bankName);
+    setIsConnecting(false);
+    setStep(1);
 
-    // Fake OAuth redirect simulation
-    toast.info(`Пренасочване към портала на ${bankName} (PSD2)...`);
-    setStep(2);
-    
-    setTimeout(async () => {
-      const res = await seedMockBankingData(bankName);
-      setIsConnecting(false);
-      setStep(1);
-      
-      if (res.success) {
-        toast.success(`Успешно свързване с ${bankName}! Изтеглени са нови транзакции.`);
-        onSuccess();
-        onClose();
-      } else {
-        toast.error('Грешка при свързване: ' + res.error);
-      }
-    }, 2500); // simulate 2.5s network delay
+    if (res.success) {
+      toast.success(`Сметката за ${bankName} е създадена. Транзакциите се синхронизират само при реална PSD2 връзка.`);
+      onSuccess();
+      onClose();
+    } else {
+      toast.error(res.error || 'Отвореното банкиране не е свързано.');
+    }
   };
 
   return (

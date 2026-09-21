@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { inventoryItems, inventoryMovements } from '@/lib/db/schema/inventory';
 import { invoiceLines, invoices } from '@/lib/db/schema/invoices';
@@ -116,7 +115,7 @@ export async function syncStockFromPurchaseInvoice(purchaseInvoiceId: string, te
             quantity: qty.toFixed(3),
             unitCost: unitPrice.toFixed(4),
             totalCost: total.toFixed(2),
-            movementDate: invoice.date ? new Date(invoice.date) : new Date(),
+            movementDate: invoice.issueDate ? new Date(invoice.issueDate) : new Date(),
             referenceId: purchaseInvoiceId as any,
           });
           added++;

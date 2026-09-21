@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { db } from '@/lib/db/db';
 import { fixedAssets, depreciationRuns, depreciationLogs } from '@/lib/db/schema/fixed_assets';
 import { journalHeaders, journalLines } from '@/lib/db/schema/journal_entries';
@@ -40,8 +39,20 @@ export async function runMonthlyDepreciation(tenantId: string, month: string, ye
     let totalMonthlyDepreciation = 0;
     const runId = uuidv4();
     const journalHeaderId = uuidv4();
-    const jLinesToInsert = [];
-    const depLogsToInsert = [];
+    const jLinesToInsert: Array<{
+      journalId: string;
+      accountId: string;
+      entryType: 'debit' | 'credit';
+      amount: string;
+      description: string;
+      currency?: string;
+    }> = [];
+    const depLogsToInsert: Array<{
+      runId: string;
+      assetId: string;
+      amount: string;
+      journalEntryId: string;
+    }> = [];
 
     // 3. Изчисляваме квотите и подготвяме счетоводните записи
     for (const asset of activeAssets) {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextRequest } from 'next/server';
 import { requireApiUser } from '@/lib/api/security';
 

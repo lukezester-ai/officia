@@ -48,7 +48,7 @@ export const requireTenant = cache(async () => {
   let tenant: any = null;
   try {
     const tRows: any = await db.execute(
-      sql`SELECT id, name FROM tenants WHERE id = ${tenantId} LIMIT 1`
+      sql`SELECT id, name, bulstat, vat_number, address FROM tenants WHERE id = ${tenantId} LIMIT 1`
     );
     tenant = Array.isArray(tRows) ? tRows[0] : tRows?.rows?.[0] ?? null;
   } catch {

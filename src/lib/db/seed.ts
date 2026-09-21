@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { db } from './db';
+﻿import { db } from './db';
 import { tenants } from './schema/tenants';
 import { users } from './schema/users';
 import { accountPlan } from './schema/account_plan';

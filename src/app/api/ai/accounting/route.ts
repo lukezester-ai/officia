@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { AccountingAnalyzer } from '@/ai/accounting-analyzer';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -10,7 +9,7 @@ import { isUuid } from '@/lib/utils/ids';
 
 export const buildCreateInvoiceTool = (tenantId: string, userId: string) => tool({
   description: "Създава нова продажна фактура към клиент. Използвай този инструмент, когато потребителят иска да издаде фактура.",
-  parameters: z.object({
+  inputSchema: z.object({
     clientName: z.string().describe("Име на клиента (контрагента). Ще бъде потърсен в базата или създаден, ако не съществува."),
     items: z.array(z.object({
       description: z.string().describe("Описание на стоката/услугата"),
@@ -24,12 +23,11 @@ export const buildCreateInvoiceTool = (tenantId: string, userId: string) => tool
   execute: async ({ clientName, items, dueDate, notes }) => {
     try {
       // 1. Търсим контрагента по име (case-insensitive)
-      let counterparty = await db.query.counterparties.findFirst({
-        where: and(
+      const [found] = await db.select().from(counterparties).where(and(
           eq(counterparties.tenantId, tenantId),
           ilike(counterparties.name, `%${clientName}%`)
-        )
-      });
+        )).limit(1);
+      let counterparty = found;
       
       if (!counterparty) {
         // Създаваме го, ако не съществува

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { getAssetsData } from './actions';
 import AssetsClient from './AssetsClient';
@@ -8,7 +7,7 @@ import Link from 'next/link';
 
 export default async function AssetsPage() {
   const res = await getAssetsData();
-  const data = res.success ? res.data : { assets: [], problems: [] };
+  const data = res.data ?? { assets: [], problems: [] };
 
   return (
     <div className="space-y-6">

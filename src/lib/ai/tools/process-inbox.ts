@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { tool } from 'ai';
 import { z } from 'zod';
 import { db } from '@/lib/db/db';
@@ -7,7 +6,7 @@ import { eq, and } from 'drizzle-orm';
 
 export const buildProcessInboxTool = (tenantId: string) => tool({
   description: "AI Инбокс Процесор. Използвай го, когато потребителят те помоли да прочетеш пощата, да провериш съобщенията, да изчистиш инбокса или да обработиш автоматичните известия.",
-  parameters: z.object({
+  inputSchema: z.object({
      run: z.boolean().optional().describe("Трябва да е true за стартиране"),
   }),
   execute: async () => {

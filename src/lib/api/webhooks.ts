@@ -1,29 +1,20 @@
-// @ts-nocheck
 import * as crypto from 'crypto';
 import { and, eq, sql } from 'drizzle-orm';
+import { db } from '../db/db';
 import { webhooks } from '../db/schema/webhooks';
 
-// Mock DB wrapper (докато не импортираме реалната връзка)
-const db = {
-  select: () => ({
-    from: (table: any) => ({
-      where: async (condition: any) => []
-    })
-  })
-};
-
-export async function triggerWebhook(tenantId: string, event: string, payload: any) {
+export async function triggerWebhook(tenantId: string, event: string, payload: unknown) {
   const activeWebhooks = await db.select().from(webhooks).where(and(
     eq(webhooks.tenantId, tenantId),
-    sql`${event} = ANY(events)`,
+    sql`${event} = ANY(${webhooks.events})`,
     eq(webhooks.isActive, true)
   ));
-  
+
   for (const webhook of activeWebhooks) {
     const signature = crypto.createHmac('sha256', webhook.secret)
       .update(JSON.stringify(payload))
       .digest('hex');
-    
+
     await fetch(webhook.url, {
       method: 'POST',
       headers: {

@@ -1,5 +1,4 @@
 'use server';
-// @ts-nocheck
 
 import { db } from '@/lib/db/db';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
