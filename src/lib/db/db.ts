@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import { rlsAls } from './rls-session';
 
 type SqlClient = ReturnType<typeof postgres>;
 type Db = ReturnType<typeof drizzle<typeof schema>>;
@@ -32,7 +33,7 @@ function createClient(): SqlClient {
   });
 }
 
-function getClient(): SqlClient {
+export function getClient(): SqlClient {
   if (!globalForDb.postgresClient) {
     if (isProductionBuild()) {
       throw new Error('Database connections are disabled during production build');
@@ -42,15 +43,21 @@ function getClient(): SqlClient {
   return globalForDb.postgresClient;
 }
 
-function getDb(): Db {
+function getPoolDb(): Db {
   if (!globalForDb.drizzleDb) {
     globalForDb.drizzleDb = drizzle(getClient(), { schema });
   }
   return globalForDb.drizzleDb;
 }
 
+function activeDb(): Db {
+  return rlsAls.getStore()?.db ?? getPoolDb();
+}
+
 export const db = new Proxy({} as Db, {
-  get(_target, prop, receiver) {
-    return Reflect.get(getDb(), prop, receiver);
+  get(_target, prop) {
+    const instance = activeDb();
+    const value = Reflect.get(instance, prop, instance);
+    return typeof value === 'function' ? value.bind(instance) : value;
   },
 });

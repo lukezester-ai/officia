@@ -16,10 +16,24 @@ const isAuthRoute = createRouteMatcher([
   '/register(.*)',
 ]);
 
+const isPublicApi = createRouteMatcher([
+  '/api/webhooks(.*)',
+  '/api/health',
+  '/api/cron(.*)',
+  '/api/ai/webhook',
+]);
+
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
-  if (isAuthRoute(req) || pathname.startsWith('/api')) {
+  if (isAuthRoute(req)) {
+    return;
+  }
+
+  if (pathname.startsWith('/api')) {
+    if (!isPublicApi(req)) {
+      await auth.protect();
+    }
     return;
   }
 

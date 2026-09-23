@@ -1,16 +1,23 @@
 import Stripe from 'stripe';
+import { getAppBaseUrl } from '@/lib/config/app-url';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
-
-export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2026-05-27.dahlia' as any,
-  appInfo: {
-    name: 'Officia ERP',
-    version: '1.0.0'
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
   }
-});
+  return new Stripe(key, {
+    apiVersion: '2026-05-27.dahlia' as any,
+    appInfo: {
+      name: 'Officia ERP',
+      version: '1.0.0'
+    }
+  });
+}
 
 export const getStripeSessionUrl = async (invoiceId: string, amount: number, currency: string = 'eur', customerEmail?: string, invoiceNumber?: string) => {
+  const origin = getAppBaseUrl();
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     customer_email: customerEmail,
@@ -22,7 +29,7 @@ export const getStripeSessionUrl = async (invoiceId: string, amount: number, cur
             name: `Invoice #${invoiceNumber || invoiceId}`,
             description: 'Payment for services/products',
           },
-          unit_amount: Math.round(amount * 100), // Convert to cents
+          unit_amount: Math.round(amount * 100),
         },
         quantity: 1,
       },
@@ -34,8 +41,8 @@ export const getStripeSessionUrl = async (invoiceId: string, amount: number, cur
         description: `Фактура № ${invoiceNumber || invoiceId} от Officia ERP`,
       }
     },
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/public/invoice/${invoiceId}?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/public/invoice/${invoiceId}?canceled=true`,
+    success_url: `${origin}/bg/public/invoice/${invoiceId}?success=true`,
+    cancel_url: `${origin}/bg/public/invoice/${invoiceId}?canceled=true`,
     metadata: {
       invoiceId,
     },

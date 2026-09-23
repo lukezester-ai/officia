@@ -9,7 +9,8 @@
 --        SELECT set_config('app.current_tenant_id', '<tenant_uuid>', true);
 --        SELECT set_config('app.current_user_id',    '<user_uuid>',  true);
 --        SELECT set_config('app.current_user_role',  '<role>',       true);
---      Готовият хелпер е в src/lib/db/rls_utils.ts::setRLSContext().
+--      Готовият runtime мост е requireTenant() → bindRequestRlsContext()
+--      (src/lib/auth/get-tenant.ts, src/lib/db/rls-session.ts).
 --   2. Потребителят от DATABASE_URL НЕ трябва да е собственик на таблиците,
 --      ИЛИ трябва да се добави FORCE ROW LEVEL SECURITY (има пример в края).
 --      Без това собственикът заобикаля RLS (PostgreSQL behavior).

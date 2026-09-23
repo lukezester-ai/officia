@@ -9,11 +9,10 @@ import { sql } from 'drizzle-orm';
  * Това е алтернатива на Supabase JWT claims, когато правим сървърни заявки с Admin Role.
  */
 export async function setRLSContext(dbInstance: any, tenantId: string, userId: string, role: string) {
-  console.log(`Задаване на RLS контекст: Фирма ${tenantId}, Потребител ${userId}, Роля ${role}`);
-  
   await dbInstance.execute(sql`
-    SELECT set_config('app.current_tenant_id', ${tenantId}, TRUE);
-    SELECT set_config('app.current_user_id', ${userId}, TRUE);
-    SELECT set_config('app.current_user_role', ${role}, TRUE);
+    SELECT
+      set_config('app.current_tenant_id', ${tenantId}, TRUE),
+      set_config('app.current_user_id', ${userId}, TRUE),
+      set_config('app.current_user_role', ${role}, TRUE)
   `);
 }

@@ -1,89 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { auth } from '@clerk/nextjs/server';
+import { requireApiSession } from '@/lib/auth/api-guard';
+import { getAppBaseUrl } from '@/lib/config/app-url';
+import { getServerPriceId, parseCheckoutBilling, parseCheckoutPlan } from '@/lib/billing/plans';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2026-05-27.dahlia' as any,
-});
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
+  }
+  return new Stripe(key, {
+    apiVersion: '2026-05-27.dahlia' as any,
+  });
+}
 
-// Price IDs от Stripe Dashboard – настрои в Render Environment Variables
-const PRICE_IDS: Record<string, { monthly: string; annual: string }> = {
-  business: {
-    monthly: process.env.STRIPE_PRICE_BUSINESS_MONTHLY || '',
-    annual: process.env.STRIPE_PRICE_BUSINESS_ANNUAL || '',
-  },
-  pro: {
-    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || '',
-    annual: process.env.STRIPE_PRICE_PRO_ANNUAL || '',
-  },
-  accounting_firm: {
-    monthly: process.env.STRIPE_PRICE_FIRM_MONTHLY || process.env.STRIPE_PRICE_ACCOUNTING_FIRM_MONTHLY || '',
-    annual: process.env.STRIPE_PRICE_FIRM_ANNUAL || process.env.STRIPE_PRICE_ACCOUNTING_FIRM_ANNUAL || '',
-  },
-};
+export async function GET() {
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+}
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
+  const { ctx, response } = await requireApiSession();
+  if (response || !ctx) return response!;
+
+  let body: { plan?: unknown; billing?: unknown } = {};
   try {
-    const { userId, orgId } = await auth().catch(() => ({ userId: null, orgId: null }));
-    const { searchParams } = new URL(req.url);
-    const plan = searchParams.get('plan') || 'business';
-    const billing = searchParams.get('billing') || 'annual';
-    const origin = req.headers.get('origin') || 'https://officiabg.com';
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
 
-    const priceId = PRICE_IDS[plan]?.[billing as 'monthly' | 'annual'];
+  const plan = parseCheckoutPlan(body.plan);
+  const billing = parseCheckoutBilling(body.billing);
+  if (!plan || !billing) {
+    return NextResponse.json({ error: 'Unknown plan' }, { status: 400 });
+  }
 
-    let lineItems: any[] = [];
-    if (priceId) {
-      lineItems = [{ price: priceId, quantity: 1 }];
-    } else {
-      // Fallback: ако няма настроен priceId в променливите, създаваме динамична цена в Stripe (за да работи бутонът за плащане винаги)
-      const defaultPlans: Record<string, { monthly: number; annual: number; name: string }> = {
-        business: { monthly: 1490, annual: 1190, name: 'Officia Business' },
-        pro: { monthly: 4900, annual: 3900, name: 'Officia Pro' },
-        accounting_firm: { monthly: 8900, annual: 7100, name: 'Officia Кантора (Accounting Firm)' },
-      };
-      const planInfo = defaultPlans[plan] || defaultPlans.business;
-      const unitAmountCents = billing === 'annual' ? planInfo.annual * 100 : planInfo.monthly * 100;
+  const priceId = getServerPriceId(plan, billing);
+  if (!priceId) {
+    return NextResponse.json({ error: 'Checkout is not configured' }, { status: 503 });
+  }
 
-      lineItems = [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: planInfo.name,
-              description: `Абонаментен план (${billing === 'annual' ? 'Годишно таксуване' : 'Месечно таксуване'})`,
-            },
-            unit_amount: unitAmountCents,
-            recurring: {
-              interval: billing === 'annual' ? 'year' : 'month',
-            },
-          },
-          quantity: 1,
-        },
-      ];
-    }
+  let origin: string;
+  try {
+    origin = getAppBaseUrl();
+  } catch {
+    return NextResponse.json({ error: 'Checkout is not configured' }, { status: 503 });
+  }
 
+  try {
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: lineItems,
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/bg/dashboard?upgraded=true`,
       cancel_url: `${origin}/bg#pricing`,
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       locale: 'bg',
+      client_reference_id: ctx.tenantId,
       metadata: {
         plan,
         billing,
-        userId: userId || '',
-        tenantId: orgId || '',
+        userId: ctx.userId,
+        tenantId: ctx.tenantId,
       },
     });
 
-    return NextResponse.redirect(session.url!);
-  } catch (err: any) {
+    if (!session.url) {
+      return NextResponse.json({ error: 'Checkout is unavailable' }, { status: 502 });
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
     console.error('[STRIPE_SUBSCRIPTION_ERROR]', err);
-    // Fallback към sign-up ако Stripe гърми
-    return NextResponse.redirect('https://officiabg.com/sign-up');
+    return NextResponse.json({ error: 'Checkout failed' }, { status: 502 });
   }
 }

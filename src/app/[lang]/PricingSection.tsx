@@ -4,12 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, Zap, Building2, Sparkles, Scale } from 'lucide-react';
 
-function getPlanHref(planId: string, isAnnual: boolean): string {
-  if (planId === 'starter') return '/sign-up';
-  const billing = isAnnual ? 'annual' : 'monthly';
-  return `/api/stripe/checkout?plan=${planId}&billing=${billing}`;
-}
-
 function formatPrice(n: number): string {
   return n % 1 !== 0 ? n.toFixed(2).replace('.', ',') : n.toString();
 }
@@ -126,6 +120,38 @@ const PLANS = [
 
 export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
+
+  async function startCheckout(planId: string) {
+    if (planId === 'starter') {
+      window.location.href = '/sign-up';
+      return;
+    }
+    setPendingPlan(planId);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: planId,
+          billing: isAnnual ? 'annual' : 'monthly',
+        }),
+      });
+      if (res.status === 401) {
+        const redirect = encodeURIComponent('/bg#pricing');
+        window.location.href = `/sign-in?redirect_url=${redirect}`;
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        window.alert('Плащането не е налично в момента.');
+        return;
+      }
+      window.location.href = data.url;
+    } finally {
+      setPendingPlan(null);
+    }
+  }
 
   return (
     <section id="pricing" className="py-24 px-6">
@@ -208,9 +234,20 @@ export default function PricingSection() {
                   ))}
                 </div>
 
-                <Link href={getPlanHref(plan.id, isAnnual)} className={plan.ctaStyle}>
-                  {plan.cta}
-                </Link>
+                {plan.isFree ? (
+                  <Link href="/sign-up" className={plan.ctaStyle}>
+                    {plan.cta}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => startCheckout(plan.id)}
+                    disabled={pendingPlan === plan.id}
+                    className={`${plan.ctaStyle} w-full disabled:opacity-60`}
+                  >
+                    {pendingPlan === plan.id ? 'Моля изчакайте...' : plan.cta}
+                  </button>
+                )}
               </div>
             );
           })}
