@@ -55,5 +55,5 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return tree;
   }
 
-  return <ClerkProvider appearance={{ baseTheme: dark }} publishableKey={clerkPublishableKey}>{tree}</ClerkProvider>;
+  return <ClerkProvider appearance={{ theme: dark }} publishableKey={clerkPublishableKey}>{tree}</ClerkProvider>;
 }
