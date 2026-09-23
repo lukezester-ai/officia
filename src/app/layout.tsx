@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 import { Fira_Sans, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { Providers } from '@/app/Providers';
@@ -54,5 +55,5 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return tree;
   }
 
-  return <ClerkProvider publishableKey={clerkPublishableKey}>{tree}</ClerkProvider>;
+  return <ClerkProvider appearance={{ baseTheme: dark }} publishableKey={clerkPublishableKey}>{tree}</ClerkProvider>;
 }
