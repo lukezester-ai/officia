@@ -118,6 +118,7 @@ BEGIN
     'leave_requests',
     'payroll_runs',
     'projects',
+    'purchase_invoices',
     'tasks',
     'time_entries',
     'vat_journals',
@@ -141,7 +142,6 @@ DECLARE
   t text;
 BEGIN
   FOREACH t IN ARRAY ARRAY[
-    'purchase_invoices',
     'tax_declarations',
     'financial_reports'
   ] LOOP

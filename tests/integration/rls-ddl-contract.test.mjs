@@ -106,7 +106,7 @@ test('tenant_id е с правилния тип: uuid таблици — uuid, t
   const bad = [];
   for (const [t, cols] of Object.entries(tables)) {
     if (!cols.tenant_id) continue;
-    const isText = ['purchase_invoices', 'tax_declarations', 'financial_reports'].includes(t);
+    const isText = ['tax_declarations', 'financial_reports'].includes(t);
     const expect = isText ? 'text' : 'uuid';
     if (cols.tenant_id !== expect) bad.push(`${t}.tenant_id=${cols.tenant_id} (очаква се ${expect})`);
   }

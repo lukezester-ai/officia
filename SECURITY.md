@@ -2,6 +2,30 @@
 
 Report vulnerabilities privately to `info@agrinexus.eu`. Do not open public GitHub issues for secrets, auth bypasses, or tenant isolation failures.
 
+## Officia Security Baseline v1
+
+Locked in:
+
+- Stripe fail-closed (`POST` only, authenticated tenant, server-side Price IDs, allow-listed `NEXT_PUBLIC_APP_URL`)
+- Clerk authentication on dashboard and private APIs
+- Tenant authorization via `requireTenant()`
+- API boundary with an explicit public allow-list
+- RLS session context per request
+- RLS integration tests in `npm run ci` / GitHub Actions
+- AI request limits, generic client errors, and `requestId`
+- `SECURITY.md`
+- Migration on deploy (`render.yaml` start command)
+
+Pending — next gate is DB role separation, not Redis:
+
+- Production DB role ≠ table owner
+- FORCE RLS (stays **off** until the app role is proven with an integration test)
+- Distributed rate limiting
+- Immutable audit log
+- `user_tenants` membership model
+
+FORCE ROW LEVEL SECURITY must remain commented in `src/lib/db/rls.sql` until `DATABASE_URL` is a `NOBYPASSRLS` application role separate from the migration/owner role.
+
 ## Runtime trust boundary
 
 Officia is a multi-tenant ERP. Every privileged request must follow:

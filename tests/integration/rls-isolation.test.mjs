@@ -27,14 +27,22 @@ const APP_ROLE_PW = 'officia_rls_app';
 const CONN = { connect_timeout: 5, onnotice: () => {}, max: 1 };
 
 function envKey(key) {
-  if (process.env[key]) return process.env[key];
+  if (process.env[key]) return stripEnvValue(process.env[key]);
   try {
     const txt = fs.readFileSync(path.resolve('.env.local'), 'utf8');
-    const m = txt.match(new RegExp(`^${key}=(.*)$`, 'm'));
-    return m ? m[1].trim() : undefined;
+    const m = txt.match(new RegExp(`^(?:export\\s+)?${key}=(.*)$`, 'm'));
+    return m ? stripEnvValue(m[1]) : undefined;
   } catch {
     return undefined;
   }
+}
+
+function stripEnvValue(value) {
+  let s = String(value || '').trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1);
+  }
+  return s.trim() || undefined;
 }
 
 const baseUrl = process.env.RLS_TEST_DATABASE_URL || envKey('DATABASE_URL');
@@ -74,8 +82,8 @@ async function provision() {
   stmts.push(`CREATE TABLE invoices (id serial PRIMARY KEY, tenant_id uuid, amount text)`);
   stmts.push(`CREATE TABLE invoice_lines (id serial PRIMARY KEY, invoice_id integer REFERENCES invoices(id), description text)`);
   stmts.push(`CREATE TABLE employees (id uuid PRIMARY KEY, tenant_id uuid)`);
-  stmts.push(`CREATE TABLE purchase_invoices (id text PRIMARY KEY, tenant_id text)`);
-  stmts.push(`CREATE TABLE purchase_invoice_lines (id text PRIMARY KEY, invoice_id text REFERENCES purchase_invoices(id))`);
+  stmts.push(`CREATE TABLE purchase_invoices (id uuid PRIMARY KEY, tenant_id uuid)`);
+  stmts.push(`CREATE TABLE purchase_invoice_lines (id uuid PRIMARY KEY, invoice_id uuid REFERENCES purchase_invoices(id))`);
   stmts.push(`CREATE TABLE tax_declarations (id text PRIMARY KEY, tenant_id text)`);
   stmts.push(`CREATE TABLE financial_reports (id text PRIMARY KEY, tenant_id text)`);
   stmts.push(`CREATE TABLE nap_integrations (id uuid PRIMARY KEY, organization_id uuid)`);
