@@ -4,7 +4,7 @@ Report vulnerabilities privately to `info@agrinexus.eu`. Do not open public GitH
 
 ## Officia Security Baseline v1
 
-Locked in:
+Locked at `e82fa63` on `main`. Do not mix later gates into that commit.
 
 - Stripe fail-closed (`POST` only, authenticated tenant, server-side Price IDs, allow-listed `NEXT_PUBLIC_APP_URL`)
 - Clerk authentication on dashboard and private APIs
@@ -16,40 +16,64 @@ Locked in:
 - `SECURITY.md`
 - Migration on deploy (`render.yaml` start command)
 
-Pending — next gate is DB role separation, not Redis:
+## Production DB Role Separation v1
 
-- Production DB role ≠ table owner
-- FORCE RLS (stays **off** until the app role is proven with an integration test)
-- Distributed rate limiting
-- Immutable audit log
-- `user_tenants` membership model
+Frozen technical gate after Baseline v1 (`e82fa63`). Own commit/PR. Not verified until CI Postgres E2E is green. Redis starts only after this gate is **MERGED / VERIFIED**.
 
-FORCE ROW LEVEL SECURITY must remain commented in `src/lib/db/rls.sql` until `DATABASE_URL` is a `NOBYPASSRLS` application role separate from the migration/owner role.
+```
+Clerk
+  → requireTenant()
+  → application LOGIN role (NOBYPASSRLS, not table owner)
+  → SET LOCAL app.current_tenant_id (real transaction)
+  → RLS policy
+  → query
+```
+
+```
+migration role  ≠  database owner  ≠  application role
+```
+
+NOBYPASSRLS is necessary, not sufficient. Isolation is proven with two organizations and production-like LOGIN roles (`current_user` = `session_user` = application role), not `SET ROLE` from a superuser.
+
+1. Create/identify migration/admin role and application role
+2. Prove application role ≠ table owner, NOBYPASSRLS, RLS enabled, migrations not as application role
+3. E2E: Org A / owner, Org A / member, Org B / owner
+4. Verify: A→A ALLOW, A→B DENY, B→A DENY, no tenant DENY, inactive DENY, member→owner op DENY, owner→permitted op ALLOW
+
+PostgreSQL identity (from the application connection):
+
+```sql
+SELECT current_user;
+SELECT session_user;
+SELECT rolname, rolsuper, rolbypassrls
+FROM pg_roles
+WHERE rolname = current_user;
+
+SELECT schemaname, tablename, tableowner
+FROM pg_tables
+WHERE schemaname = 'public';
+```
+
+**Definition of Done:** Application database access is performed by a non-owner, non-bypass role, and cross-tenant access has been verified against PostgreSQL RLS using real transactions.
+
+FORCE RLS stays off. `user_tenants` does not start before this gate is closed.
+
+Proof: `tests/integration/rls-role-separation.test.mjs` (must **fail** in CI if Postgres is down; local skip only). Boot assert: `src/instrumentation.ts`. Production migrate: `DATABASE_MIGRATE_URL` must differ from `DATABASE_URL`.
+
+Still later (do not start yet): Redis rate limiting → immutable audit → `user_tenants`.
 
 ## Runtime trust boundary
 
 Officia is a multi-tenant ERP. Every privileged request must follow:
 
 ```
-Clerk session → requireTenant() → PostgreSQL RLS GUCs → query → audit
+Clerk session → requireTenant() → PostgreSQL RLS GUCs → query
 ```
 
 - **Auth:** Clerk. Dashboard and private `/api/*` routes require a signed-in user.
-- **Tenant:** `src/lib/auth/get-tenant.ts` resolves `users.tenant_id` from `clerk_id`.
-- **RLS:** `requireTenant()` binds `app.current_tenant_id`, `app.current_user_id`, and `app.current_user_role` on a reserved connection for the rest of the request (`src/lib/db/rls-session.ts`). Policies live in `src/lib/db/rls.sql`.
+- **Tenant:** `src/lib/auth/get-tenant.ts` binds `app.current_clerk_id`, loads `users`, rejects inactive membership, then binds tenant/user/role GUCs.
+- **RLS:** Reserved connection in `src/lib/db/rls-session.ts`. Policies in `src/lib/db/rls.sql`. Role bootstrap in `src/lib/db/roles.sql`.
 - **Public APIs only:** `/api/webhooks/*`, `/api/health`, `/api/cron/*` (Bearer `CRON_SECRET`), `/api/ai/webhook` (Bearer `AI_WEBHOOK_SECRET`).
-
-## Production database roles
-
-The `DATABASE_URL` user used by the app must **not** be the table owner, **or** `FORCE ROW LEVEL SECURITY` must be enabled after RLS session binding is verified.
-
-Required:
-
-- Application role: `NOSUPERUSER` + `NOBYPASSRLS`
-- Separate owner/migration role for `drizzle-kit migrate`
-- RLS contract tests: `npm run test:rls` (runs in CI)
-
-Do not enable FORCE RLS until application traffic sets GUCs on every tenant query. Owner connections still bypass RLS; that is why the app role must differ from the owner.
 
 ## Billing
 
@@ -63,7 +87,8 @@ Chat is authenticated and tenant-scoped. Request size, message count, and messag
 
 Never commit `.env.local`. Production needs at least:
 
-- `DATABASE_URL`
+- `DATABASE_URL` (application role)
+- `DATABASE_MIGRATE_URL` (migration role)
 - `NEXT_PUBLIC_APP_URL` (https origin)
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`
 - `STRIPE_SECRET_KEY` and `STRIPE_PRICE_*`

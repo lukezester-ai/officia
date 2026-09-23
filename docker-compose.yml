@@ -12,6 +12,9 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    # Superuser owns the instance. Apply src/lib/db/roles.sql after first boot
+    # so DATABASE_URL can use officia_app (NOBYPASSRLS, not table owner) and
+    # DATABASE_MIGRATE_URL can use officia_migrate. Do not enable FORCE RLS.
 
 volumes:
   db_data:
