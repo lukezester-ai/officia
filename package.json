@@ -13,7 +13,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "test:rls": "node --test tests/integration/rls-isolation.test.mjs tests/integration/rls-ddl-contract.test.mjs tests/integration/rls-role-separation.test.mjs",
-    "ci": "npm run lint && npm run typecheck && npm test -- --runInBand && npm run test:rls && npm run build",
+    "test:redis": "node --test tests/integration/redis-rate-limit.test.mjs",
+    "ci": "npm run lint && npm run typecheck && npm test -- --runInBand && npm run test:rls && npm run test:redis && npm run build",
     "test": "jest"
   },
   "dependencies": {
@@ -61,6 +62,7 @@
     "react-dom": "^19.1.2",
     "react-markdown": "^10.1.0",
     "recharts": "^3.8.1",
+    "redis": "^6.2.1",
     "resend": "^6.12.4",
     "serialize-javascript": "^7.0.7",
     "shadcn": "^4.11.0",

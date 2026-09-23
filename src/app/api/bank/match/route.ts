@@ -8,7 +8,7 @@ import { requireTenant } from '@/lib/auth/get-tenant';
 import { withRateLimit } from '@/lib/api/rate-limit';
 
 export async function POST(req: NextRequest) {
-  return withRateLimit(req, () => matchBank(req));
+  return withRateLimit(req, () => matchBank(req), 'bank:match');
 }
 
 async function matchBank(req: NextRequest) {

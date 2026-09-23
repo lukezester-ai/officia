@@ -9,7 +9,7 @@ import { withRateLimit } from '@/lib/api/rate-limit';
 import { requireTenant } from '@/lib/auth/get-tenant';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  return withRateLimit(req, () => createCheckout(req, params));
+  return withRateLimit(req, () => createCheckout(req, params), 'invoices:checkout');
 }
 
 async function createCheckout(req: Request, params: Promise<{ id: string }>) {

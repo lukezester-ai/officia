@@ -4,10 +4,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { findRelevantTaxLaws, buildRagSystemPrompt } from '@/lib/ai/rag/tax-rag';
 import { requireApiSession, publicClientError } from '@/lib/auth/api-guard';
 import { rejectOversizedRequest } from '@/lib/api/security';
-
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const MAX_REQUESTS_PER_WINDOW = 20;
+import { AI_CHAT_ROUTE_LIMIT, enforceTenantRateLimit } from '@/lib/rate-limit/tenant-limit';
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_CHARS = 4000;
 const MAX_BODY_BYTES = 32_000;
@@ -21,18 +18,13 @@ export async function POST(req: NextRequest) {
     const { ctx, response } = await requireApiSession();
     if (response || !ctx) return response!;
 
-    const now = Date.now();
-    const rl = rateLimitMap.get(ctx.tenantId) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
-    if (now > rl.resetTime) {
-      rl.count = 1;
-      rl.resetTime = now + RATE_LIMIT_WINDOW_MS;
-    } else {
-      rl.count += 1;
-    }
-    rateLimitMap.set(ctx.tenantId, rl);
-    if (rl.count > MAX_REQUESTS_PER_WINDOW) {
-      return publicClientError(429, 'Too many requests', requestId);
-    }
+    const limited = await enforceTenantRateLimit({
+      tenantId: ctx.tenantId,
+      route: 'ai:chat',
+      limit: AI_CHAT_ROUTE_LIMIT,
+      requestId,
+    });
+    if (limited) return limited;
 
     const body = await req.json().catch(() => null);
     if (!body?.messages || !Array.isArray(body.messages)) {

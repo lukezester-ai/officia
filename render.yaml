@@ -12,3 +12,5 @@ services:
         sync: false
       - key: DATABASE_MIGRATE_URL
         sync: false
+      - key: REDIS_URL
+        sync: false

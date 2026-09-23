@@ -4,5 +4,7 @@ export async function register() {
 
   const { getClient } = await import('./lib/db/db');
   const { assertApplicationDbRole } = await import('./lib/db/assert-app-role');
+  const { assertRedisConfigured } = await import('./lib/rate-limit/redis');
   await assertApplicationDbRole(getClient());
+  await assertRedisConfigured();
 }

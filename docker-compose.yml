@@ -16,5 +16,11 @@ services:
     # so DATABASE_URL can use officia_app (NOBYPASSRLS, not table owner) and
     # DATABASE_MIGRATE_URL can use officia_migrate. Do not enable FORCE RLS.
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
 volumes:
   db_data:

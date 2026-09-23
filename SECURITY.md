@@ -18,7 +18,7 @@ Locked at `e82fa63` on `main`. Do not mix later gates into that commit.
 
 ## Production DB Role Separation v1
 
-Frozen technical gate after Baseline v1 (`e82fa63`). Own commit/PR. Not verified until CI Postgres E2E is green. Redis starts only after this gate is **MERGED / VERIFIED**.
+Frozen technical gate after Baseline v1 (`e82fa63`). **MERGED / VERIFIED** at `79a814d`.
 
 ```
 Clerk
@@ -56,11 +56,36 @@ WHERE schemaname = 'public';
 
 **Definition of Done:** Application database access is performed by a non-owner, non-bypass role, and cross-tenant access has been verified against PostgreSQL RLS using real transactions.
 
-FORCE RLS stays off. `user_tenants` does not start before this gate is closed.
+Status: **MERGED / VERIFIED** at `79a814d` (PR #6). Do not reopen this baseline for Redis work.
 
-Proof: `tests/integration/rls-role-separation.test.mjs` (must **fail** in CI if Postgres is down; local skip only). Boot assert: `src/instrumentation.ts`. Production migrate: `DATABASE_MIGRATE_URL` must differ from `DATABASE_URL`.
+FORCE RLS stays off. Proof remains `tests/integration/rls-role-separation.test.mjs`.
 
-Still later (do not start yet): Redis rate limiting → immutable audit → `user_tenants`.
+Still later (do not start yet): immutable audit → `user_tenants`.
+
+## Redis distributed rate limiting v1
+
+Frozen next gate after DB Role Separation (`79a814d`). Own commit/PR. Do not mix immutable audit or `user_tenants`.
+
+In-memory `Map` buckets are single-instance and IP keys couple tenants behind NAT. This gate replaces them with a tenant-scoped Redis counter shared by every application process.
+
+```
+requireTenant()
+  → officia:rl:v1:{tenantId}:{route}
+  → Redis INCR + EXPIRE (atomic Lua)
+  → allow or 429
+```
+
+1. `REDIS_URL` required in production (`src/instrumentation.ts`)
+2. Key is tenant + route — never IP as the tenant identity
+3. Two application instances share one counter
+4. Tenant A hitting the limit does not block tenant B
+5. Missing tenant → deny (403)
+6. Redis down → fail closed (503), no in-memory fallback
+7. AI chat: 20 / 60s; other wrapped APIs: 60 / 60s
+
+**Definition of Done:** Rate limits are tenant-aware and enforced in Redis with an atomic increment visible to every application instance.
+
+Proof: `tests/rate-limit.contract.test.ts` + `tests/integration/redis-rate-limit.test.mjs` (must **fail** in CI if Redis is down).
 
 ## Runtime trust boundary
 
@@ -81,7 +106,7 @@ Clerk session → requireTenant() → PostgreSQL RLS GUCs → query
 
 ## AI
 
-Chat is authenticated and tenant-scoped. Request size, message count, and message length are capped. Clients receive generic errors plus a `requestId`; details stay in server logs. In-memory rate limits are a single-instance control and must move to Redis before horizontal scale-out.
+Chat is authenticated and tenant-scoped. Request size, message count, and message length are capped. Clients receive generic errors plus a `requestId`; details stay in server logs. Rate limits are tenant-scoped Redis counters (`officia:rl:v1:{tenantId}:{route}`), not per-process Maps.
 
 ## Secrets
 
@@ -92,4 +117,4 @@ Never commit `.env.local`. Production needs at least:
 - `NEXT_PUBLIC_APP_URL` (https origin)
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`
 - `STRIPE_SECRET_KEY` and `STRIPE_PRICE_*`
-- `CRON_SECRET` / webhook secrets when those endpoints are enabled
+- `REDIS_URL` (required in production for distributed rate limits)

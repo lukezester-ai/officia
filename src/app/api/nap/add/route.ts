@@ -6,7 +6,7 @@ import { requireTenant } from '@/lib/auth/get-tenant';
 import { withRateLimit } from '@/lib/api/rate-limit';
 
 export async function POST(req: Request) {
-  return withRateLimit(req, () => addNapIntegration(req));
+  return withRateLimit(req, () => addNapIntegration(req), 'nap:add');
 }
 
 async function addNapIntegration(req: Request) {
