@@ -16,6 +16,7 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
       setTimeout(() => reject(new Error('timeout')), 12_000);
     }),
   ]).catch((error: unknown) => {
+    console.error('[dashboard]', error);
     loadError = error instanceof Error ? error.message : 'unknown';
     return null;
   });
@@ -30,7 +31,7 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
     <div className="space-y-6">
       {loadError ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          Таблото не успя да зареди фирмените данни. Опитай отново след секунда.
+          Фирмените данни още се зареждат от базата. Презареди страницата; нулите по-долу не означават, че фирмата е празна.
         </div>
       ) : null}
       {/* KPI Row */}
