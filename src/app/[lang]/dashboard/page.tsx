@@ -9,7 +9,16 @@ function fmt(n: number) {
 
 export default async function DashboardPage({ params }: { params?: Promise<{ lang: string }> }) {
   const { lang = 'bg' } = (await params) || {};
-  const data = await getDashboardData().catch(() => null);
+  let loadError: string | null = null;
+  const data = await Promise.race([
+    getDashboardData(),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('timeout')), 12_000);
+    }),
+  ]).catch((error: unknown) => {
+    loadError = error instanceof Error ? error.message : 'unknown';
+    return null;
+  });
 
   const revenue = data?.overviewStats?.revenue ?? 0;
   const expenses = data?.overviewStats?.expenses ?? 0;
@@ -19,6 +28,11 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
 
   return (
     <div className="space-y-6">
+      {loadError ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          Таблото не успя да зареди фирмените данни. Опитай отново след секунда.
+        </div>
+      ) : null}
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Приходи */}

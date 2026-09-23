@@ -39,7 +39,12 @@ export async function ensureRequestConnection(client: SqlClient): Promise<RlsSto
     throw new Error('Postgres client cannot reserve a session');
   }
 
-  const reserved = await client.reserve();
+  const reserved = await Promise.race([
+    client.reserve(),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('RLS session timed out')), 8_000);
+    }),
+  ]);
   const scopedDb = drizzle(reserved, { schema });
   const store: RlsStore = { db: scopedDb, reserved };
   rlsAls.enterWith(store);
