@@ -8,12 +8,44 @@ export type AppDb = ReturnType<typeof drizzle<typeof schema>>;
 
 type RlsStore = {
   db: AppDb;
-  reserved: Reserved;
+  reserved: Reserved | null;
 };
 
 export const rlsAls = new AsyncLocalStorage<RlsStore>();
 
+const globalForRls = globalThis as unknown as {
+  officiaRoleBypassesRls?: boolean;
+};
+
+async function currentRoleBypassesRls(client: SqlClient): Promise<boolean> {
+  if (typeof globalForRls.officiaRoleBypassesRls === 'boolean') {
+    return globalForRls.officiaRoleBypassesRls;
+  }
+  const [role] = await client`
+    SELECT r.rolsuper, r.rolbypassrls
+    FROM pg_roles r
+    WHERE r.rolname = current_user
+  `;
+  if (role?.rolsuper || role?.rolbypassrls) {
+    globalForRls.officiaRoleBypassesRls = true;
+    return true;
+  }
+  const owned = await client`
+    SELECT 1 AS ok
+    FROM pg_class c
+    JOIN pg_roles r ON r.oid = c.relowner
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind = 'r'
+      AND r.rolname = current_user
+    LIMIT 1
+  `;
+  globalForRls.officiaRoleBypassesRls = owned.length > 0;
+  return globalForRls.officiaRoleBypassesRls;
+}
+
 async function releaseStore(store: RlsStore) {
+  if (!store.reserved) return;
   try {
     await store.reserved`
       SELECT
@@ -35,6 +67,13 @@ export async function ensureRequestConnection(client: SqlClient): Promise<RlsSto
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
     throw new Error('RLS session requires the Node.js runtime');
   }
+
+  if (await currentRoleBypassesRls(client)) {
+    const store: RlsStore = { db: drizzle(client, { schema }), reserved: null };
+    rlsAls.enterWith(store);
+    return store;
+  }
+
   if (typeof client.reserve !== 'function') {
     throw new Error('Postgres client cannot reserve a session');
   }
@@ -71,8 +110,9 @@ export async function setRlsGucs(opts: {
   if (!store) {
     throw new Error('RLS session is not open');
   }
-  // Reserved connection: session GUCs last for the request. The E2E gate uses
-  // SET LOCAL in a transaction after LOGIN as the application role.
+  if (!store.reserved) {
+    return;
+  }
   await store.reserved`
     SELECT
       set_config('app.current_clerk_id', ${opts.clerkId ?? ''}, false),
