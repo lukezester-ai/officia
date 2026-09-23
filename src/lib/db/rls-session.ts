@@ -105,12 +105,10 @@ export async function setRlsGucs(opts: {
   tenantId?: string;
   userId?: string;
   role?: string;
+  store?: RlsStore;
 }): Promise<void> {
-  const store = rlsAls.getStore();
-  if (!store) {
-    throw new Error('RLS session is not open');
-  }
-  if (!store.reserved) {
+  const store = opts.store ?? rlsAls.getStore();
+  if (!store?.reserved) {
     return;
   }
   await store.reserved`
@@ -135,6 +133,7 @@ export async function bindRequestRlsContext(opts: {
     tenantId: opts.tenantId,
     userId: opts.userId,
     role: opts.role,
+    store,
   });
   return store;
 }
