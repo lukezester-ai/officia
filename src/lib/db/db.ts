@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import { getAppDatabaseUrl } from './connection-urls';
 import { rlsAls } from './rls-session';
 
 type SqlClient = ReturnType<typeof postgres>;
@@ -16,10 +17,7 @@ function isProductionBuild() {
 }
 
 function createClient(): SqlClient {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is not set');
-  }
+  const connectionString = getAppDatabaseUrl();
 
   const isLocal =
     connectionString.includes('localhost') || connectionString.includes('127.0.0.1');

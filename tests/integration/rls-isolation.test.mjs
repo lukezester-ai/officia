@@ -57,6 +57,7 @@ let provisionErr = null;
 
 // fixtures
 let A = null, B = null, DRAFT = null, POSTED = null, LINE_B = null;
+let USER_A = null, USER_B = null, USER_INACTIVE = null;
 
 async function connect(url) {
   const c = postgres(url, CONN);
@@ -76,7 +77,7 @@ async function provision() {
   // minimal schema contract (matches src/lib/db/schema/*)
   const stmts = [];
   stmts.push(`CREATE TABLE tenants (id uuid PRIMARY KEY, name text NOT NULL)`);
-  stmts.push(`CREATE TABLE users (id uuid PRIMARY KEY, tenant_id uuid REFERENCES tenants(id), clerk_id text NOT NULL UNIQUE, email text)`);
+  stmts.push(`CREATE TABLE users (id uuid PRIMARY KEY, tenant_id uuid REFERENCES tenants(id), clerk_id text NOT NULL UNIQUE, email text, is_active boolean DEFAULT true)`);
   stmts.push(`CREATE TABLE roles (id uuid PRIMARY KEY, tenant_id uuid)`);
   stmts.push(`CREATE TABLE journal_headers (id uuid PRIMARY KEY, tenant_id uuid NOT NULL, journal_number text UNIQUE, status text NOT NULL DEFAULT 'draft', posted_by uuid)`);
   stmts.push(`CREATE TABLE invoices (id serial PRIMARY KEY, tenant_id uuid, amount text)`);
@@ -117,11 +118,17 @@ async function provision() {
   await admin.unsafe(`GRANT USAGE ON SCHEMA public TO ${APP_ROLE}`);
   await admin.unsafe(`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${APP_ROLE}`);
   await admin.unsafe(`GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${APP_ROLE}`);
+  await admin.unsafe(`GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO ${APP_ROLE}`);
 }
 
 async function seed() {
   A = crypto.randomUUID(); B = crypto.randomUUID();
+  USER_A = crypto.randomUUID(); USER_B = crypto.randomUUID(); USER_INACTIVE = crypto.randomUUID();
   await admin.unsafe(`INSERT INTO tenants (id, name) VALUES ('${A}','A'), ('${B}','B')`);
+  await admin.unsafe(`INSERT INTO users (id, tenant_id, clerk_id, email, is_active) VALUES
+      ('${USER_A}','${A}','clerk-a','a@example.com', true),
+      ('${USER_B}','${B}','clerk-b','b@example.com', true),
+      ('${USER_INACTIVE}','${A}','clerk-off','off@example.com', false)`);
 
   const ins = await admin.unsafe(`INSERT INTO journal_headers (id, tenant_id, status) VALUES
       ('${crypto.randomUUID()}','${A}','draft'),
@@ -137,19 +144,36 @@ async function seed() {
   LINE_B = lb.id;
 }
 
-function contextSql({ tenantId = null, role = null }) {
+function defaultUserId(tenantId) {
+  if (tenantId === A) return USER_A;
+  if (tenantId === B) return USER_B;
+  return null;
+}
+
+function defaultClerkId(userId) {
+  if (userId === USER_A) return 'clerk-a';
+  if (userId === USER_B) return 'clerk-b';
+  if (userId === USER_INACTIVE) return 'clerk-off';
+  return null;
+}
+
+function contextSql({ tenantId = null, role = null, userId = null, clerkId = null }) {
   const parts = [];
+  if (clerkId) parts.push(`SET app.current_clerk_id = '${clerkId}'`);
   if (tenantId) parts.push(`SET app.current_tenant_id = '${tenantId}'`);
+  if (userId) parts.push(`SET app.current_user_id = '${userId}'`);
   if (role) parts.push(`SET app.current_user_role = '${role}'`);
   return parts.join('; ');
 }
 
 /** изпълнява fn в isolated client (max:1), като app_role с GUC контекст. */
-async function asApp({ tenantId = null, role = null }, fn) {
+async function asApp({ tenantId = null, role = null, userId = undefined, clerkId = undefined }, fn) {
+  const resolvedUserId = userId === undefined ? defaultUserId(tenantId) : userId;
+  const resolvedClerkId = clerkId === undefined ? defaultClerkId(resolvedUserId) : clerkId;
   const c = await connect(testDbUrl);
   try {
     await c.unsafe(`SET ROLE ${APP_ROLE}`);
-    const ctx = contextSql({ tenantId, role });
+    const ctx = contextSql({ tenantId, role, userId: resolvedUserId, clerkId: resolvedClerkId });
     if (ctx) await c.unsafe(ctx);
     return await fn(c);
   } finally {
@@ -165,6 +189,7 @@ before(async () => {
     await seed();
   } catch (err) {
     console.error('[rls-isolation] setup failed:', err && err.message);
+    if (process.env.CI) throw err;
     provisionErr = err;
     if (admin) await admin.end({ timeout: 1 }).catch(() => {});
     admin = null;
@@ -314,5 +339,21 @@ test('child: A може да чете собствени invoice_lines', async (
   await asApp({ tenantId: A }, async (c) => {
     const rows = await c`SELECT id FROM invoice_lines`;
     assert.ok(rows.length >= 1);
+  });
+});
+
+test('inactive membership → 0 invoice rows', async (t) => {
+  if (!ok(t)) return;
+  await asApp({ tenantId: A, userId: USER_INACTIVE, role: 'owner' }, async (c) => {
+    const rows = await c`SELECT tenant_id FROM invoices`;
+    assert.equal(rows.length, 0);
+  });
+});
+
+test('invalid membership (user B in tenant A) → 0 invoice rows', async (t) => {
+  if (!ok(t)) return;
+  await asApp({ tenantId: A, userId: USER_B, role: 'owner' }, async (c) => {
+    const rows = await c`SELECT tenant_id FROM invoices`;
+    assert.equal(rows.length, 0);
   });
 });

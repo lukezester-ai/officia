@@ -12,7 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test:rls": "node --test tests/integration/rls-isolation.test.mjs tests/integration/rls-ddl-contract.test.mjs",
+    "test:rls": "node --test tests/integration/rls-isolation.test.mjs tests/integration/rls-ddl-contract.test.mjs tests/integration/rls-role-separation.test.mjs",
     "ci": "npm run lint && npm run typecheck && npm test -- --runInBand && npm run test:rls && npm run build",
     "test": "jest"
   },
