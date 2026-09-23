@@ -11,9 +11,9 @@ export default {
     url: (() => {
       const migrate = process.env.DATABASE_MIGRATE_URL;
       const app = process.env.DATABASE_URL;
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.OFFICIA_ENFORCE_APP_ROLE === '1') {
         if (!migrate) {
-          throw new Error('DATABASE_MIGRATE_URL is required in production');
+          throw new Error('DATABASE_MIGRATE_URL is required when OFFICIA_ENFORCE_APP_ROLE=1');
         }
         if (app && migrate === app) {
           throw new Error('DATABASE_MIGRATE_URL must differ from DATABASE_URL');
