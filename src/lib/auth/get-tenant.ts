@@ -3,6 +3,7 @@ import { db, getClient } from '@/lib/db/db';
 import { sql } from 'drizzle-orm';
 import { cache } from 'react';
 import { bindRequestRlsContext, setRlsGucs } from '@/lib/db/rls-session';
+import { assertApplicationDbRole } from '@/lib/db/assert-app-role';
 
 /**
  * Clerk → reserved DB session → membership → tenant RLS GUCs.
@@ -14,8 +15,11 @@ export const requireTenant = cache(async () => {
     throw new Error('Not authenticated');
   }
 
+  const client = getClient();
+  await assertApplicationDbRole(client);
+
   await bindRequestRlsContext({
-    client: getClient(),
+    client,
     clerkId: userId,
   });
 
