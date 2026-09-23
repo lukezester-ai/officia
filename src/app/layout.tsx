@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { getLocale, getMessages } from 'next-intl/server';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Fira_Sans, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { Providers } from '@/app/Providers';
+import bgMessages from '../messages/bg.json';
 
 const firaSans = Fira_Sans({
   weight: ["300", "400", "500", "600", "700"],
@@ -37,14 +37,8 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  let locale = "bg";
-  let messages: Record<string, unknown> = {};
-  try {
-    locale = await getLocale();
-    messages = await getMessages();
-  } catch {
-    messages = (await import("../messages/bg.json")).default;
-  }
+  const locale = "bg";
+  const messages = bgMessages;
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const tree = (
     <html lang={locale} className="dark" suppressHydrationWarning>

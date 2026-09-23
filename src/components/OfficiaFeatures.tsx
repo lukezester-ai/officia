@@ -915,6 +915,7 @@ function CTAButton({ href, variant, label }: { href: string; variant: "primary" 
   return (
     <Link
       href={href}
+      prefetch={false}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors"

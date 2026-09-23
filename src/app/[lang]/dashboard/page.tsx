@@ -1,32 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, FileText, ShoppingCart, Wallet, AlertCircle, ArrowUpRight, BarChart3, Inbox, Clock, CheckSquare } from '@/components/icons';
+import { TrendingUp, ShoppingCart, Wallet, AlertCircle, Inbox, Clock, CheckSquare } from '@/components/icons';
 import { getDashboardData } from './actions';
 import Link from 'next/link';
-import { getInvoices } from './invoices/actions';
-import { getPurchaseInvoices } from './purchase-invoices/actions-read';
-import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
-
-interface DashboardData {
-  needsReview?: {
-    invoices?: number;
-    transactions?: number;
-    documents?: number;
-    vatIssues?: number;
-  };
-  overviewStats?: {
-    inboxOpenItems?: number;
-    approvalsPending?: number;
-  };
-  aiRecommendations?: Array<{
-    id: string;
-    title: string;
-    description: string;
-  }>;
-  upcomingDeadlines?: {
-    dueInvoices?: number;
-    expiringDocs?: number;
-  };
-}
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -34,29 +9,13 @@ function fmt(n: number) {
 
 export default async function DashboardPage({ params }: { params?: Promise<{ lang: string }> }) {
   const { lang = 'bg' } = (await params) || {};
-  // Execute all top-level dashboard queries in parallel for maximum speed (<100ms total DB latency)
-  const [data, invRes, purRes] = await Promise.all([
-    getDashboardData().catch(() => null),
-    getInvoices().catch(() => ({ success: false, data: [] })),
-    getPurchaseInvoices().catch(() => ({ success: false, data: [] })),
-  ]);
+  const data = await getDashboardData().catch(() => null);
 
-  const invoices: any[] = invRes.success ? invRes.data : [];
-  const purchases: any[] = purRes.success ? purRes.data : [];
-
-  const revenue = invoices
-    .filter(i => i.status === 'issued' || i.status === 'paid')
-    .reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
-
-  const expenses = purchases
-    .filter(i => i.status === 'approved' || i.status === 'paid')
-    .reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
-
-  const outstanding = invoices.filter(i => i.status === 'issued');
-  const outstandingAmount = outstanding.reduce((s, i) => s + getInvoiceEffectiveAmount(i), 0);
+  const revenue = data?.overviewStats?.revenue ?? 0;
+  const expenses = data?.overviewStats?.expenses ?? 0;
+  const outstandingCount = data?.overviewStats?.outstandingCount ?? 0;
+  const outstandingAmount = data?.overviewStats?.outstandingAmount ?? 0;
   const netProfit = revenue - expenses;
-
-  const now = new Date();
 
   return (
     <div className="space-y-6">
@@ -104,7 +63,7 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
             <div className="bg-rose-500/20 text-rose-400 rounded-xl p-2.5">
               <AlertCircle size={18} />
             </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{outstanding.length} бр.</span>
+            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{outstandingCount} бр.</span>
           </div>
           <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(outstandingAmount)}</div>
           <div className="text-sm text-zinc-500">€ за събиране</div>

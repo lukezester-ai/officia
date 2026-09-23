@@ -162,7 +162,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
                 <span>Започни безплатно</span>
                 <ArrowRight className="h-5 w-5 transition-transform duration-150 group-hover:translate-x-1" />
               </Link>
-              <Link href={`/${lang}/dashboard`} className="flex items-center gap-3 rounded-2xl border border-white/60 px-8 py-5 text-lg font-bold text-[#d0d0f0] transition-all hover:border-white/75 hover:bg-white/6 active:scale-[0.97]">
+              <Link href={`/${lang}/dashboard`} prefetch={false} className="flex items-center gap-3 rounded-2xl border border-white/60 px-8 py-5 text-lg font-bold text-[#d0d0f0] transition-all hover:border-white/75 hover:bg-white/6 active:scale-[0.97]">
                 <span>Виж демо</span>
               </Link>
             </motion.div>

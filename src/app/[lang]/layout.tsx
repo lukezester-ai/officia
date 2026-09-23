@@ -9,8 +9,6 @@ export const metadata: Metadata = {
   description: "Модерен SaaS за счетоводители и офис мениджъри",
 };
 
-export const dynamic = "force-dynamic";
-
 export default async function LangLayout({
   children,
   params,

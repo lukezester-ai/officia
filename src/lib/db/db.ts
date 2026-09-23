@@ -26,9 +26,9 @@ function createClient(): SqlClient {
   return postgres(connectionString, {
     prepare: false,
     ssl: isLocal ? false : 'require',
-    max: isProductionBuild() ? 1 : 15,
+    max: isProductionBuild() ? 1 : 10,
     idle_timeout: 20,
-    connect_timeout: isProductionBuild() ? 2 : 10,
+    connect_timeout: 5,
   });
 }
 

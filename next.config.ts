@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     staticGenerationMaxConcurrency: 1,
     staticGenerationMinPagesPerWorker: 200,
   },
+  async redirects() {
+    return [
+      { source: '/', destination: '/bg', permanent: false },
+      { source: '/login', destination: '/sign-in', permanent: false },
+      { source: '/register', destination: '/sign-up', permanent: false },
+    ];
+  },
   webpack(config) {
     // OneDrive workspaces can have very limited local disk; persistent webpack
     // cache is redundant in CI and can exceed the available space.
