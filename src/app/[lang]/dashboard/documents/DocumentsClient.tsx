@@ -70,32 +70,10 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
       if (!res.ok) throw new Error(`OCR грешка: ${res.status}`);
       const data = await res.json();
       setOcrResult(data);
-      toast.success('OCR анализът завърши успешно!');
+      toast.success('OCR анализът завърши. Файлът още не е в архива.');
+      setStage('idle');
     } catch (e: any) {
       toast.error(e?.message ?? 'OCR грешка');
-      setStage('idle');
-      return;
-    }
-
-    // Auto-save after OCR
-    setStage('saving');
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('rawText', ocrResult?.extractedText ?? '');
-      const saveRes = await uploadAndAnalyzeDocument(fd);
-      if (saveRes.success) {
-        toast.success('Документът е запазен и изпратен за AI анализ!');
-        setStage('done');
-        setFile(null);
-        setPreview(null);
-        setOcrResult(null);
-        onUploaded();
-      } else {
-        throw new Error(saveRes.error);
-      }
-    } catch (e: any) {
-      toast.error('Грешка при запазване: ' + e?.message);
       setStage('idle');
     }
   }
@@ -138,7 +116,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
             ref={inputRef}
             type="file"
             className="hidden"
-            accept="image/*,.pdf"
+            accept="image/*,.pdf,.txt,.doc,.docx"
             onChange={e => e.target.files?.[0] && pickFile(e.target.files[0])}
           />
           <div className="flex flex-col items-center gap-3">
@@ -147,7 +125,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
             </div>
             <div>
               <p className="font-semibold text-zinc-200">Пусни файл тук или кликни за качване</p>
-              <p className="text-sm text-zinc-500 mt-1">Поддържа: PNG, JPG, PDF · AI OCR автоматично</p>
+              <p className="text-sm text-zinc-500 mt-1">PDF, Word, текст или снимка · до 5 MB</p>
             </div>
             <div className="flex gap-2 mt-1">
               {['📄 Фактура', '📑 Договор', '🧾 Касова бележка', '📋 Друг'].map(t => (
@@ -211,14 +189,14 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
 
           {/* Actions */}
           <div className="flex gap-2">
-            {stage === 'idle' && !ocrResult && (
-              <Button onClick={runOcr} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white flex-1">
-                <Sparkles size={15} /> OCR анализ + запази
+            {stage === 'idle' && (
+              <Button onClick={saveAfterOcr} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white flex-1">
+                <Upload size={15} /> Запази в архива
               </Button>
             )}
-            {stage === 'idle' && ocrResult && (
-              <Button onClick={saveAfterOcr} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white flex-1">
-                <CheckCircle size={15} /> Запази документа
+            {stage === 'idle' && !ocrResult && (
+              <Button onClick={runOcr} variant="outline" className="gap-2 border-white/10 text-zinc-300">
+                <Sparkles size={15} /> OCR
               </Button>
             )}
             {(stage === 'ocr' || stage === 'saving') && (
@@ -232,7 +210,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
                 <Upload size={14} /> Смени
               </Button>
             )}
-            <input ref={inputRef} type="file" className="hidden" accept="image/*,.pdf" onChange={e => e.target.files?.[0] && pickFile(e.target.files[0])} />
+            <input ref={inputRef} type="file" className="hidden" accept="image/*,.pdf,.txt,.doc,.docx" onChange={e => e.target.files?.[0] && pickFile(e.target.files[0])} />
           </div>
         </div>
       )}
@@ -328,6 +306,10 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
                         {doc.aiStatus === 'needs_review' && (
                           <Badge variant="outline" className="ml-1 border-amber-500/30 text-amber-400 bg-amber-500/10">Преглед</Badge>
                         )}
+                      </div>
+                    ) : doc.fileUrl ? (
+                      <div className="flex items-center gap-1.5 text-sm text-zinc-300">
+                        <CheckCircle size={14} className="text-indigo-400" /> В архива
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 text-sm text-zinc-500">

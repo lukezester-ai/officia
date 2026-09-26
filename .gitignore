@@ -44,5 +44,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# uploaded contract files
+# uploaded contract and archive files
 /data/contract-files/
+/data/archive-files/

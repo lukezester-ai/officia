@@ -33,7 +33,9 @@ export function DocumentDrawer({ document, open, onOpenChange }: { document: any
               {document.aiStatus === 'needs_review' ? 'Нужен преглед от човек' : 'AI Анализ'}
             </h4>
             <p className="text-sm text-muted-foreground">
-              {document.aiSummary || 'Този документ е анализиран успешно. Открити са ключови полета.'}
+              {document.aiSummary || (document.status === 'analyzed'
+                ? 'Анализът е готов.'
+                : 'Файлът е в архива. Анализът не е пуснат.')}
             </p>
           </div>
 
@@ -53,10 +55,17 @@ export function DocumentDrawer({ document, open, onOpenChange }: { document: any
                 <Clock size={16} />
                 Създай задача
               </Button>
-              <Button variant="outline" className="justify-start gap-2">
-                <Download size={16} />
-                Изтегли файл
-              </Button>
+              {document.fileUrl ? (
+                <a href={`/api/documents/${document.id}`} className="inline-flex items-center justify-start gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent">
+                  <Download size={16} />
+                  Изтегли файл
+                </a>
+              ) : (
+                <Button variant="outline" className="justify-start gap-2" onClick={() => toast.info('Към този запис няма файл.')}>
+                  <Download size={16} />
+                  Изтегли файл
+                </Button>
+              )}
             </div>
           </div>
 
