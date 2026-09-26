@@ -68,15 +68,15 @@ export function SendPayslipButton({ employee }: SendPayslipButtonProps) {
             <div className="rounded-xl bg-black/40 border border-white/5 p-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-zinc-500">Бруто</span>
-                <span className="text-violet-400 font-semibold tabular-nums">{employee.gross.toFixed(2)} лв</span>
+                <span className="text-violet-400 font-semibold tabular-nums">{employee.gross.toFixed(2)} €</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-zinc-600">Удръжки (осиг. + ДОД)</span>
-                <span className="text-rose-400 tabular-nums">− {(employee.doo + employee.dzpo + employee.zzo + employee.tax).toFixed(2)} лв</span>
+                <span className="text-rose-400 tabular-nums">− {(employee.doo + employee.dzpo + employee.zzo + employee.tax).toFixed(2)} €</span>
               </div>
               <div className="flex justify-between border-t border-white/5 pt-2 mt-1">
                 <span className="text-white font-bold">НЕТО</span>
-                <span className="text-emerald-400 font-black text-base tabular-nums">{employee.net.toFixed(2)} лв</span>
+                <span className="text-emerald-400 font-black text-base tabular-nums">{employee.net.toFixed(2)} €</span>
               </div>
             </div>
 

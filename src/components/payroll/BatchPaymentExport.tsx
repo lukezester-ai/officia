@@ -107,7 +107,7 @@ ${employees
           <h2 className="text-lg font-semibold text-white">Банков Export — Заплати</h2>
         </div>
         <span className="text-xs text-zinc-500 bg-white/5 px-3 py-1 rounded-full border border-white/10">
-          {employees.length} превода · {totalNet.toLocaleString("bg-BG", { minimumFractionDigits: 2 })} лв
+          {employees.length} превода · {totalNet.toLocaleString("bg-BG", { minimumFractionDigits: 2 })} €
         </span>
       </div>
 
@@ -125,7 +125,7 @@ ${employees
                 {emp.position && <span className="text-zinc-600 ml-2 text-xs">{emp.position}</span>}
               </div>
               <span className="text-emerald-400 font-bold tabular-nums">
-                {emp.net.toLocaleString("bg-BG", { minimumFractionDigits: 2 })} лв
+                {emp.net.toLocaleString("bg-BG", { minimumFractionDigits: 2 })} €
               </span>
             </div>
           ))}

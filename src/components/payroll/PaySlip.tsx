@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { PayrollBreakdown } from '@/lib/payroll/calculator';
+import { EMPLOYEE_RATE_TOTAL, EMPLOYER_RATE_TOTAL, formatRate, PAYROLL_RATES } from '@/lib/payroll/rates';
 import { Printer, Building2, User, Calendar, FileText } from 'lucide-react';
 
 interface PaySlipProps {
@@ -11,8 +12,8 @@ interface PaySlipProps {
   year: number;
 }
 
-function fmtBGN(n: number): string {
-  return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' лв.';
+function fmtEUR(n: number): string {
+  return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 }
 
 function fmtPct(n: number): string {
@@ -175,7 +176,7 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
             {/* ── Gross ── */}
             <div className="flex items-center justify-between py-3.5 px-5 rounded-xl bg-violet-500/10 border border-violet-500/20">
               <span className="text-zinc-300 font-semibold">Брутна заплата (Обеми/Ставка)</span>
-              <span className="text-violet-300 font-bold text-lg tabular-nums">{fmtBGN(calc.grossSalary)}</span>
+              <span className="text-violet-300 font-bold text-lg tabular-nums">{fmtEUR(calc.grossSalary)}</span>
             </div>
 
             {calc.adjustments && (
@@ -185,12 +186,12 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                   <div>Работни дни: <span className="text-white font-bold">{calc.adjustments.workingDays || 21}</span></div>
                   <div>Отработени: <span className="text-emerald-400 font-bold">{calc.adjustments.workedDays || 0}</span></div>
                   <div>Платен отпуск: <span className="text-blue-400 font-bold">{calc.adjustments.paidLeaveDays || 0} дни</span></div>
-                  <div>Болничен (Раб.): <span className="text-amber-400 font-bold">{calc.adjustments.sickDaysEmployer || 0} дни ({fmtBGN(calc.sickLeaveCompEmployer || 0)})</span></div>
+                  <div>Болничен (Раб.): <span className="text-amber-400 font-bold">{calc.adjustments.sickDaysEmployer || 0} дни ({fmtEUR(calc.sickLeaveCompEmployer || 0)})</span></div>
                 </div>
                 {calc.effectiveGross !== calc.grossSalary && (
                   <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm">
                     <span className="text-zinc-400 font-medium">Ефективна осигурителна база (след отпуски):</span>
-                    <span className="text-indigo-300 font-bold tabular-nums">{fmtBGN(calc.effectiveGross ?? calc.grossSalary)}</span>
+                    <span className="text-indigo-300 font-bold tabular-nums">{fmtEUR(calc.effectiveGross ?? calc.grossSalary)}</span>
                   </div>
                 )}
               </div>
@@ -211,23 +212,23 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                   <tbody>
                     <tr className="border-t border-white/5 hover:bg-white/3 transition-colors">
                       <td className="py-3 px-5 text-zinc-300">ДОО — Държавно обществено осигуряване</td>
-                      <td className="py-3 px-5 text-right text-zinc-500 tabular-nums">7.90%</td>
-                      <td className="py-3 px-5 text-right text-zinc-200 tabular-nums font-medium">{fmtBGN(calc.employee.doo)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-500 tabular-nums">{formatRate(PAYROLL_RATES.employeeDoo)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-200 tabular-nums font-medium">{fmtEUR(calc.employee.doo)}</td>
                     </tr>
                     <tr className="border-t border-white/5 hover:bg-white/3 transition-colors">
                       <td className="py-3 px-5 text-zinc-300">ДЗПО — Допълнително задължително пенсионно</td>
-                      <td className="py-3 px-5 text-right text-zinc-500 tabular-nums">2.80%</td>
-                      <td className="py-3 px-5 text-right text-zinc-200 tabular-nums font-medium">{fmtBGN(calc.employee.dzpo)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-500 tabular-nums">{formatRate(PAYROLL_RATES.employeeDzpo)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-200 tabular-nums font-medium">{fmtEUR(calc.employee.dzpo)}</td>
                     </tr>
                     <tr className="border-t border-white/5 hover:bg-white/3 transition-colors">
                       <td className="py-3 px-5 text-zinc-300">ЗО — Здравно осигуряване</td>
-                      <td className="py-3 px-5 text-right text-zinc-500 tabular-nums">2.20%</td>
-                      <td className="py-3 px-5 text-right text-zinc-200 tabular-nums font-medium">{fmtBGN(calc.employee.zo)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-500 tabular-nums">{formatRate(PAYROLL_RATES.employeeZo)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-200 tabular-nums font-medium">{fmtEUR(calc.employee.zo)}</td>
                     </tr>
                     <tr className="border-t border-white/5 payslip-row-highlight" style={{ background: 'rgba(99,102,241,0.08)' }}>
                       <td className="py-3 px-5 text-indigo-300 font-semibold">Общо осигуровки служител</td>
-                      <td className="py-3 px-5 text-right text-indigo-400 tabular-nums font-semibold">12.90%</td>
-                      <td className="py-3 px-5 text-right text-indigo-300 tabular-nums font-bold">{fmtBGN(calc.employee.total)}</td>
+                      <td className="py-3 px-5 text-right text-indigo-400 tabular-nums font-semibold">{formatRate(EMPLOYEE_RATE_TOTAL)}</td>
+                      <td className="py-3 px-5 text-right text-indigo-300 tabular-nums font-bold">{fmtEUR(calc.employee.total)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -242,11 +243,11 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                   <tbody>
                     <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
                       <td className="py-3 px-5 text-zinc-400">Данъчна основа (бруто − осигуровки)</td>
-                      <td className="py-3 px-5 text-right text-zinc-300 tabular-nums">{fmtBGN(calc.taxBase)}</td>
+                      <td className="py-3 px-5 text-right text-zinc-300 tabular-nums">{fmtEUR(calc.taxBase)}</td>
                     </tr>
                     <tr className="border-t border-white/5" style={{ background: 'rgba(239,68,68,0.06)' }}>
                       <td className="py-3 px-5 text-rose-300">ДДФЛ — Данък върху доходите на физически лица (10%)</td>
-                      <td className="py-3 px-5 text-right text-rose-300 tabular-nums font-bold">{fmtBGN(calc.ddfl)}</td>
+                      <td className="py-3 px-5 text-right text-rose-300 tabular-nums font-bold">{fmtEUR(calc.ddfl)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -266,7 +267,7 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                 <p className="text-zinc-500 text-xs mt-0.5">За изплащане по сметка</p>
               </div>
               <span className="text-emerald-400 font-black text-2xl tabular-nums drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]">
-                {fmtBGN(calc.netSalary)}
+                {fmtEUR(calc.netSalary)}
               </span>
             </div>
 
@@ -288,23 +289,23 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                   <tbody>
                     <tr className="border-t border-amber-500/10">
                       <td className="py-2.5 px-5 text-zinc-400">ДОО работодател</td>
-                      <td className="py-2.5 px-5 text-right text-zinc-500 tabular-nums">10.92%</td>
-                      <td className="py-2.5 px-5 text-right text-zinc-300 tabular-nums font-medium">{fmtBGN(calc.employer.doo)}</td>
+                      <td className="py-2.5 px-5 text-right text-zinc-500 tabular-nums">{formatRate(PAYROLL_RATES.employerDoo)}</td>
+                      <td className="py-2.5 px-5 text-right text-zinc-300 tabular-nums font-medium">{fmtEUR(calc.employer.doo)}</td>
                     </tr>
                     <tr className="border-t border-amber-500/10">
                       <td className="py-2.5 px-5 text-zinc-400">ДЗПО работодател</td>
-                      <td className="py-2.5 px-5 text-right text-zinc-500 tabular-nums">4.00%</td>
-                      <td className="py-2.5 px-5 text-right text-zinc-300 tabular-nums font-medium">{fmtBGN(calc.employer.dzpo)}</td>
+                      <td className="py-2.5 px-5 text-right text-zinc-500 tabular-nums">{formatRate(PAYROLL_RATES.employerDzpo)}</td>
+                      <td className="py-2.5 px-5 text-right text-zinc-300 tabular-nums font-medium">{fmtEUR(calc.employer.dzpo)}</td>
                     </tr>
                     <tr className="border-t border-amber-500/10">
                       <td className="py-2.5 px-5 text-zinc-400">ЗО работодател</td>
-                      <td className="py-2.5 px-5 text-right text-zinc-500 tabular-nums">4.00%</td>
-                      <td className="py-2.5 px-5 text-right text-zinc-300 tabular-nums font-medium">{fmtBGN(calc.employer.zo)}</td>
+                      <td className="py-2.5 px-5 text-right text-zinc-500 tabular-nums">{formatRate(PAYROLL_RATES.employerZo)}</td>
+                      <td className="py-2.5 px-5 text-right text-zinc-300 tabular-nums font-medium">{fmtEUR(calc.employer.zo)}</td>
                     </tr>
                     <tr className="border-t border-amber-500/10" style={{ background: 'rgba(245,158,11,0.06)' }}>
                       <td className="py-3 px-5 text-amber-400 font-semibold">Общо осигуровки работодател</td>
-                      <td className="py-3 px-5 text-right text-amber-500 tabular-nums font-semibold">18.92%</td>
-                      <td className="py-3 px-5 text-right text-amber-400 tabular-nums font-bold">{fmtBGN(calc.employer.total)}</td>
+                      <td className="py-3 px-5 text-right text-amber-500 tabular-nums font-semibold">{formatRate(EMPLOYER_RATE_TOTAL)}</td>
+                      <td className="py-3 px-5 text-right text-amber-400 tabular-nums font-bold">{fmtEUR(calc.employer.total)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -317,15 +318,15 @@ export function PaySlip({ employee, calc, month, year }: PaySlipProps) {
                 <p className="text-amber-300 font-semibold">Общ разход за работодателя</p>
                 <p className="text-zinc-500 text-xs mt-0.5">Бруто + осигуровки работодател</p>
               </div>
-              <span className="text-amber-300 font-bold text-lg tabular-nums">{fmtBGN(calc.totalEmployerCost)}</span>
+              <span className="text-amber-300 font-bold text-lg tabular-nums">{fmtEUR(calc.totalEmployerCost)}</span>
             </div>
 
           </div>
 
           {/* ─── Footer ─── */}
           <div className="px-8 py-4 border-t border-white/6 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-            <p>Осигурителна основа: {fmtBGN(calc.insuranceBase)} (макс. {fmtBGN(calc.maxInsuranceBase)})</p>
-            <p>Ставки: ДОО 7.9% / ДЗПО 2.8% / ЗО 2.2% / ДДФЛ 10% (2024)</p>
+            <p>Осигурителна основа: {fmtEUR(calc.insuranceBase)} (макс. {fmtEUR(calc.maxInsuranceBase)})</p>
+            <p>Ставки 2026: ДОО {PAYROLL_RATES.employeeDoo}% / ДЗПО {PAYROLL_RATES.employeeDzpo}% / ЗО {PAYROLL_RATES.employeeZo}% / данък {PAYROLL_RATES.incomeTax}%. ТЗПБ не е включена.</p>
           </div>
         </div>
       </div>

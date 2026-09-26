@@ -15,6 +15,7 @@ type Deal = {
   currency: string | null;
   stage: string;
   counterpartyName: string | null;
+  invoiceId: string | null;
 };
 
 type Client = { id: string; name: string; type: string; isActive: boolean };
@@ -61,7 +62,12 @@ export default function DealsPage() {
     if (!res.success) {
       setDeals(previous);
       toast.error(res.error || 'Етапът не беше сменен.');
+      return;
     }
+    if (res.invoiceId) {
+      setDeals((rows) => rows.map((row) => row.id === id ? { ...row, invoiceId: res.invoiceId || row.invoiceId } : row));
+    }
+    if (res.invoiceNumber) toast.success(`Фактура ${res.invoiceNumber} е в Чернови.`);
   }
 
   return (
@@ -109,6 +115,7 @@ export default function DealsPage() {
                     <p className="text-sm font-medium">{deal.title}</p>
                     <p className="text-xs text-zinc-400">{deal.counterpartyName || 'Без клиент'}</p>
                     <p className="mt-1 text-sm tabular-nums">{deal.amount} {deal.currency || 'EUR'}</p>
+                    {deal.invoiceId ? <p className="mt-1 text-xs text-emerald-400">Има фактура в Чернови</p> : null}
                     <select
                       value={deal.stage}
                       onChange={(e) => { void changeStage(deal.id, e.target.value); }}

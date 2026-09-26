@@ -1,11 +1,8 @@
 /**
- * Калкулатор за работни заплати (България)
- * Осигурителни вноски за 2024/2025 - Трета категория труд (родени след 1959 г.)
- *
- * Служител: ДОО 7.9% + ДЗПО 2.8% + ЗО 2.2% = 12.9%
- * Работодател: ДОО 10.92% + ДЗПО 4% + ЗО 4% = 18.92%
- * ДДФЛ: 10% върху (бруто - осигуровки на служителя)
+ * Калкулатор за работни заплати (България, 2026).
+ * Трета категория труд, родени след 1959 г. ТЗПБ не влиза.
  */
+import { PAYROLL_RATES, insuranceCeilingEur, payrollMonthNumber } from './rates';
 
 export interface PayrollBreakdown {
   // Входни данни
@@ -15,10 +12,10 @@ export interface PayrollBreakdown {
 
   // Осигуровки - служител
   employee: {
-    doo: number;       // ДОО 7.9%
-    dzpo: number;      // ДЗПО 2.8%
-    zo: number;        // ЗО 2.2%
-    total: number;     // 12.9% общо
+    doo: number;
+    dzpo: number;
+    zo: number;
+    total: number;
   };
 
   // ДДФЛ
@@ -30,10 +27,10 @@ export interface PayrollBreakdown {
 
   // Осигуровки - работодател
   employer: {
-    doo: number;       // ДОО 10.92%
-    dzpo: number;      // ДЗПО 4%
-    zo: number;        // ЗО 4%
-    total: number;     // 18.92% общо
+    doo: number;
+    dzpo: number;
+    zo: number;
+    total: number;
   };
 
   // Общ разход за работодателя
@@ -46,25 +43,6 @@ export interface PayrollBreakdown {
   effectiveGross?: number;
   sickLeaveCompEmployer?: number;
 }
-
-// Осигурителни ставки 2024/2025
-const RATES = {
-  // Служител
-  EMPLOYEE_DOO: 7.9,
-  EMPLOYEE_DZPO: 2.8,
-  EMPLOYEE_ZO: 2.2,
-
-  // Работодател
-  EMPLOYER_DOO: 10.92,
-  EMPLOYER_DZPO: 4.0,
-  EMPLOYER_ZO: 4.0,
-
-  // ДДФЛ
-  DDFL: 10.0,
-
-  // Максимален осигурителен доход (BGN/месец за 2024)
-  MAX_INSURANCE_BASE: 3750,
-} as const;
 
 export interface PayrollAdjustments {
   workingDays?: number;       // Общо работни дни в месеца (по подразбиране 21)
@@ -86,7 +64,7 @@ export function calculatePayroll(
   adjustments?: PayrollAdjustments
 ): PayrollBreakdown & { adjustments?: PayrollAdjustments; effectiveGross: number; sickLeaveCompEmployer: number } {
   const baseGross = Math.max(0, grossSalary);
-  const maxInsuranceBase = RATES.MAX_INSURANCE_BASE;
+  const maxInsuranceBase = insuranceCeilingEur(year, payrollMonthNumber(month));
 
   let effectiveGross = baseGross;
   let sickLeaveCompEmployer = 0;
@@ -107,22 +85,22 @@ export function calculatePayroll(
   const insuranceBase = Math.min(effectiveGross, maxInsuranceBase);
 
   // --- Осигуровки СЛУЖИТЕЛ ---
-  const employeeDoo = round2(insuranceBase * RATES.EMPLOYEE_DOO / 100);
-  const employeeDzpo = round2(insuranceBase * RATES.EMPLOYEE_DZPO / 100);
-  const employeeZo = round2(insuranceBase * RATES.EMPLOYEE_ZO / 100);
+  const employeeDoo = round2(insuranceBase * PAYROLL_RATES.employeeDoo / 100);
+  const employeeDzpo = round2(insuranceBase * PAYROLL_RATES.employeeDzpo / 100);
+  const employeeZo = round2(insuranceBase * PAYROLL_RATES.employeeZo / 100);
   const employeeTotal = round2(employeeDoo + employeeDzpo + employeeZo);
 
   // --- ДДФЛ ---
   const taxBase = round2(Math.max(0, effectiveGross - employeeTotal));
-  const ddfl = round2(taxBase * RATES.DDFL / 100);
+  const ddfl = round2(taxBase * PAYROLL_RATES.incomeTax / 100);
 
   // --- Нетна заплата ---
   const netSalary = round2(effectiveGross - employeeTotal - ddfl);
 
   // --- Осигуровки РАБОТОДАТЕЛ ---
-  const employerDoo = round2(insuranceBase * RATES.EMPLOYER_DOO / 100);
-  const employerDzpo = round2(insuranceBase * RATES.EMPLOYER_DZPO / 100);
-  const employerZo = round2(insuranceBase * RATES.EMPLOYER_ZO / 100);
+  const employerDoo = round2(insuranceBase * PAYROLL_RATES.employerDoo / 100);
+  const employerDzpo = round2(insuranceBase * PAYROLL_RATES.employerDzpo / 100);
+  const employerZo = round2(insuranceBase * PAYROLL_RATES.employerZo / 100);
   const employerTotal = round2(employerDoo + employerDzpo + employerZo);
 
   // --- Общ разход за работодателя ---

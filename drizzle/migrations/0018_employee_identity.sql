@@ -1,0 +1,2 @@
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS iban text;
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS egn text;

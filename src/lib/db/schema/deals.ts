@@ -12,5 +12,6 @@ export const deals = pgTable('deals', {
   stage: text('stage').notNull().default('lead'),
   expectedClose: text('expected_close'),
   notes: text('notes'),
+  invoiceId: uuid('invoice_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });

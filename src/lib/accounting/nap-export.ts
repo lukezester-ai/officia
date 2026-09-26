@@ -1,5 +1,6 @@
 import iconv from 'iconv-lite';
 import JSZip from 'jszip';
+import { buildPayrollDeclaration, renderPayrollDeclarationXml } from '@/lib/payroll/declarations';
 
 export interface VatRecord {
   id: string;
@@ -120,50 +121,25 @@ export async function generateNapExportArchive(
 }
 
 /**
- * Генерира XML файл за Декларации Образец 1 и Образец 6 към НАП (ТРЗ и Данъци).
+ * Чернова за Обр. 1 и Обр. 6 от ведомостта. Не е официалният файл на НАП.
  */
 export function generatePayrollDeclarationXml(
-  employeesData: Array<{ pin?: string; firstName: string; lastName: string; grossSalary: number; insuranceBase: number; dooEmp: number; dzpoEmp: number; zoEmp: number; ddfl: number }>,
+  employeesData: Array<{ pin?: string; firstName: string; lastName: string; grossSalary: number }>,
   year: number,
   month: number,
-  companyEik: string = "123456789"
+  companyEik: string = ''
 ): string {
-  let totalDoo = 0;
-  let totalDzpo = 0;
-  let totalZo = 0;
-  let totalDdfl = 0;
-
-  const personsXml = employeesData.map((e, idx) => {
-    totalDoo += e.dooEmp || 0;
-    totalDzpo += e.dzpoEmp || 0;
-    totalZo += e.zoEmp || 0;
-    totalDdfl += e.ddfl || 0;
-
-    return `    <Person Row="${idx + 1}">
-      <PIN>${e.pin || '0000000000'}</PIN>
-      <Names>${e.firstName} ${e.lastName}</Names>
-      <InsuredDays>21</InsuredDays>
-      <InsuranceBase>${(e.insuranceBase || 0).toFixed(2)}</InsuranceBase>
-      <EmployeeDOO>${(e.dooEmp || 0).toFixed(2)}</EmployeeDOO>
-      <EmployeeDZPO>${(e.dzpoEmp || 0).toFixed(2)}</EmployeeDZPO>
-      <EmployeeZO>${(e.zoEmp || 0).toFixed(2)}</EmployeeZO>
-      <IncomeTaxDDFL>${(e.ddfl || 0).toFixed(2)}</IncomeTaxDDFL>
-    </Person>`;
-  }).join('\r\n');
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<NAP_Payroll_Declarations Year="${year}" Month="${String(month).padStart(2, '0')}" EIK="${companyEik}" Software="Officia BG ERP">
-  <Declaration1_Persons>
-${personsXml}
-  </Declaration1_Persons>
-  <Declaration6_Summary>
-    <TotalDOO>${totalDoo.toFixed(2)}</TotalDOO>
-    <TotalDZPO>${totalDzpo.toFixed(2)}</TotalDZPO>
-    <TotalZO>${totalZo.toFixed(2)}</TotalZO>
-    <TotalDDFL>${totalDdfl.toFixed(2)}</TotalDDFL>
-    <StatutoryDueDate>${year}-${String(month + 1).padStart(2, '0')}-14</StatutoryDueDate>
-  </Declaration6_Summary>
-</NAP_Payroll_Declarations>`;
+  return renderPayrollDeclarationXml(buildPayrollDeclaration({
+    year,
+    month,
+    eik: companyEik,
+    employees: employeesData.map((employee) => ({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      egn: employee.pin,
+      grossSalary: employee.grossSalary,
+    })),
+  }));
 }
 
 /**
@@ -206,9 +182,9 @@ export async function generateFullBatchNapZip(
 
   const payrollFolder = zip.folder('Payroll_TRZ_NAP');
   if (payrollFolder) {
-    payrollFolder.file(`OBRAZEC_1_6_${month}_${year}.xml`, payrollBuffer);
+    payrollFolder.file(`Officia_Obr1_Obr6_${year}_${String(month).padStart(2, '0')}.xml`, payrollBuffer);
   } else {
-    zip.file(`OBRAZEC_1_6_${month}_${year}.xml`, payrollBuffer);
+    zip.file(`Officia_Obr1_Obr6_${year}_${String(month).padStart(2, '0')}.xml`, payrollBuffer);
   }
 
   return await zip.generateAsync({ type: 'nodebuffer' });

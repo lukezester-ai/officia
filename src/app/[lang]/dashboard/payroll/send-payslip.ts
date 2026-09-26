@@ -2,11 +2,10 @@
 
 import { Resend } from 'resend';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { EMPLOYER_RATE_TOTAL, PAYROLL_RATES } from '@/lib/payroll/rates';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Bulgarian payroll rates
-const EMPLOYER_RATE = 0.2132;
+const EMPLOYER_RATE = EMPLOYER_RATE_TOTAL / 100;
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -53,7 +52,7 @@ function generatePayslipHTML(emp: {
     <!-- Main number -->
     <div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05));border:1px solid rgba(16,185,129,0.3);border-radius:12px;padding:24px;margin-bottom:16px;text-align:center;">
       <div style="color:#6ee7b7;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Нетна заплата за превод</div>
-      <div style="color:#34d399;font-size:42px;font-weight:900;letter-spacing:-1px;">${fmt(emp.net)} лв</div>
+      <div style="color:#34d399;font-size:42px;font-weight:900;letter-spacing:-1px;">${fmt(emp.net)} €</div>
     </div>
 
     <!-- Breakdown -->
@@ -63,27 +62,27 @@ function generatePayslipHTML(emp: {
       <table style="width:100%;border-collapse:collapse;">
         <tr>
           <td style="padding:10px 0;color:#cbd5e1;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.05);">Бруто заплата</td>
-          <td style="padding:10px 0;text-align:right;color:#a78bfa;font-weight:700;font-size:15px;border-bottom:1px solid rgba(255,255,255,0.05);">${fmt(emp.gross)} лв</td>
+          <td style="padding:10px 0;text-align:right;color:#a78bfa;font-weight:700;font-size:15px;border-bottom:1px solid rgba(255,255,255,0.05);">${fmt(emp.gross)} €</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">ДОО (10.52%)</td>
-          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">− ${fmt(emp.doo)} лв</td>
+          <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">ДОО (${PAYROLL_RATES.employeeDoo}%)</td>
+          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">− ${fmt(emp.doo)} €</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">ДЗПО (2.2%)</td>
-          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">− ${fmt(emp.dzpo)} лв</td>
+          <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">ДЗПО (${PAYROLL_RATES.employeeDzpo}%)</td>
+          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">− ${fmt(emp.dzpo)} €</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">ЗЗО (3.2%)</td>
-          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">− ${fmt(emp.zzo)} лв</td>
+          <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">ЗО (${PAYROLL_RATES.employeeZo}%)</td>
+          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">− ${fmt(emp.zzo)} €</td>
         </tr>
         <tr>
           <td style="padding:8px 0;color:#94a3b8;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);">ДОД (10%)</td>
-          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);">− ${fmt(emp.tax)} лв</td>
+          <td style="padding:8px 0;text-align:right;color:#f87171;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);">− ${fmt(emp.tax)} €</td>
         </tr>
         <tr style="background:rgba(16,185,129,0.05);">
           <td style="padding:12px 0;color:white;font-weight:700;font-size:15px;">НЕТНА ЗАПЛАТА</td>
-          <td style="padding:12px 0;text-align:right;color:#34d399;font-weight:900;font-size:18px;">${fmt(emp.net)} лв</td>
+          <td style="padding:12px 0;text-align:right;color:#34d399;font-weight:900;font-size:18px;">${fmt(emp.net)} €</td>
         </tr>
       </table>
     </div>
@@ -91,7 +90,7 @@ function generatePayslipHTML(emp: {
     <!-- Employer cost info -->
     <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:16px;margin-bottom:24px;">
       <div style="font-size:12px;color:#818cf8;">
-        💡 Общ разход на работодателя (с осигуровки): <strong style="color:#a5b4fc;">${fmt(employerCost)} лв/мес</strong>
+        💡 Общ разход на работодателя (с осигуровки): <strong style="color:#a5b4fc;">${fmt(employerCost)} €/мес</strong>
       </div>
     </div>
 

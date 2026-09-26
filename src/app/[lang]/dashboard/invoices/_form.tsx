@@ -25,7 +25,7 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function NewInvoiceDialog({ onCreated }: { onCreated: () => Promise<any[] | void> | void }) {
+export function NewInvoiceDialog({ onCreated }: { onCreated: (invoice?: { id: string }) => Promise<any[] | void> | void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -89,7 +89,7 @@ export function NewInvoiceDialog({ onCreated }: { onCreated: () => Promise<any[]
         toast.error('Грешка: ' + (res.error || 'Фактурата не беше записана'));
         return;
       }
-      const fresh = await onCreated();
+      const fresh = await onCreated(res.invoice);
       if (Array.isArray(fresh) && !fresh.some((invoice) => invoice.id === res.id)) {
         toast.error('Записът мина, но фактурата не се появи в списъка. Презареди страницата.');
         return;

@@ -115,7 +115,7 @@ export default function TaxesPage() {
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
-              toast.success(`Пълният пакет за НАП (ДДС + ТРЗ Обр.1/6 за ${m}/${y}) е изтеглен!`);
+              toast.success(`Пакетът за ${m}/${y} е изтеглен. Файлът за Обр. 1 и Обр. 6 е чернова за преглед.`);
             } else {
               toast.error('Грешка при масов експорт: ' + (res.error || 'Неизвестна грешка'));
             }

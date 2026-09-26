@@ -1,5 +1,5 @@
 import React from 'react';
-import { getPayrollData } from './actions';
+import { getPayrollData, getPayrollDeclaration } from './actions';
 import { getEmployeesWithSalary } from './slip-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,8 @@ import { LegislativeTracker } from '@/components/payroll/LegislativeTracker';
 import { SendPayslipButton } from './SendPayslipButton';
 import { SlipGenerator } from '@/components/payroll/SlipGenerator';
 import { PayrollActionButtons } from './PayrollActionButtons';
+import { PayrollDeclarations } from './PayrollDeclarations';
+import { PAYROLL_RATES } from '@/lib/payroll/rates';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -23,6 +25,7 @@ export default async function PayrollPage() {
 
   const empRes = await getEmployeesWithSalary();
   const employees = empRes.data || [];
+  const declaration = await getPayrollDeclaration();
 
   return (
     <div className="space-y-8 pb-10">
@@ -39,6 +42,12 @@ export default async function PayrollPage() {
         </div>
         <PayrollActionButtons payrollList={data.list} />
       </div>
+
+      <PayrollDeclarations
+        draft={declaration.success ? declaration.draft : null}
+        xml={declaration.success ? declaration.xml : ''}
+        error={declaration.success ? undefined : declaration.error}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="shadow-sm border-white/10 bg-white/5 transition-all hover:border-white/20">
@@ -109,9 +118,9 @@ export default async function PayrollPage() {
               <TableRow className="hover:bg-transparent border-white/10">
                 <TableHead className="pl-6 text-zinc-400">Служител</TableHead>
                 <TableHead className="text-right text-zinc-400 font-semibold text-violet-400/80">Бруто</TableHead>
-                <TableHead className="text-right text-zinc-400 text-xs">ДОО (10.52%)</TableHead>
-                <TableHead className="text-right text-zinc-400 text-xs">ДЗПО (2.2%)</TableHead>
-                <TableHead className="text-right text-zinc-400 text-xs">ЗЗО (3.2%)</TableHead>
+                <TableHead className="text-right text-zinc-400 text-xs">ДОО ({PAYROLL_RATES.employeeDoo}%)</TableHead>
+                <TableHead className="text-right text-zinc-400 text-xs">ДЗПО ({PAYROLL_RATES.employeeDzpo}%)</TableHead>
+                <TableHead className="text-right text-zinc-400 text-xs">ЗО ({PAYROLL_RATES.employeeZo}%)</TableHead>
                 <TableHead className="text-right text-zinc-400 text-xs text-rose-400/80">ДОД (10%)</TableHead>
                 <TableHead className="text-right pr-6 text-emerald-400 font-bold">НЕТО</TableHead>
                 <TableHead className="text-right pr-6"></TableHead>

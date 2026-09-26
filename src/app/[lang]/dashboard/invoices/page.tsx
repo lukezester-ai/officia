@@ -64,7 +64,14 @@ export default function InvoicesPage() {
           <h1 className="text-2xl font-bold tracking-tight">Фактури</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Издаване и управление на фактури.</p>
         </div>
-        <NewInvoiceDialog onCreated={load} />
+        <NewInvoiceDialog onCreated={async (created) => {
+          const rows = await load();
+          if (created && !rows.some((row) => row.id === created.id)) {
+            setInvoices((current) => [created, ...current.filter((row) => row.id !== created.id)]);
+            return [created, ...rows];
+          }
+          return rows;
+        }} />
       </div>
 
       {/* Overdue alert banner */}
@@ -78,13 +85,13 @@ export default function InvoicesPage() {
               ⚠️ {overdue.length} {overdue.length === 1 ? 'просрочена фактура' : 'просрочени фактури'}
             </p>
             <p className="text-sm text-rose-300/70">
-              Обща сума: <span className="font-bold">{fmt(overdueAmount)} лв.</span> — моля предприемете действие.
+              Обща сума: <span className="font-bold">{fmt(overdueAmount)} €</span> — моля предприемете действие.
             </p>
           </div>
           <div className="flex gap-2">
             {overdue.slice(0, 2).map((inv: any) => (
               <span key={inv.id} className="text-xs bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded-lg px-2.5 py-1">
-                {inv.invoiceNumber || inv.clientName} · {fmt(parseFloat(inv.totalAmount || '0'))} лв.
+                {inv.invoiceNumber || inv.clientName} · {fmt(parseFloat(inv.totalAmount || '0'))} €
               </span>
             ))}
             {overdue.length > 2 && (

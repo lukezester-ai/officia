@@ -164,7 +164,23 @@ export async function createInvoice(input: {
     if (!saved) return { success: false, error: 'Фактурата не остана в базата' };
 
     revalidatePath('/', 'layout');
-    return { success: true, id: invoiceId };
+    return {
+      success: true,
+      id: invoiceId,
+      invoice: {
+        id: invoiceId,
+        invoiceNumber: input.invoiceNumber.trim(),
+        counterpartyName: name,
+        clientName: name,
+        dueDate: input.dueDate?.trim() || null,
+        issueDate: input.issueDate,
+        status: 'draft',
+        totalAmount: total,
+        total,
+        netAmount: money(netAmount),
+        vatAmount: money(vatAmount),
+      },
+    };
   } catch (error: any) {
     const detail = dbErrorText(error, 'Фактурата не беше записана');
     console.error('[createInvoice]', detail);

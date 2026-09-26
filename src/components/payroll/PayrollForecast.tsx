@@ -1,11 +1,12 @@
 "use client";
 
 import { TrendingUp, AlertTriangle } from "lucide-react";
+import { EMPLOYER_RATE_TOTAL, EMPLOYEE_RATE_TOTAL, PAYROLL_RATES } from "@/lib/payroll/rates";
 
 const BG_MONTHS = ["Яну", "Фев", "Мар", "Апр", "Май", "Юни", "Юли", "Авг", "Сеп", "Окт", "Ное", "Дек"];
 
-// Employer social security rates (Bulgaria 2024)
-const EMPLOYER_RATE = 0.2132; // ДОО 13.72% + ДЗПО 2.8% + ЗЗО 4.8% + ТЗПБ 0.5% + ОЗМ 0.1% + ОЗТ 0.2%
+const EMPLOYER_RATE = EMPLOYER_RATE_TOTAL / 100;
+const NET_RATE = 1 - EMPLOYEE_RATE_TOTAL / 100 - (PAYROLL_RATES.incomeTax / 100) * (1 - EMPLOYEE_RATE_TOTAL / 100);
 
 function fmt(n: number) {
   return n.toLocaleString("bg-BG", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -26,7 +27,7 @@ export function PayrollForecast({ monthlyGross, employeeCount }: PayrollForecast
     const gross = monthlyGross * (1 + i * 0.005); // 0.5% slight drift per month
     const employerContribs = gross * EMPLOYER_RATE;
     const totalCost = gross + employerContribs;
-    const net = gross * (1 - 0.1592); // approx net after employee deductions
+      const net = gross * NET_RATE;
     return {
       label: BG_MONTHS[monthIdx],
       gross: Math.round(gross),

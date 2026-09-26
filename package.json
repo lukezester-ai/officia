@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit --incremental false",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node scripts/apply-sql-migrations.mjs",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "test:rls": "node --test tests/integration/rls-isolation.test.mjs tests/integration/rls-ddl-contract.test.mjs tests/integration/rls-role-separation.test.mjs",

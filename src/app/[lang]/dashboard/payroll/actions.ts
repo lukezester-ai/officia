@@ -2,8 +2,16 @@
 
 import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
+import { tenants } from '@/lib/db/schema/tenants';
 import { eq, and } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { calculatePayroll } from '@/lib/payroll/calculator';
+import {
+  buildPayrollDeclaration,
+  previousDeclarationPeriod,
+  renderPayrollDeclarationXml,
+  type DeclarationDraft,
+} from '@/lib/payroll/declarations';
 
 export async function getPayrollData() {
   try {
@@ -13,17 +21,8 @@ export async function getPayrollData() {
     const activeEmployees = await db.select().from(employees)
       .where(and(eq(employees.tenantId, tenantId), eq(employees.isActive, true)));
       
-    // Параметри за 2024/2025 (Трета категория труд, родени след 1959)
-    // Максимален осигурителен доход
-    const MAX_INSURANCE_BASE = 3750;
-    
-    // Проценти за сметка на служителя:
-    const DOO_PERCENT = 10.52; // Държавно обществено осигуряване
-    const DZPO_PERCENT = 2.20;  // Допълнително задължително пенсионно
-    const ZZO_PERCENT = 3.20;   // Здравно осигуряване
-    const TAX_PERCENT = 10.00;  // ДОД (Данък общ доход)
-
-    // Обработка на ведомостта
+    const now = new Date();
+    const monthName = ['Януари', 'Февруари', 'Март', 'Април', 'Май', 'Юни', 'Юли', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'][now.getMonth()];
     let totalGross = 0;
     let totalDoo = 0;
     let totalDzpo = 0;
@@ -33,20 +32,12 @@ export async function getPayrollData() {
 
     const payrollList = activeEmployees.map(emp => {
       const gross = parseFloat(emp.salary || '0');
-      
-      // Осигурителен доход (ограничен до тавана)
-      const insBase = Math.min(gross, MAX_INSURANCE_BASE);
-      
-      const doo = (insBase * DOO_PERCENT) / 100;
-      const dzpo = (insBase * DZPO_PERCENT) / 100;
-      const zzo = (insBase * ZZO_PERCENT) / 100;
-      
-      // Данъчна основа = Бруто - Осигуровки за сметка на лицето
-      const totalIns = doo + dzpo + zzo;
-      const taxBase = Math.max(0, gross - totalIns);
-      const tax = (taxBase * TAX_PERCENT) / 100;
-      
-      const net = gross - totalIns - tax;
+      const calc = calculatePayroll(gross, monthName, now.getFullYear());
+      const doo = calc.employee.doo;
+      const dzpo = calc.employee.dzpo;
+      const zzo = calc.employee.zo;
+      const tax = calc.ddfl;
+      const net = calc.netSalary;
       
       // Добавяне към общите суми
       totalGross += gross;
@@ -88,6 +79,33 @@ export async function getPayrollData() {
     };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+}
+
+export async function getPayrollDeclaration(): Promise<
+  { success: true; draft: DeclarationDraft; xml: string } | { success: false; error: string }
+> {
+  try {
+    const { tenantId } = await requireTenant();
+    const [company] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+    const activeEmployees = await db.select().from(employees)
+      .where(and(eq(employees.tenantId, tenantId), eq(employees.isActive, true)));
+    const period = previousDeclarationPeriod(new Date());
+    const draft = buildPayrollDeclaration({
+      year: period.year,
+      month: period.month,
+      eik: company?.bulstat || '',
+      employees: activeEmployees.map((employee) => ({
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        egn: employee.egn,
+        grossSalary: Number(employee.salary || '0'),
+      })),
+    });
+    return { success: true, draft, xml: renderPayrollDeclarationXml(draft) };
+  } catch (error) {
+    console.error('[payroll declaration]', error);
+    return { success: false, error: 'Декларацията не можа да се подготви.' };
   }
 }
 
