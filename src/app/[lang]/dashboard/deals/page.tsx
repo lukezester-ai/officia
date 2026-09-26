@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { DEAL_STAGES, type DealStage } from '@/lib/crm/deals';
+import { DEAL_STAGES, invoiceStatusLabel, type DealStage } from '@/lib/crm/deals';
 import { getCounterparties } from '../counterparties/actions';
 import { createDeal, listDeals, moveDeal } from './actions';
 
@@ -16,11 +18,15 @@ type Deal = {
   stage: string;
   counterpartyName: string | null;
   invoiceId: string | null;
+  invoiceNumber: string | null;
+  invoiceStatus: string | null;
 };
 
 type Client = { id: string; name: string; type: string; isActive: boolean };
 
 export default function DealsPage() {
+  const params = useParams<{ lang: string }>();
+  const lang = params?.lang || 'bg';
   const [deals, setDeals] = useState<Deal[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [title, setTitle] = useState('');
@@ -65,7 +71,12 @@ export default function DealsPage() {
       return;
     }
     if (res.invoiceId) {
-      setDeals((rows) => rows.map((row) => row.id === id ? { ...row, invoiceId: res.invoiceId || row.invoiceId } : row));
+      setDeals((rows) => rows.map((row) => row.id === id ? {
+        ...row,
+        invoiceId: res.invoiceId || row.invoiceId,
+        invoiceNumber: res.invoiceNumber || row.invoiceNumber,
+        invoiceStatus: res.invoiceNumber ? 'draft' : row.invoiceStatus,
+      } : row));
     }
     if (res.invoiceNumber) toast.success(`Фактура ${res.invoiceNumber} е в Чернови.`);
   }
@@ -115,7 +126,11 @@ export default function DealsPage() {
                     <p className="text-sm font-medium">{deal.title}</p>
                     <p className="text-xs text-zinc-400">{deal.counterpartyName || 'Без клиент'}</p>
                     <p className="mt-1 text-sm tabular-nums">{deal.amount} {deal.currency || 'EUR'}</p>
-                    {deal.invoiceId ? <p className="mt-1 text-xs text-emerald-400">Има фактура в Чернови</p> : null}
+                    {deal.invoiceId ? (
+                      <Link href={`/${lang}/dashboard/invoices`} className="mt-1 block text-xs text-emerald-400 hover:underline">
+                        Фактура {deal.invoiceNumber || ''} · {invoiceStatusLabel(deal.invoiceStatus)}
+                      </Link>
+                    ) : null}
                     <select
                       value={deal.stage}
                       onChange={(e) => { void changeStage(deal.id, e.target.value); }}

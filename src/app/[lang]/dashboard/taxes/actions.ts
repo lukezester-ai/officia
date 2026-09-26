@@ -104,18 +104,11 @@ export async function exportBatchDeclarationsAction(
     const formattedEmps = emps
       .filter((e: any) => e.egn)
       .map((e: any) => {
-        const gross = parseFloat(e.salary || '0');
-        const insBase = Math.min(gross, 3750);
         return {
           pin: e.egn,
           firstName: e.firstName || '',
           lastName: e.lastName || '',
-          grossSalary: gross,
-          insuranceBase: insBase,
-          dooEmp: insBase * 0.079,
-          dzpoEmp: insBase * 0.028,
-          zoEmp: insBase * 0.022,
-          ddfl: Math.max(0, gross - insBase * 0.129) * 0.10,
+          grossSalary: parseFloat(e.salary || '0'),
         };
       });
 

@@ -14,6 +14,17 @@ export function isDealStage(value: string): value is DealStage {
   return STAGE_IDS.has(value);
 }
 
+export function dealStageLabel(stage: string): string {
+  return DEAL_STAGES.find((item) => item.id === stage)?.label || stage;
+}
+
+export function invoiceStatusLabel(status: string | null | undefined): string {
+  if (status === 'issued') return 'Издадена';
+  if (status === 'paid') return 'Платена';
+  if (status === 'cancelled') return 'Анулирана';
+  return 'Чернова';
+}
+
 export function parseDealAmount(value: string): number | null {
   const amount = Number(String(value).replace(',', '.').trim());
   if (!Number.isFinite(amount) || amount < 0) return null;

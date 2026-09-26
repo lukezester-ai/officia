@@ -24,8 +24,11 @@ export async function listDeals() {
       counterpartyName: counterparties.name,
       expectedClose: deals.expectedClose,
       invoiceId: deals.invoiceId,
+      invoiceNumber: invoices.invoiceNumber,
+      invoiceStatus: invoices.status,
     }).from(deals)
       .leftJoin(counterparties, eq(deals.counterpartyId, counterparties.id))
+      .leftJoin(invoices, eq(deals.invoiceId, invoices.id))
       .where(eq(deals.tenantId, tenantId))
       .orderBy(desc(deals.createdAt));
     return { success: true as const, data: rows };

@@ -88,9 +88,9 @@ export async function deactivateCounterparty(id: string) {
   }
 }
 import { invoices } from '@/lib/db/schema/invoices';
+import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
-import { documents } from '@/lib/db/schema/documents';
-import { or } from 'drizzle-orm';
+import { deals } from '@/lib/db/schema/deals';
 
 export async function getCounterparty360Data(id: string) {
   try {
@@ -101,6 +101,19 @@ export async function getCounterparty360Data(id: string) {
     // Find invoices (match by counterpartyName, in real app match by ID if linked)
     // Wait, counterparties are linked to invoices by name or ID? Currently invoices just has counterpartyName. Let's match by name.
     const relatedInvoices = await db.select().from(invoices).where(and(eq(invoices.tenantId, tenantId), eq(invoices.counterpartyName, counterparty.name)));
+    const relatedDeals = await db.select({
+      id: deals.id,
+      title: deals.title,
+      amount: deals.amount,
+      currency: deals.currency,
+      stage: deals.stage,
+      invoiceId: deals.invoiceId,
+      invoiceNumber: invoices.invoiceNumber,
+      invoiceStatus: invoices.status,
+    }).from(deals)
+      .leftJoin(invoices, eq(deals.invoiceId, invoices.id))
+      .where(and(eq(deals.tenantId, tenantId), eq(deals.counterpartyId, counterparty.id)))
+      .orderBy(desc(deals.createdAt));
     
     // Financials
     const unpaidInvoices = relatedInvoices.filter(i => i.status === 'issued');
@@ -108,7 +121,17 @@ export async function getCounterparty360Data(id: string) {
     const totalVolume = relatedInvoices.reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
     
     // Transactions
-    const relatedTransactions = await db.select().from(bankTransactions).where(eq(bankTransactions.counterpartyName, counterparty.name));
+    const relatedTransactions = await db.select({
+      id: bankTransactions.id,
+      description: bankTransactions.description,
+      date: bankTransactions.date,
+      amount: bankTransactions.amount,
+    }).from(bankTransactions)
+      .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+      .where(and(
+        eq(bankAccounts.tenantId, tenantId),
+        eq(bankTransactions.counterpartyName, counterparty.name),
+      ));
     
     // Documents
     // Since document schema doesn't have counterpartyName directly, we might search metadata or title
@@ -127,6 +150,10 @@ export async function getCounterparty360Data(id: string) {
     if (!counterparty.eik) {
       aiNotes.push('Липсва ЕИК. Препоръчително е да го въведете за коректно отчитане по ДДС.');
     }
+    const openDeals = relatedDeals.filter((deal) => deal.stage !== 'won' && deal.stage !== 'lost');
+    if (openDeals.length > 0) {
+      aiNotes.push(`${openDeals.length} отворени сделки с този клиент.`);
+    }
 
     return { 
       success: true, 
@@ -138,12 +165,14 @@ export async function getCounterparty360Data(id: string) {
           overdueCount: overdue.length
         },
         invoices: relatedInvoices,
+        deals: relatedDeals,
         transactions: relatedTransactions,
         documents: relatedDocuments,
         aiNotes
       } 
     };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    console.error('[counterparty-360]', error);
+    return { success: false, error: 'Карточката на клиента не можа да се зареди.' };
   }
 }

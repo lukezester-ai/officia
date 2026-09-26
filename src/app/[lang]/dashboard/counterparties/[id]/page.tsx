@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building, Mail, Phone, MapPin, FileText, DollarSign, AlertCircle, TrendingUp, Calendar, Zap } from '@/components/icons';
 import Link from 'next/link';
+import { dealStageLabel, invoiceStatusLabel } from '@/lib/crm/deals';
 
 interface Counterparty {
   name: string;
@@ -38,10 +39,21 @@ interface Transaction {
   amount?: string;
 }
 
+interface DealRow {
+  id: string;
+  title: string;
+  amount: string;
+  currency: string | null;
+  stage: string;
+  invoiceNumber: string | null;
+  invoiceStatus: string | null;
+}
+
 interface Counterparty360Data {
   counterparty: Counterparty;
   financials: Financials;
   invoices: Invoice[];
+  deals: DealRow[];
   transactions: Transaction[];
   aiNotes: string[];
 }
@@ -66,7 +78,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
     );
   }
 
-  const { counterparty, financials, invoices, transactions, aiNotes } = res.data as Counterparty360Data;
+  const { counterparty, financials, invoices, deals, transactions, aiNotes } = res.data as Counterparty360Data;
 
   return (
     <div className="space-y-6">
@@ -173,6 +185,9 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                   <TabsTrigger value="invoices" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
                     Фактури ({invoices.length})
                   </TabsTrigger>
+                  <TabsTrigger value="deals" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
+                    Сделки ({deals.length})
+                  </TabsTrigger>
                   <TabsTrigger value="transactions" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
                     Банкови плащания ({transactions.length})
                   </TabsTrigger>
@@ -180,7 +195,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                 
                 <TabsContent value="invoices" className="p-0 m-0">
                   {invoices.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground text-sm">Няма издадени фактури.</div>
+                    <div className="p-8 text-center text-muted-foreground text-sm">Няма фактури към този клиент.</div>
                   ) : (
                     <div className="divide-y divide-border">
                       {invoices.slice(0, 10).map((inv: any) => (
@@ -189,7 +204,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-sm font-medium">{inv.invoiceNumber}</span>
                               <Badge variant="outline" className={inv.status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}>
-                                {inv.status === 'paid' ? 'Платена' : inv.status === 'issued' ? 'Издадена' : inv.status}
+                                {invoiceStatusLabel(inv.status)}
                               </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
@@ -198,6 +213,29 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                           </div>
                           <div className="text-right font-mono font-semibold">
                             {fmt(parseFloat(inv.totalAmount || '0'))} €
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="deals" className="p-0 m-0">
+                  {deals.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground text-sm">Няма сделки с този клиент.</div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {deals.map((deal) => (
+                        <div key={deal.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                          <div>
+                            <p className="text-sm font-medium">{deal.title}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {dealStageLabel(deal.stage)}
+                              {deal.invoiceNumber ? ` · Фактура ${deal.invoiceNumber} · ${invoiceStatusLabel(deal.invoiceStatus)}` : ''}
+                            </p>
+                          </div>
+                          <div className="text-right font-mono font-semibold">
+                            {fmt(parseFloat(deal.amount || '0'))} {deal.currency || 'EUR'}
                           </div>
                         </div>
                       ))}

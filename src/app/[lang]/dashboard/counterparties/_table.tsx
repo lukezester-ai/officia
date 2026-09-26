@@ -1,6 +1,7 @@
 'use client';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pencil, UserX } from 'lucide-react';
 
@@ -18,6 +19,8 @@ interface CounterpartyTableProps {
 }
 
 export function CounterpartyTable({ data, loading, onEdit, onDeactivate }: CounterpartyTableProps) {
+  const params = useParams<{ lang: string }>();
+  const lang = params?.lang || 'bg';
   if (loading) {
     return <div className="py-10 text-center text-muted-foreground text-sm">Зарежда...</div>;
   }
@@ -45,7 +48,9 @@ export function CounterpartyTable({ data, loading, onEdit, onDeactivate }: Count
             return (
               <TableRow key={c.id} className="hover:bg-muted/30">
                 <TableCell className="font-medium text-sm">
-                  <div>{c.name}</div>
+                  <Link href={`/${lang}/dashboard/counterparties/${c.id}`} className="hover:underline">
+                    {c.name}
+                  </Link>
                   {c.email && <div className="text-xs text-muted-foreground">{c.email}</div>}
                 </TableCell>
                 <TableCell>

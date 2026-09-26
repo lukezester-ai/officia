@@ -1,5 +1,5 @@
 import { splitDealAmount } from '@/lib/crm/deal-invoice';
-import { isDealStage, parseDealAmount } from '@/lib/crm/deals';
+import { dealStageLabel, invoiceStatusLabel, isDealStage, parseDealAmount } from '@/lib/crm/deals';
 
 describe('deal stages', () => {
   it('accepts the sales stages', () => {
@@ -12,6 +12,12 @@ describe('deal stages', () => {
     expect(parseDealAmount('1200,5')).toBe(1200.5);
     expect(parseDealAmount('10.555')).toBeNull();
     expect(parseDealAmount('-1')).toBeNull();
+  });
+
+  it('names the stage and the invoice status', () => {
+    expect(dealStageLabel('won')).toBe('Спечелена');
+    expect(invoiceStatusLabel('issued')).toBe('Издадена');
+    expect(invoiceStatusLabel(null)).toBe('Чернова');
   });
 
   it('turns a won amount into an invoice total with 20% VAT included', () => {
