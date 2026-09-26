@@ -3,7 +3,9 @@
 import { db } from '@/lib/db/db';
 import { documents } from '@/lib/db/schema/documents';
 import { tasks } from '@/lib/db/schema/tasks';
+import { counterparties } from '@/lib/db/schema/counterparties';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { parseUuidParam } from '@/lib/utils/ids';
 import { eq, desc, and } from 'drizzle-orm';
 import { TaskGenerator } from '@/workflows/task-generator';
 import { revalidatePath } from 'next/cache';
@@ -74,14 +76,47 @@ export async function getDocuments() {
         metadata: documents.metadata,
         aiStatus: documents.aiStatus,
         aiSummary: documents.aiSummary,
+        counterpartyId: documents.counterpartyId,
+        counterpartyName: counterparties.name,
         createdAt: documents.createdAt,
       })
       .from(documents)
+      .leftJoin(counterparties, and(
+        eq(documents.counterpartyId, counterparties.id),
+        eq(counterparties.tenantId, tenantId),
+      ))
       .where(eq(documents.tenantId, tenantId))
       .orderBy(desc(documents.createdAt));
     return { success: true, data };
   } catch (err: any) {
     return { success: false, data: [] };
+  }
+}
+
+export async function linkDocumentToClient(documentId: string, counterpartyId: string) {
+  try {
+    const { tenantId } = await requireTenant();
+    const docId = parseUuidParam(documentId);
+    const clientId = parseUuidParam(counterpartyId);
+    if (!docId || !clientId) return { success: false as const, error: 'Избери клиент.' };
+
+    const [client] = await db.select({ id: counterparties.id, name: counterparties.name })
+      .from(counterparties)
+      .where(and(eq(counterparties.id, clientId), eq(counterparties.tenantId, tenantId)))
+      .limit(1);
+    if (!client) return { success: false as const, error: 'Клиентът не е от този акаунт.' };
+
+    const [doc] = await db.update(documents)
+      .set({ counterpartyId: client.id })
+      .where(and(eq(documents.id, docId), eq(documents.tenantId, tenantId)))
+      .returning({ id: documents.id });
+    if (!doc) return { success: false as const, error: 'Документът не е от този акаунт.' };
+
+    revalidatePath('/', 'layout');
+    return { success: true as const, counterpartyName: client.name };
+  } catch (error) {
+    console.error('[link-document]', error);
+    return { success: false as const, error: 'Документът не беше свързан.' };
   }
 }
 

@@ -92,6 +92,7 @@ import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { deals } from '@/lib/db/schema/deals';
 import { contracts } from '@/lib/db/schema/contracts';
+import { documents } from '@/lib/db/schema/documents';
 
 export async function getCounterparty360Data(id: string) {
   try {
@@ -143,10 +144,14 @@ export async function getCounterparty360Data(id: string) {
         eq(bankTransactions.counterpartyName, counterparty.name),
       ));
     
-    // Documents
-    // Since document schema doesn't have counterpartyName directly, we might search metadata or title
-    // But for now, we'll return empty array or mock
-    const relatedDocuments: any[] = [];
+    const relatedDocuments = await db.select({
+      id: documents.id,
+      title: documents.title,
+      createdAt: documents.createdAt,
+      fileUrl: documents.fileUrl,
+    }).from(documents)
+      .where(and(eq(documents.tenantId, tenantId), eq(documents.counterpartyId, counterparty.id)))
+      .orderBy(desc(documents.createdAt));
 
     // AI Notes logic
     const aiNotes = [];

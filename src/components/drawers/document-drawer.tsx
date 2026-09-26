@@ -1,11 +1,60 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Clock, FileKey, Zap, LayoutList, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCounterparties } from '@/app/[lang]/dashboard/counterparties/actions';
+import { linkDocumentToClient } from '@/app/[lang]/dashboard/documents/actions';
 
-export function DocumentDrawer({ document, open, onOpenChange }: { document: any, open: boolean, onOpenChange: (open: boolean) => void }) {
+function LinkClient({ documentId, linkedName, onLinked }: { documentId: string; linkedName?: string | null; onLinked: (name: string) => void }) {
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [clientId, setClientId] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void getCounterparties().then((res) => {
+      if (res.success) {
+        setClients((res.data || []).filter((row) => row.isActive !== false).map((row) => ({ id: row.id, name: row.name })));
+      }
+    });
+  }, []);
+
+  async function link() {
+    setSaving(true);
+    const res = await linkDocumentToClient(documentId, clientId);
+    setSaving(false);
+    if (!res.success) {
+      toast.error(res.error || 'Документът не беше свързан.');
+      return;
+    }
+    toast.success(`Свързан с ${res.counterpartyName}.`);
+    onLinked(res.counterpartyName);
+  }
+
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <p className="text-xs text-muted-foreground">{linkedName ? `Свързан с ${linkedName}` : 'Още не е свързан с клиент.'}</p>
+      <select
+        value={clientId}
+        onChange={(e) => setClientId(e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      >
+        <option value="">Избери клиент</option>
+        {clients.map((client) => (
+          <option key={client.id} value={client.id}>{client.name}</option>
+        ))}
+      </select>
+      <Button variant="outline" className="w-full justify-start gap-2" onClick={link} disabled={saving || !clientId}>
+        <CheckCircle size={16} className="text-emerald-500" />
+        {saving ? 'Запис...' : 'Свържи с клиент'}
+      </Button>
+    </div>
+  );
+}
+
+export function DocumentDrawer({ document, open, onOpenChange, onLinked }: { document: any, open: boolean, onOpenChange: (open: boolean) => void, onLinked?: (name: string) => void }) {
   if (!document) return null;
 
   return (
@@ -47,10 +96,7 @@ export function DocumentDrawer({ document, open, onOpenChange }: { document: any
                 <FileText size={16} className="text-indigo-500" />
                 Създай фактура
               </Button>
-              <Button variant="outline" className="justify-start gap-2" onClick={() => toast.info('Свързване с контрагент...')}>
-                <CheckCircle size={16} className="text-emerald-500" />
-                Свържи с клиент
-              </Button>
+              <LinkClient documentId={document.id} linkedName={document.counterpartyName} onLinked={(name) => onLinked?.(name)} />
               <Button variant="outline" className="justify-start gap-2">
                 <Clock size={16} />
                 Създай задача

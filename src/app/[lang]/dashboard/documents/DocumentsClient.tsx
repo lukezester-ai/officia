@@ -294,7 +294,7 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
                   <TableCell>
                     <Badge variant="outline" className="border-white/10 bg-white/5 text-zinc-300">{getDocTypeLabel(doc.type)}</Badge>
                   </TableCell>
-                  <TableCell className="text-zinc-400">{doc.metadata?.counterpartyName || '—'}</TableCell>
+                  <TableCell className="text-zinc-400">{doc.counterpartyName || doc.metadata?.counterpartyName || '—'}</TableCell>
                   <TableCell className="text-zinc-400">
                     {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('bg-BG') : '—'}
                   </TableCell>
@@ -328,6 +328,12 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
         document={selectedDoc}
         open={!!selectedDoc}
         onOpenChange={o => !o && setSelectedDoc(null)}
+        onLinked={(name) => {
+          if (!selectedDoc) return;
+          const id = selectedDoc.id;
+          setDocs((prev) => prev.map((doc) => doc.id === id ? { ...doc, counterpartyName: name } : doc));
+          setSelectedDoc((prev: any) => prev ? { ...prev, counterpartyName: name } : prev);
+        }}
       />
     </>
   );

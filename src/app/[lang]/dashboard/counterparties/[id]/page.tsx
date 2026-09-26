@@ -57,6 +57,13 @@ interface ContractRow {
   endDate?: Date | string | null;
 }
 
+interface DocumentRow {
+  id: string;
+  title: string;
+  createdAt?: Date | string | null;
+  fileUrl?: string | null;
+}
+
 interface Counterparty360Data {
   counterparty: Counterparty;
   financials: Financials;
@@ -64,6 +71,7 @@ interface Counterparty360Data {
   deals: DealRow[];
   contracts: ContractRow[];
   transactions: Transaction[];
+  documents: DocumentRow[];
   aiNotes: string[];
 }
 
@@ -94,7 +102,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
     );
   }
 
-  const { counterparty, financials, invoices, deals, contracts, transactions, aiNotes } = res.data as Counterparty360Data;
+  const { counterparty, financials, invoices, deals, contracts, transactions, documents, aiNotes } = res.data as Counterparty360Data;
 
   return (
     <div className="space-y-6">
@@ -207,6 +215,9 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                   <TabsTrigger value="contracts" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
                     Договори ({contracts.length})
                   </TabsTrigger>
+                  <TabsTrigger value="documents" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
+                    Документи ({documents.length})
+                  </TabsTrigger>
                   <TabsTrigger value="transactions" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
                     Банкови плащания ({transactions.length})
                   </TabsTrigger>
@@ -278,6 +289,31 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                           </div>
                         </Link>
                       ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="documents" className="p-0 m-0">
+                  {documents.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground text-sm">Няма документи към този клиент.</div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {documents.map((doc) => {
+                        const body = (
+                          <div>
+                            <p className="text-sm font-medium">{doc.title}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('bg-BG') : '—'}
+                              {doc.fileUrl ? ' · Свали' : ''}
+                            </p>
+                          </div>
+                        );
+                        return doc.fileUrl ? (
+                          <a key={doc.id} href={`/api/documents/${doc.id}`} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">{body}</a>
+                        ) : (
+                          <div key={doc.id} className="flex items-center justify-between p-4">{body}</div>
+                        );
+                      })}
                     </div>
                   )}
                 </TabsContent>
