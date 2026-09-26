@@ -3,6 +3,8 @@ import { isUuid, parseUuidParam } from '@/lib/utils/ids';
 import { assertBalancedJournal } from '@/lib/accounting/auto-postings';
 import { chooseInvoiceNumber } from '@/lib/accounting/invoice-number';
 import { parseManualJournalLines } from '@/lib/accounting/manual-journal';
+import { isValidIban } from '@/lib/banking/iban';
+import { buildPaymentCsv, validatePaymentLine } from '@/lib/banking/payment-file';
 
 describe('vat period helpers', () => {
   it('builds inclusive month bounds', () => {
@@ -68,5 +70,39 @@ describe('manual journal lines', () => {
     expect(() => parseManualJournalLines([
       { account: '411', description: '', debit: '10', credit: '10' },
     ])).toThrow('или дебит, или кредит');
+  });
+});
+
+describe('payment files', () => {
+  const iban = 'BG80BNBG96611020345678';
+
+  it('accepts a checksum-valid BG IBAN', () => {
+    expect(isValidIban('BG80 BNBG 9661 1020 3456 78')).toBe(true);
+    expect(isValidIban('BG80BNBG96611020345679')).toBe(false);
+  });
+
+  it('requires a budget payment code', () => {
+    expect(validatePaymentLine({
+      beneficiaryName: 'НАП',
+      beneficiaryIban: iban,
+      amount: 12.5,
+      currency: 'EUR',
+      reason: 'ДДС',
+      kind: 'budget',
+    })).toMatch(/6 цифри/);
+  });
+
+  it('writes the debtor IBAN into the export', () => {
+    const csv = buildPaymentCsv(iban, [{
+      beneficiaryName: 'Доставчик',
+      beneficiaryIban: iban,
+      amount: 10,
+      currency: 'EUR',
+      reason: 'Фактура 1',
+      kind: 'transfer',
+    }]);
+    expect(csv).toContain(iban);
+    expect(csv).toContain('превод');
+    expect(csv).toContain('10.00');
   });
 });

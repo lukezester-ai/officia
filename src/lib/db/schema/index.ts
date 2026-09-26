@@ -5,7 +5,9 @@ export * from './documents';
 
 export * from './leave_requests';
 export * from './bank_accounts';
+export * from './bank_links';
 export * from './bank_transactions';
+export * from './payment_orders';
 export * from './waitlist';
 export * from './account_plan';
 export * from './journal_entries';
@@ -29,6 +31,7 @@ export * from './document_extractions';
 export * from './approvals';
 
 export * from './counterparties';
+export * from './deals';
 export * from './expenses';
 export * from './contracts';
 export * from './time_entries';

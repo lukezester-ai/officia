@@ -6,6 +6,8 @@ export const bankAccounts = pgTable('bank_accounts', {
   tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
   institutionId: text('institution_id'), // e.g. 'SANDBOXFINANCE_SFIN0000'
   institutionName: text('institution_name'), // e.g. 'UniCredit Bulbank'
+  externalAccountId: text('external_account_id'),
+  requisitionId: text('requisition_id'),
   iban: text('iban'),
   balance: text('balance'),
   currency: text('currency').default('EUR'),

@@ -119,11 +119,11 @@ async function provision() {
   stmts.push(`CREATE TABLE bank_transactions (id uuid PRIMARY KEY, account_id uuid REFERENCES bank_accounts(id))`);
 
   const uuidTenant = [
-    'account_plan', 'accounting_rules', 'activity_logs', 'ai_inbox', 'approvals',
+    'account_plan', 'accounting_rules', 'activity_logs', 'ai_inbox', 'approvals', 'bank_links',
     'audit_log', 'budgets', 'company_divisions', 'contracts', 'contract_versions',
-    'contract_parties', 'counterparties', 'depreciation_runs', 'documents',
+    'contract_parties', 'counterparties', 'deals', 'depreciation_runs', 'documents',
     'expenses', 'fiscal_years', 'fixed_assets', 'inventory_items',
-    'inventory_movements', 'leave_requests', 'payroll_runs', 'projects',
+    'inventory_movements', 'leave_requests', 'payment_orders', 'payroll_runs', 'projects',
     'tasks', 'time_entries', 'vat_journals', 'webhooks', 'work_schedules',
   ];
   for (const t of uuidTenant) stmts.push(`CREATE TABLE ${t} (id uuid PRIMARY KEY, tenant_id uuid)`);
