@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Plus, Trash2, Save, Send } from "lucide-react";
 import { createInvoice } from "../actions";
@@ -71,10 +71,10 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
   const total = subtotal + vatAmount;
 
   const handleSave = async (status: "draft" | "sent") => {
-    if (!clientName.trim()) { alert("Vyvedi ime na klient"); return; }
-    if (items.some((it) => !it.description.trim())) { alert("Popylni opisaniya na redovete"); return; }
+    if (!clientName.trim()) { alert("Въведете име на клиент"); return; }
+    if (items.some((it) => !it.description.trim())) { alert("Попълнете описание на редовете"); return; }
     setSaving(true);
-    await createInvoice(lang, {
+    const result = await createInvoice(lang, {
       invoiceNumber,
       clientName,
       clientAddress,
@@ -88,6 +88,10 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
       vatAmount: vatAmount.toFixed(2),
       total: total.toFixed(2),
     });
+    if (result?.error) {
+      alert(result.error);
+      setSaving(false);
+    }
   };
 
   return (
@@ -108,7 +112,7 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
                 <FileText size={20} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Nova faktura</h1>
+                <h1 className="text-2xl font-bold">Нова фактура</h1>
                 <p className="text-zinc-400 text-sm font-mono">{invoiceNumber}</p>
               </div>
             </div>
@@ -119,14 +123,14 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
               disabled={saving}
               className="flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 transition-colors px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50"
             >
-              <Save size={14} /> Chernova
+              <Save size={14} /> Чернова
             </button>
             <button
               onClick={() => handleSave("sent")}
               disabled={saving}
               className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 transition-colors px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50"
             >
-              <Send size={14} /> Izprati
+              <Send size={14} /> Изпрати
             </button>
           </div>
         </div>
@@ -139,7 +143,7 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
             {/* Invoice meta */}
             <div className="bg-white/3 border border-white/8 rounded-2xl p-5 grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Nomer</label>
+                <label className="block text-xs text-zinc-400 mb-1">Номер</label>
                 <input
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
@@ -147,7 +151,7 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Data na izdavane</label>
+                <label className="block text-xs text-zinc-400 mb-1">Дата на издаване</label>
                 <input
                   type="date"
                   value={issueDate}
@@ -156,7 +160,7 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Srok za plashchane</label>
+                <label className="block text-xs text-zinc-400 mb-1">Срок за плащане</label>
                 <input
                   type="date"
                   value={dueDate}
@@ -168,19 +172,19 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
 
             {/* Client */}
             <div className="bg-white/3 border border-white/8 rounded-2xl p-5 space-y-3">
-              <h2 className="text-sm font-semibold text-zinc-300">Klient</h2>
+              <h2 className="text-sm font-semibold text-zinc-300">Клиент</h2>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1">Ime / Firma *</label>
+                  <label className="block text-xs text-zinc-400 mb-1">Име / Фирма *</label>
                   <input
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
-                    placeholder="EOOD / AD / Grazhdanin"
+                    placeholder="ЕООД / АД / физическо лице"
                     className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1">EIK / DDS nomer</label>
+                  <label className="block text-xs text-zinc-400 mb-1">ЕИК / ДДС номер</label>
                   <input
                     value={clientVat}
                     onChange={(e) => setClientVat(e.target.value)}
@@ -190,12 +194,12 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Adres</label>
+                  <label className="block text-xs text-zinc-400 mb-1">Адрес</label>
                 <textarea
                   value={clientAddress}
                   onChange={(e) => setClientAddress(e.target.value)}
                   rows={2}
-                  placeholder="Grad, ulitsa, poshtenski kod"
+                  placeholder="Град, улица, пощенски код"
                   className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600 resize-none"
                 />
               </div>
@@ -204,22 +208,22 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
             {/* Line items */}
             <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
               <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Redove</h2>
+                <h2 className="text-sm font-semibold">Редове</h2>
                 <button
                   onClick={addItem}
                   className="flex items-center gap-1 text-xs bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-colors"
                 >
-                  <Plus size={12} /> Dobavi red
+                  <Plus size={12} /> Добави ред
                 </button>
               </div>
 
               <div className="divide-y divide-white/5">
                 <div className="grid grid-cols-12 gap-2 px-5 py-2 text-xs text-zinc-500">
-                  <div className="col-span-5">Opisanie</div>
-                  <div className="col-span-2 text-right">Kolichestvo</div>
-                  <div className="col-span-2 text-right">Tsena EUR</div>
-                  <div className="col-span-1 text-right">DDS%</div>
-                  <div className="col-span-1 text-right">Suma</div>
+                  <div className="col-span-5">Описание</div>
+                  <div className="col-span-2 text-right">Количество</div>
+                  <div className="col-span-2 text-right">Цена EUR</div>
+                  <div className="col-span-1 text-right">ДДС%</div>
+                  <div className="col-span-1 text-right">Сума</div>
                   <div className="col-span-1" />
                 </div>
 
@@ -229,7 +233,7 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
                       <input
                         value={it.description}
                         onChange={(e) => updateItem(it.id, "description", e.target.value)}
-                        placeholder="Opisanie na usluga / stoka"
+                        placeholder="Описание на услуга / стока"
                         className="w-full bg-zinc-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-white placeholder-zinc-600"
                       />
                     </div>
@@ -283,12 +287,12 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
 
             {/* Notes */}
             <div className="bg-white/3 border border-white/8 rounded-2xl p-5">
-              <label className="block text-xs text-zinc-400 mb-2">Belezhki (optsionalno)</label>
+              <label className="block text-xs text-zinc-400 mb-2">Бележки</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                placeholder="Nachin na plashchane, bank smetka, dopylnitelna informatsiya..."
+                placeholder="Начин на плащане, банкова сметка, допълнителна информация..."
                 className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 resize-none"
               />
             </div>
@@ -297,18 +301,18 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
           {/* Right — totals */}
           <div className="space-y-4">
             <div className="bg-white/3 border border-white/8 rounded-2xl p-5 space-y-3 sticky top-6">
-              <h2 className="text-sm font-semibold">Obshto</h2>
+              <h2 className="text-sm font-semibold">Общо</h2>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between text-zinc-400">
-                  <span>Danychna osnova</span>
+                  <span>Данъчна основа</span>
                   <span className="font-mono tabular-nums">{subtotal.toFixed(2)} EUR</span>
                 </div>
                 <div className="flex justify-between text-zinc-400">
-                  <span>DDS</span>
+                  <span>ДДС</span>
                   <span className="font-mono tabular-nums">{vatAmount.toFixed(2)} EUR</span>
                 </div>
                 <div className="border-t border-white/10 pt-2 flex justify-between text-white font-bold text-sm">
-                  <span>Obshta suma</span>
+                  <span>Обща сума</span>
                   <span className="font-mono tabular-nums">{total.toFixed(2)} EUR</span>
                 </div>
               </div>
@@ -319,14 +323,14 @@ export default function NewInvoicePage(props: { params: Promise<{ lang: string }
                   disabled={saving}
                   className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 transition-colors px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
                 >
-                  <Send size={14} /> Izprati
+                  <Send size={14} /> Изпрати
                 </button>
                 <button
                   onClick={() => handleSave("draft")}
                   disabled={saving}
                   className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 transition-colors px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
                 >
-                  <Save size={14} /> Zapazi kato chernova
+                  <Save size={14} /> Запази като чернова
                 </button>
               </div>
             </div>

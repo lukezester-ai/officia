@@ -1,5 +1,5 @@
-import { db } from "@/lib/db/db";
-import { journalHeaders } from "@/lib/db/schema";
+import { requireTenant } from "@/lib/auth/get-tenant";
+import { listAccountMovements } from "@/lib/accounting/journal-read";
 import BudgetsClient from "./BudgetsClient";
 
 export default async function BudgetsPage({
@@ -9,22 +9,8 @@ export default async function BudgetsPage({
 }) {
   const { lang } = await params;
 
-  let entries: any[] = [];
-  try {
-    const { requireTenant } = await import('@/lib/auth/get-tenant');
-    const { eq } = await import('drizzle-orm');
-    const { tenantId } = await requireTenant();
-    entries = await db.select().from(journalHeaders as any).where(eq((journalHeaders as any).tenantId, tenantId)).limit(2000);
-  } catch {}
+  const { tenantId } = await requireTenant();
+  const journalEntries = await listAccountMovements(tenantId, 2000);
 
-  const serialized = entries.map((e) => ({
-    id: String(e.id ?? ""),
-    date: String(e.entryDate ?? e.entry_date ?? ""),
-    debitAccount: String(e.debitAccount ?? e.debit_account ?? ""),
-    creditAccount: String(e.creditAccount ?? e.credit_account ?? ""),
-    debitAmount: Number(e.debitAmount ?? e.debit_amount ?? 0),
-    creditAmount: Number(e.creditAmount ?? e.credit_amount ?? 0),
-  }));
-
-  return <BudgetsClient lang={lang} journalEntries={serialized} />;
+  return <BudgetsClient lang={lang} journalEntries={journalEntries} />;
 }

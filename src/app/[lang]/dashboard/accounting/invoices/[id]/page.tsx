@@ -1,16 +1,18 @@
 import { db } from "@/lib/db/db";
-import { invoices } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { invoices, invoiceLines } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, Printer, CheckCircle, Send, Clock, AlertTriangle } from "@/components/icons";
-import { updateInvoiceStatus, deleteInvoice } from "../actions";
+import { requireTenant } from "@/lib/auth/get-tenant";
+import { parseUuidParam } from "@/lib/utils/ids";
+import { PrintButton } from "@/components/print-button";
+import { updateInvoiceStatus } from "../actions";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  draft: { label: "Chernova", color: "text-zinc-400", bg: "bg-zinc-800" },
-  sent: { label: "Izpratena", color: "text-blue-400", bg: "bg-blue-950/60" },
-  paid: { label: "Platena", color: "text-emerald-400", bg: "bg-emerald-950/60" },
-  overdue: { label: "Zakasnyala", color: "text-red-400", bg: "bg-red-950/60" },
+  draft: { label: "Чернова", color: "text-zinc-400", bg: "bg-zinc-800" },
+  sent: { label: "Изпратена", color: "text-blue-400", bg: "bg-blue-950/60" },
+  paid: { label: "Платена", color: "text-emerald-400", bg: "bg-emerald-950/60" },
+  overdue: { label: "Закъсняла", color: "text-red-400", bg: "bg-red-950/60" },
 };
 
 export default async function InvoiceDetailPage({
@@ -19,55 +21,65 @@ export default async function InvoiceDetailPage({
   params: Promise<{ lang: string; id: string }>;
 }) {
   const { lang, id } = await params;
+  const invoiceId = parseUuidParam(id);
+  if (!invoiceId) notFound();
 
-  let inv: any = null;
-  try {
-    const rows = await (db as any)
-      .select()
-      .from(invoices)
-      .where(eq((invoices as any).id, id))
-      .limit(1);
-    inv = rows[0] ?? null;
-  } catch {}
+  const { tenantId, tenant } = await requireTenant();
+  const [inv] = await db
+    .select()
+    .from(invoices)
+    .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)))
+    .limit(1);
 
   if (!inv) notFound();
 
-  const invoiceNumber = inv.invoiceNumber ?? inv.invoice_number ?? "";
-  const clientName = inv.clientName ?? inv.client_name ?? "";
-  const clientAddress = inv.clientAddress ?? inv.client_address ?? "";
-  const clientVatNumber = inv.clientVatNumber ?? inv.client_vat_number ?? "";
-  const issueDate = inv.issueDate ?? inv.issue_date ?? "";
-  const dueDate = inv.dueDate ?? inv.due_date ?? "";
+  const storedLines = await db
+    .select()
+    .from(invoiceLines)
+    .where(eq(invoiceLines.invoiceId, invoiceId));
+
+  const invoiceNumber = inv.invoiceNumber ?? "";
+  const clientName = inv.clientName || inv.counterpartyName || "";
+  const clientAddress = inv.clientAddress || inv.counterpartyAddress || "";
+  const clientVatNumber = inv.clientVatNumber || inv.counterpartyVat || inv.counterpartyEik || "";
+  const issueDate = inv.issueDate ?? "";
+  const dueDate = inv.dueDate ?? "";
   const status = inv.status ?? "draft";
   const notes = inv.notes ?? "";
-  const items: any[] = Array.isArray(inv.items) ? inv.items : [];
-  const subtotal = parseFloat(String(inv.subtotal ?? "0"));
-  const vatAmount = parseFloat(String(inv.vatAmount ?? inv.vat_amount ?? "0"));
-  const total = parseFloat(String(inv.total ?? "0"));
-
+  const items = storedLines.length > 0
+    ? storedLines.map((line) => ({
+        description: line.description ?? "",
+        quantity: line.quantity ?? "0",
+        unitPrice: line.unitPrice ?? "0",
+        vatRate: line.vatRate ?? "0",
+        total: line.lineNet ?? "0",
+      }))
+    : Array.isArray(inv.items)
+      ? inv.items
+      : [];
+  const subtotal = parseFloat(String(inv.subtotal || inv.netAmount || "0"));
+  const vatAmount = parseFloat(String(inv.vatAmount ?? "0"));
+  const total = parseFloat(String((Number(inv.total || 0) ? inv.total : inv.totalAmount) || "0"));
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
+  const issuerName = String(tenant?.name ?? "");
+  const issuerEik = String(tenant?.bulstat ?? "");
+  const issuerVat = String(tenant?.vat_number ?? tenant?.vatNumber ?? "");
+  const issuerAddress = String(tenant?.address ?? "");
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6 lg:p-8 print:bg-white print:text-black print:p-0">
       <div className="max-w-4xl mx-auto space-y-6 print:space-y-0">
-
-        {/* Toolbar hidden on print */}
         <div className="flex items-center justify-between print:hidden">
           <div className="flex items-center gap-4">
             <Link
               href={`/${lang}/dashboard/accounting/invoices`}
               className="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center hover:border-white/25 transition-all"
             >
-              <span aria-hidden="true">&lt;</span>
+              <span aria-hidden="true">&larr;</span>
             </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
-                <span className="text-white" aria-hidden="true">#</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">{invoiceNumber}</h1>
-                <span className={`text-xs px-2 py-0.5 rounded-lg ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
-              </div>
+            <div>
+              <h1 className="text-xl font-bold">{invoiceNumber}</h1>
+              <span className={`text-xs px-2 py-0.5 rounded-lg ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
             </div>
           </div>
 
@@ -78,7 +90,7 @@ export default async function InvoiceDetailPage({
                 await updateInvoiceStatus(inv.id, "paid", lang);
               }}>
                 <button type="submit" className="flex items-center gap-1.5 text-xs bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-xl transition-colors font-medium">
-                  <span aria-hidden="true">OK</span> Platena
+                  Платена
                 </button>
               </form>
             )}
@@ -88,97 +100,90 @@ export default async function InvoiceDetailPage({
                 await updateInvoiceStatus(inv.id, "sent", lang);
               }}>
                 <button type="submit" className="flex items-center gap-1.5 text-xs bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-xl transition-colors font-medium">
-                  <span aria-hidden="true">&gt;</span> Izprati
-                  </button>
-               </form>
+                  Изпрати
+                </button>
+              </form>
             )}
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-1.5 text-xs bg-white/8 hover:bg-white/15 border border-white/10 px-3 py-2 rounded-xl transition-colors"
-            >
-              <span aria-hidden="true">PDF</span> PDF / Pechat
-            </button>
+            <PrintButton
+              label="PDF / Печат"
+              className="flex items-center gap-1.5 text-xs bg-white/8 hover:bg-white/15 border border-white/10 px-3 py-2 rounded-xl transition-colors print:hidden"
+            />
           </div>
         </div>
 
-        {/* Invoice document */}
         <div className="bg-white text-zinc-900 rounded-2xl p-10 print:rounded-none print:shadow-none print:p-8">
-
-          {/* Header */}
           <div className="flex justify-between items-start mb-10">
             <div>
-              <div className="text-3xl font-bold text-orange-600 mb-1">FAKTURA</div>
+              <div className="text-3xl font-bold text-orange-600 mb-1">ФАКТУРА</div>
               <div className="text-sm text-zinc-500 font-mono">{invoiceNumber}</div>
             </div>
             <div className="text-right text-sm">
-              <div className="text-zinc-400">Data na izdavane</div>
+              <div className="text-zinc-400">Дата на издаване</div>
               <div className="font-semibold">{issueDate}</div>
-              <div className="text-zinc-400 mt-1">Srok za plashchane</div>
+              <div className="text-zinc-400 mt-1">Срок за плащане</div>
               <div className="font-semibold text-orange-600">{dueDate}</div>
             </div>
           </div>
 
-          {/* Parties */}
           <div className="grid grid-cols-2 gap-8 mb-10">
             <div>
-              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Izdatel</div>
-              <div className="font-bold text-lg">Moyata Firma EOOD</div>
-              <div className="text-sm text-zinc-500 mt-1">BG Bulgaria</div>
+              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Издател</div>
+              <div className="font-bold text-lg">{issuerName || "—"}</div>
+              {issuerEik && <div className="text-sm text-zinc-500">ЕИК: {issuerEik}</div>}
+              {issuerVat && <div className="text-sm text-zinc-500">ДДС: {issuerVat}</div>}
+              {issuerAddress && <div className="text-sm text-zinc-500 whitespace-pre-line">{issuerAddress}</div>}
             </div>
             <div>
-              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Klient</div>
+              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Клиент</div>
               <div className="font-bold text-lg">{clientName}</div>
-              {clientVatNumber && <div className="text-sm text-zinc-500">EIK/DDS: {clientVatNumber}</div>}
+              {clientVatNumber && <div className="text-sm text-zinc-500">ЕИК/ДДС: {clientVatNumber}</div>}
               {clientAddress && <div className="text-sm text-zinc-500 whitespace-pre-line">{clientAddress}</div>}
             </div>
           </div>
 
-          {/* Line items table */}
           <table className="w-full mb-8">
             <thead>
               <tr className="border-b-2 border-zinc-200">
-                <th className="text-left text-xs font-semibold text-zinc-400 uppercase pb-2">Opisanie</th>
-                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">Kol.</th>
-                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">Tsena EUR</th>
-                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">DDS%</th>
-                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">Suma EUR</th>
+                <th className="text-left text-xs font-semibold text-zinc-400 uppercase pb-2">Описание</th>
+                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">Кол.</th>
+                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">Цена EUR</th>
+                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">ДДС%</th>
+                <th className="text-right text-xs font-semibold text-zinc-400 uppercase pb-2">Сума EUR</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {items.map((it: any, i: number) => (
+              {items.map((it: { description?: string; quantity?: string | number; unitPrice?: string | number; vatRate?: string | number; total?: string | number }, i: number) => (
                 <tr key={i}>
                   <td className="py-3 text-sm">{it.description}</td>
                   <td className="py-3 text-sm text-right tabular-nums">{it.quantity}</td>
-                  <td className="py-3 text-sm text-right tabular-nums">{parseFloat(it.unitPrice).toFixed(2)}</td>
+                  <td className="py-3 text-sm text-right tabular-nums">{parseFloat(String(it.unitPrice ?? 0)).toFixed(2)}</td>
                   <td className="py-3 text-sm text-right tabular-nums">{it.vatRate}%</td>
-                  <td className="py-3 text-sm text-right font-mono tabular-nums">{parseFloat(it.total).toFixed(2)}</td>
+                  <td className="py-3 text-sm text-right font-mono tabular-nums">{parseFloat(String(it.total ?? 0)).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* Totals */}
           <div className="flex justify-end">
             <div className="w-64 space-y-1">
               <div className="flex justify-between text-sm text-zinc-500">
-                <span>Danychna osnova</span>
+                <span>Данъчна основа</span>
                 <span className="font-mono tabular-nums">{subtotal.toFixed(2)} EUR</span>
               </div>
               <div className="flex justify-between text-sm text-zinc-500">
-                <span>DDS</span>
+                <span>ДДС</span>
                 <span className="font-mono tabular-nums">{vatAmount.toFixed(2)} EUR</span>
               </div>
               <div className="border-t-2 border-zinc-800 pt-2 flex justify-between text-lg font-bold">
-                <span>OBSHTO</span>
+                <span>ОБЩО</span>
                 <span className="font-mono tabular-nums text-orange-600">{total.toFixed(2)} EUR</span>
               </div>
             </div>
           </div>
 
-          {/* Notes */}
           {notes && (
             <div className="mt-10 pt-8 border-t border-zinc-200">
-              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Belezhki</div>
+              <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Бележки</div>
               <div className="text-sm text-zinc-600 whitespace-pre-line">{notes}</div>
             </div>
           )}

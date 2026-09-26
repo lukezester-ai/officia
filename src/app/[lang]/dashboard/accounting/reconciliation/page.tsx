@@ -1,11 +1,10 @@
-import { auth } from '@clerk/nextjs/server';
 import { ReconciliationEngine } from '@/lib/accounting/reconciliation-engine';
+import { requireTenant } from '@/lib/auth/get-tenant';
 import ReconciliationClient from './ReconciliationClient';
 
 export default async function ReconciliationPage({ params }: { params: Promise<{ lang: string }> }) {
-  const { lang } = await params;
-  const { userId, orgId } = await auth();
-  const tenantId = orgId || userId || "demo-tenant";
+  await params;
+  const { tenantId } = await requireTenant();
 
   const suggestions = await ReconciliationEngine.suggestMatches(tenantId);
 

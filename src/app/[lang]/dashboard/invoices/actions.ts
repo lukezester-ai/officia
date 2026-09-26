@@ -4,32 +4,43 @@ import { db } from '@/lib/db/db';
 import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { counterparties } from '@/lib/db/schema/counterparties';
-import { tenants } from '@/lib/db/schema/tenants';
 import { eq, and, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { requireTenant } from '@/lib/auth/get-tenant';
 import { ensureAutoJournalForInvoice } from '@/lib/accounting/auto-journal';
 import { syncStockFromSalesInvoice } from '@/lib/inventory/auto-stock';
-import { cache } from 'react';
 
-async function getTenant() {
-  const { tenant } = await requireTenant();
-  return tenant;
+function dbErrorText(error: any, fallback: string) {
+  const code = error?.code || error?.cause?.code;
+  if (code === 'ECONNREFUSED') return 'Базата данни не отговаря. Стартирай Postgres и опитай отново.';
+  return error?.cause?.message || error?.message || fallback;
 }
 
-export const getInvoices = cache(async () => {
+function money(value: number) {
+  if (!Number.isFinite(value)) return '0.00';
+  return (Math.round(value * 100) / 100).toFixed(2);
+}
+
+async function getTenant() {
+  const { tenant, tenantId } = await requireTenant();
+  return { ...tenant, id: tenant?.id || tenantId };
+}
+
+export async function getInvoices() {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Липсва Tenant', data: [] };
+    const { tenantId } = await requireTenant();
+    if (!tenantId) return { success: false, error: 'Липсва Tenant', data: [] as never[] };
     const data = await db.select().from(invoices)
-      .where(eq(invoices.tenantId, tenant.id))
+      .where(eq(invoices.tenantId, tenantId))
       .orderBy(desc(invoices.createdAt));
     return { success: true, data };
   } catch (error: any) {
-    return { success: false, error: error.message, data: [] };
+    const detail = dbErrorText(error, 'Фактурите не се заредиха');
+    console.error('[getInvoices]', detail);
+    return { success: false, error: detail, data: [] as never[] };
   }
-});
+}
 
 export async function getInvoiceWithLines(id: string) {
   try {
@@ -68,56 +79,96 @@ export async function createInvoice(input: {
   lines: { description: string; quantity: number; unitPrice: number; vatRate: number }[];
 }) {
   try {
-    const tenant = await getTenant();
-    if (!tenant) return { success: false, error: 'Липсва Tenant' };
+    const { tenantId } = await requireTenant();
+    if (!tenantId) return { success: false, error: 'Липсва Tenant' };
 
-    const computedLines = input.lines.map(l => {
-      const lineNet = Math.round(l.quantity * l.unitPrice * 100) / 100;
-      const lineVat = Math.round(lineNet * l.vatRate / 100 * 100) / 100;
-      return { ...l, lineNet, lineVat, lineTotal: lineNet + lineVat };
-    });
-    const netAmount = computedLines.reduce((s, l) => s + l.lineNet, 0);
-    const vatAmount = computedLines.reduce((s, l) => s + l.lineVat, 0);
+    const computedLines = input.lines.map((line) => {
+      const quantity = Number(line.quantity) || 0;
+      const unitPrice = Number(line.unitPrice) || 0;
+      const vatRate = Number(line.vatRate) || 0;
+      const lineNet = Math.round(quantity * unitPrice * 100) / 100;
+      const lineVat = Math.round((lineNet * vatRate) / 100 * 100) / 100;
+      return {
+        description: String(line.description || '').trim(),
+        quantity,
+        unitPrice,
+        vatRate,
+        lineNet,
+        lineVat,
+        lineTotal: lineNet + lineVat,
+        skladItemId: (line as { skladItemId?: string | null }).skladItemId || null,
+      };
+    }).filter((line) => line.description);
+
+    if (computedLines.length === 0) return { success: false, error: 'Добави поне един ред' };
+
+    const netAmount = computedLines.reduce((sum, line) => sum + line.lineNet, 0);
+    const vatAmount = computedLines.reduce((sum, line) => sum + line.lineVat, 0);
     const totalAmount = netAmount + vatAmount;
+    const name = input.counterpartyName.trim();
+    const total = money(totalAmount);
 
-    const [invoice] = await db.insert(invoices).values({
-      tenantId: tenant.id,
-      invoiceNumber: input.invoiceNumber,
-      type: 'invoice',
-      status: 'draft',
-      issueDate: input.issueDate,
-      dueDate: input.dueDate || null,
-      counterpartyName: input.counterpartyName,
-      counterpartyEik: input.counterpartyEik || null,
-      counterpartyVat: input.counterpartyVat || null,
-      counterpartyAddress: input.counterpartyAddress || null,
-      netAmount: netAmount.toString(),
-      vatAmount: vatAmount.toString(),
-      totalAmount: totalAmount.toString(),
-      notes: input.notes || null,
-      vatPosted: false,
-    }).returning();
+    const invoiceId = await db.transaction(async (tx) => {
+      const [invoice] = await tx.insert(invoices).values({
+        tenantId,
+        invoiceNumber: input.invoiceNumber.trim(),
+        type: 'invoice',
+        status: 'draft',
+        issueDate: input.issueDate,
+        dueDate: input.dueDate?.trim() || null,
+        clientName: name,
+        counterpartyName: name,
+        clientAddress: input.counterpartyAddress?.trim() || null,
+        counterpartyAddress: input.counterpartyAddress?.trim() || null,
+        clientVatNumber: input.counterpartyVat?.trim() || input.counterpartyEik?.trim() || null,
+        counterpartyEik: input.counterpartyEik?.trim() || null,
+        counterpartyVat: input.counterpartyVat?.trim() || null,
+        subtotal: money(netAmount),
+        netAmount: money(netAmount),
+        amount: money(netAmount),
+        vatAmount: money(vatAmount),
+        totalAmount: total,
+        total,
+        notes: input.notes?.trim() || null,
+        vatPosted: false,
+        items: computedLines.map((line) => ({
+          description: line.description,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          vatRate: line.vatRate,
+          total: line.lineNet,
+        })),
+      }).returning({ id: invoices.id });
 
-    if (computedLines.length > 0) {
-      await db.insert(invoiceLines).values(
-        computedLines.map(l => ({
+      if (!invoice?.id) throw new Error('Фактурата не беше записана');
+
+      await tx.insert(invoiceLines).values(
+        computedLines.map((line) => ({
           invoiceId: invoice.id,
-          description: l.description,
-          quantity: l.quantity.toString(),
-          unitPrice: l.unitPrice.toString(),
-          vatRate: String(l.vatRate),
-          lineNet: l.lineNet.toString(),
-          lineVat: l.lineVat.toString(),
-          lineTotal: l.lineTotal.toString(),
-          skladItemId: (l as any).skladItemId || null,
-        }))
+          description: line.description,
+          quantity: String(line.quantity),
+          unitPrice: money(line.unitPrice),
+          vatRate: String(line.vatRate),
+          lineNet: money(line.lineNet),
+          lineVat: money(line.lineVat),
+          lineTotal: money(line.lineTotal),
+          skladItemId: line.skladItemId,
+        })),
       );
-    }
+
+      return invoice.id;
+    });
+
+    const [saved] = await db.select({ id: invoices.id }).from(invoices)
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.tenantId, tenantId)));
+    if (!saved) return { success: false, error: 'Фактурата не остана в базата' };
 
     revalidatePath('/', 'layout');
-    return { success: true, data: invoice };
+    return { success: true, id: invoiceId };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    const detail = dbErrorText(error, 'Фактурата не беше записана');
+    console.error('[createInvoice]', detail);
+    return { success: false, error: detail };
   }
 }
 

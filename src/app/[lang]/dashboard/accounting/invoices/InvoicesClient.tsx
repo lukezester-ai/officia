@@ -17,7 +17,7 @@ import {
 import { deleteInvoice } from "./actions";
 
 interface Invoice {
-  id: number;
+  id: string;
   invoiceNumber: string;
   clientName: string;
   issueDate: string;
@@ -28,10 +28,10 @@ interface Invoice {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  draft: { label: "Chernova", color: "text-zinc-400", bg: "bg-zinc-800", icon: Clock },
-  sent: { label: "Izpratena", color: "text-blue-400", bg: "bg-blue-950/60", icon: Send },
-  paid: { label: "Platena", color: "text-emerald-400", bg: "bg-emerald-950/60", icon: CheckCircle },
-  overdue: { label: "Zakasnyala", color: "text-red-400", bg: "bg-red-950/60", icon: AlertTriangle },
+  draft: { label: "Чернова", color: "text-zinc-400", bg: "bg-zinc-800", icon: Clock },
+  sent: { label: "Изпратена", color: "text-blue-400", bg: "bg-blue-950/60", icon: Send },
+  paid: { label: "Платена", color: "text-emerald-400", bg: "bg-emerald-950/60", icon: CheckCircle },
+  overdue: { label: "Закъсняла", color: "text-red-400", bg: "bg-red-950/60", icon: AlertTriangle },
 };
 
 export default function InvoicesClient({
@@ -42,7 +42,7 @@ export default function InvoicesClient({
   invoices: Invoice[];
 }) {
   const [filter, setFilter] = useState("all");
-  const [deleting, setDeleting] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const filtered = filter === "all" ? invoices : invoices.filter((i) => i.status === filter);
 
@@ -62,8 +62,8 @@ export default function InvoicesClient({
     .filter((i) => i.status === "sent" || i.status === "overdue")
     .reduce((s, i) => s + parseFloat(i.total), 0);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Iztrii tazi faktura?")) return;
+  const handleDelete = async (id: string) => {
+    if (!confirm("Изтриване на тази фактура?")) return;
     setDeleting(id);
     await deleteInvoice(id, lang);
   };
@@ -86,8 +86,8 @@ export default function InvoicesClient({
                 <FileText size={20} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Fakturi</h1>
-                <p className="text-zinc-400 text-sm">Invoices</p>
+                <h1 className="text-2xl font-bold">Фактури</h1>
+                <p className="text-zinc-400 text-sm">Продажби</p>
               </div>
             </div>
           </div>
@@ -95,16 +95,16 @@ export default function InvoicesClient({
             href={`/${lang}/dashboard/accounting/invoices/new`}
             className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 transition-colors px-4 py-2 rounded-xl text-sm font-medium"
           >
-            <Plus size={16} /> Nova faktura
+            <Plus size={16} /> Нова фактура
           </Link>
         </div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Plateni", value: totalPaid, color: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-950/30" },
-            { label: "Ochakva se", value: totalPending, color: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-950/30" },
-            { label: "Obshto fakturi", value: invoices.length, color: "text-white", border: "border-white/10", bg: "bg-white/3", isCount: true },
+            { label: "Платени", value: totalPaid, color: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-950/30" },
+            { label: "Очаква се", value: totalPending, color: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-950/30" },
+            { label: "Общо фактури", value: invoices.length, color: "text-white", border: "border-white/10", bg: "bg-white/3", isCount: true },
           ].map((s) => (
             <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-5`}>
               <div className="text-xs text-zinc-400 mb-2">{s.label}</div>
@@ -132,7 +132,7 @@ export default function InvoicesClient({
                 }`}
               >
                 {cfg && <cfg.icon size={11} />}
-                {f === "all" ? "Vsichki" : cfg?.label}
+                {f === "all" ? "Всички" : cfg?.label}
                 <span className="ml-1 text-zinc-500">
                   {counts[f]}
                 </span>
@@ -145,15 +145,15 @@ export default function InvoicesClient({
         {filtered.length === 0 ? (
           <div className="bg-orange-950/20 border border-orange-500/20 rounded-2xl p-12 text-center">
             <FileText size={48} className="text-orange-400 mx-auto mb-4" />
-            <h3 className="font-bold text-lg mb-2">Nyama fakturi</h3>
+            <h3 className="font-bold text-lg mb-2">Няма фактури</h3>
             <p className="text-zinc-400 text-sm mb-6">
-              {filter === "all" ? "Syzdai pyrvata si faktura." : `Nyama fakturi so status: ${STATUS_CONFIG[filter]?.label}.`}
+              {filter === "all" ? "Създайте първата фактура." : `Няма фактури със статус: ${STATUS_CONFIG[filter]?.label}.`}
             </p>
             <Link
               href={`/${lang}/dashboard/accounting/invoices/new`}
               className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 transition-colors px-4 py-2 rounded-xl text-sm font-medium"
             >
-              <Plus size={14} /> Nova faktura
+              <Plus size={14} /> Нова фактура
             </Link>
           </div>
         ) : (
@@ -179,9 +179,9 @@ export default function InvoicesClient({
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-zinc-400">Izd.: {inv.issueDate}</div>
+                        <div className="text-xs text-zinc-400">Изд.: {inv.issueDate}</div>
                         <div className={`text-xs mt-0.5 ${isOverdue ? "text-red-400" : "text-zinc-500"}`}>
-                          Srok: {inv.dueDate}
+                          Срок: {inv.dueDate}
                         </div>
                       </div>
                       <div>
@@ -203,7 +203,7 @@ export default function InvoicesClient({
                       <Link
                         href={`/${lang}/dashboard/accounting/invoices/${inv.id}`}
                         className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 flex items-center justify-center transition-colors"
-                        title="Pregled"
+                        title="Преглед"
                       >
                         <Eye size={13} />
                       </Link>
@@ -211,7 +211,7 @@ export default function InvoicesClient({
                         onClick={() => handleDelete(inv.id)}
                         disabled={deleting === inv.id}
                         className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-950/60 hover:text-red-400 flex items-center justify-center transition-colors"
-                        title="Iztrii"
+                        title="Изтрий"
                       >
                         <Trash2 size={13} />
                       </button>

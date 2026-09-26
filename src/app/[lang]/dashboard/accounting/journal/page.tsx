@@ -1,43 +1,24 @@
-import { db } from "@/lib/db/db";
-import { journalHeaders } from "@/lib/db/schema";
 import { requireTenant } from "@/lib/auth/get-tenant";
-import { desc, eq } from "drizzle-orm";
+import { listJournalSummaries } from "@/lib/accounting/journal-read";
 import Link from "next/link";
 import { BookOpen, Plus, TrendingUp, ArrowUpDown, Zap } from "@/components/icons";
 
 export default async function JournalPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  let entries: any[] = [];
-  let totalDebit = 0;
-  let totalCredit = 0;
-
-  try {
-    const { tenantId } = await requireTenant();
-    entries = await db
-      .select()
-      .from(journalHeaders as any)
-      .where(eq((journalHeaders as any).tenantId, tenantId))
-      .orderBy(desc((journalHeaders as any).createdAt))
-      .limit(100);
-    totalDebit = entries.reduce(
-      (s: number, e: any) => s + Number(e.debitAmount ?? e.debit_amount ?? 0),
-      0
-    );
-    totalCredit = entries.reduce(
-      (s: number, e: any) => s + Number(e.creditAmount ?? e.credit_amount ?? 0),
-      0
-    );
-  } catch {}
+  const { tenantId } = await requireTenant();
+  const entries = await listJournalSummaries(tenantId, 100);
+  const totalDebit = entries.reduce((sum, entry) => sum + entry.debitAmount, 0);
+  const totalCredit = entries.reduce((sum, entry) => sum + entry.creditAmount, 0);
 
   const balanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
   const stats = [
     { label: "Записвания", value: String(entries.length), color: "from-violet-500 to-purple-600" },
-    { label: "Общо дебит", value: totalDebit.toFixed(2) + " лв.", color: "from-blue-500 to-cyan-600" },
-    { label: "Общо кредит", value: totalCredit.toFixed(2) + " лв.", color: "from-emerald-500 to-teal-600" },
+    { label: "Общо дебит", value: totalDebit.toFixed(2) + " EUR", color: "from-blue-500 to-cyan-600" },
+    { label: "Общо кредит", value: totalCredit.toFixed(2) + " EUR", color: "from-emerald-500 to-teal-600" },
     {
       label: "Баланс",
-      value: (totalDebit - totalCredit).toFixed(2) + " лв.",
+      value: (totalDebit - totalCredit).toFixed(2) + " EUR",
       color: balanced ? "from-emerald-500 to-teal-600" : "from-red-500 to-rose-600",
     },
   ];
@@ -122,16 +103,16 @@ export default async function JournalPage({ params }: { params: Promise<{ lang: 
                           : "-"}
                       </td>
                       <td className="px-4 py-3 text-violet-400 font-mono text-xs">
-                        {e.referenceNumber ?? e.reference_number ?? "-"}
+                        {e.referenceNumber || "-"}
                       </td>
                       <td className="px-4 py-3 text-white max-w-xs truncate">
-                        {e.description ?? "-"}
+                        {e.description || "-"}
                       </td>
                       <td className="px-4 py-3 text-zinc-300 font-mono text-xs">
-                        {e.debitAccount ?? e.debit_account ?? "-"}
+                        {e.debitAccount || "-"}
                       </td>
                       <td className="px-4 py-3 text-zinc-300 font-mono text-xs">
-                        {e.creditAccount ?? e.credit_account ?? "-"}
+                        {e.creditAccount || "-"}
                       </td>
                       <td className="px-4 py-3 text-right text-blue-400 font-mono text-xs tabular-nums">
                         {e.debitAmount ?? e.debit_amount

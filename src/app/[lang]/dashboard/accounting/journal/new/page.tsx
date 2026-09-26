@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Plus, Trash2, Save, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
+import { createManualJournalEntry } from "../actions";
 
 const ACCOUNTS = [
   { code: "411", name: "Клиенти" },
@@ -27,8 +28,6 @@ interface Line {
   debit: string;
   credit: string;
 }
-
-import { use } from "react";
 
 export default function NewJournalEntry(props: { params: Promise<{ lang: string }> }) {
   const params = use(props.params);
@@ -65,12 +64,19 @@ export default function NewJournalEntry(props: { params: Promise<{ lang: string 
 
     setSaving(true);
     try {
-      const res = await fetch("/api/journal-entries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, reference, description, lines }),
+      const result = await createManualJournalEntry({
+        lang: params.lang,
+        date,
+        reference,
+        description,
+        lines: lines.map(({ account, description: lineDescription, debit, credit }) => ({
+          account,
+          description: lineDescription,
+          debit,
+          credit,
+        })),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (result.error) throw new Error(result.error);
       setSuccess(true);
       setTimeout(() => router.push(`/${params.lang}/dashboard/accounting/journal`), 1500);
     } catch (e: any) {

@@ -25,7 +25,7 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
+export function NewInvoiceDialog({ onCreated }: { onCreated: () => Promise<any[] | void> | void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -73,28 +73,37 @@ export function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
     if (!form.counterpartyName.trim()) { toast.error('Избери или въведи клиент'); return; }
     if (lines.every(l => !l.description.trim())) { toast.error('Добави поне един ред'); return; }
     setLoading(true);
-    const res = await createInvoice({
-      ...form,
-      lines: computedLines
-        .filter(l => l.description.trim())
-        .map(l => ({
-          description: l.description,
-          quantity: parseFloat(l.quantity) || 1,
-          unitPrice: parseFloat(l.unitPrice) || 0,
-          vatRate: l.vatRate,
-        })),
-    });
-    if (res.success) {
+    try {
+      const res = await createInvoice({
+        ...form,
+        lines: computedLines
+          .filter(l => l.description.trim())
+          .map(l => ({
+            description: l.description,
+            quantity: parseFloat(l.quantity) || 1,
+            unitPrice: parseFloat(l.unitPrice) || 0,
+            vatRate: Number(l.vatRate) || 0,
+          })),
+      });
+      if (!res.success || !res.id) {
+        toast.error('Грешка: ' + (res.error || 'Фактурата не беше записана'));
+        return;
+      }
+      const fresh = await onCreated();
+      if (Array.isArray(fresh) && !fresh.some((invoice) => invoice.id === res.id)) {
+        toast.error('Записът мина, но фактурата не се появи в списъка. Презареди страницата.');
+        return;
+      }
       toast.success('Фактурата е създадена!');
-      onCreated();
       setOpen(false);
       setForm(freshForm());
       setLines([emptyLine()]);
       setSelectedClient('');
-    } else {
-      toast.error('Грешка: ' + res.error);
+    } catch (error: any) {
+      toast.error('Грешка: ' + (error?.message || 'Фактурата не беше записана'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -184,7 +193,7 @@ export function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>Отказ</Button>
-            <Button onClick={handleSubmit} disabled={loading}>
+            <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? 'Записване...' : 'Създай фактура'}
             </Button>
           </div>

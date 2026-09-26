@@ -4,38 +4,37 @@ import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { aiInboxItems } from '@/lib/db/schema/ai_inbox';
-import { eq } from 'drizzle-orm';
-import { auth } from '@clerk/nextjs/server';
+import { and, eq } from 'drizzle-orm';
+import { requireTenant } from '@/lib/auth/get-tenant';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 
 export async function generateMorningBriefing() {
   try {
-    const { userId, orgId } = await auth();
-    const tenantId = orgId || userId;
-    
-    if (!tenantId) {
-      return "Няма достъп.";
-    }
+    const { tenantId } = await requireTenant();
 
-    // Събиране на данни за AI
     const allInvoices = await db.select().from(invoices).where(eq(invoices.tenantId, tenantId));
-    const outstandingInvoices = allInvoices.filter(i => i.status === 'issued');
-    const totalOutstanding = outstandingInvoices.reduce((acc, inv) => acc + parseFloat(inv.totalAmount || '0'), 0);
+    const outstandingInvoices = allInvoices.filter(i => i.status === 'issued' || i.status === 'sent' || i.status === 'overdue');
+    const totalOutstanding = outstandingInvoices.reduce((acc, inv) => acc + getInvoiceEffectiveAmount(inv), 0);
 
-    const pendingLeaves = await db.select().from(leaveRequests).where(eq(leaveRequests.status, 'pending'));
-    const pendingLeavesCount = pendingLeaves.filter(l => l.tenantId === tenantId).length;
+    const pendingLeaves = await db.select().from(leaveRequests).where(and(
+      eq(leaveRequests.tenantId, tenantId),
+      eq(leaveRequests.status, 'pending'),
+    ));
 
-    const inboxItems = await db.select().from(aiInboxItems).where(eq(aiInboxItems.tenantId, tenantId));
-    const openInboxCount = inboxItems.filter(i => i.status === 'open').length;
+    const inboxItems = await db.select().from(aiInboxItems).where(and(
+      eq(aiInboxItems.tenantId, tenantId),
+      eq(aiInboxItems.status, 'open'),
+    ));
 
     // Генериране на персонализиран AI текст
     const prompt = `Ти си Officia AI - проактивен бизнес асистент. 
 Потребителят току-що отвори системата.
 Ето текущото състояние на фирмата:
-- Неплатени изходящи фактури: ${outstandingInvoices.length} бр. (общо: ${totalOutstanding.toFixed(2)} лв.)
-- Чакащи молби за отпуск: ${pendingLeavesCount} бр.
-- Непрочетени системни известия (Inbox): ${openInboxCount} бр.
+- Неплатени изходящи фактури: ${outstandingInvoices.length} бр. (общо: ${totalOutstanding.toFixed(2)} €)
+- Чакащи молби за отпуск: ${pendingLeaves.length} бр.
+- Непрочетени системни известия (Inbox): ${inboxItems.length} бр.
 
 Напиши кратък, енергичен и приятелски сутрешен брифинг (до 3 изречения). 
 Кажи му 'Добро утро' или 'Здравей'. 

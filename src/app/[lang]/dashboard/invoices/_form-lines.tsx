@@ -86,7 +86,7 @@ export function InvoiceLines({ lines, computedLines, onAdd, onRemove, onChange }
           </tbody>
         </table>
       </div>
-      <Button variant="outline" size="sm" className="gap-1.5" onClick={onAdd}>
+      <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onAdd}>
         <Plus size={13} /> Добави ред
       </Button>
     </div>

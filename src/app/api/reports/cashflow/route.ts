@@ -1,15 +1,10 @@
 import { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { requireTenant } from '@/lib/auth/get-tenant';
 import { ReportEngine } from '@/lib/accounting/report-engine';
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId, orgId } = await auth();
-    const tenantId = orgId || userId;
-
-    if (!tenantId) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { tenantId } = await requireTenant();
 
     const { searchParams } = new URL(req.url);
     const startParam = searchParams.get('start');
@@ -25,6 +20,10 @@ export async function GET(req: NextRequest) {
 
     return Response.json(report);
   } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message === "Not authenticated" || message === "Inactive membership" || message === "Tenant access denied" || message.startsWith("Потребителят")) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
     console.error(error);
     return Response.json({ error: "Failed to generate cash flow report" }, { status: 500 });
   }

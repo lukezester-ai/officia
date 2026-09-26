@@ -10,33 +10,29 @@ export default async function InvoicesPage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+  const { tenantId } = await requireTenant();
+  const rows = await db
+    .select()
+    .from(invoices)
+    .where(eq(invoices.tenantId, tenantId))
+    .orderBy(desc(invoices.createdAt))
+    .limit(500);
 
-  let rows: any[] = [];
-  try {
-    const { tenantId } = await requireTenant();
-    rows = await db
-      .select()
-      .from(invoices)
-      .where(eq((invoices as any).tenantId, tenantId))
-      .orderBy(desc((invoices as any).createdAt))
-      .limit(500);
-  } catch {}
-
-  const serialized = rows.map((r: any) => ({
+  const serialized = rows.map((r) => ({
     id: r.id,
-    invoiceNumber: String(r.invoiceNumber ?? r.invoice_number ?? ""),
-    clientName: String(r.clientName ?? r.client_name ?? ""),
-    clientAddress: String(r.clientAddress ?? r.client_address ?? ""),
-    clientVatNumber: String(r.clientVatNumber ?? r.client_vat_number ?? ""),
-    issueDate: String(r.issueDate ?? r.issue_date ?? ""),
-    dueDate: String(r.dueDate ?? r.due_date ?? ""),
+    invoiceNumber: String(r.invoiceNumber ?? ""),
+    clientName: String(r.clientName || r.counterpartyName || ""),
+    clientAddress: String(r.clientAddress || r.counterpartyAddress || ""),
+    clientVatNumber: String(r.clientVatNumber || r.counterpartyEik || ""),
+    issueDate: String(r.issueDate ?? ""),
+    dueDate: String(r.dueDate ?? ""),
     status: String(r.status ?? "draft"),
-    subtotal: String(r.subtotal ?? "0"),
-    vatAmount: String(r.vatAmount ?? r.vat_amount ?? "0"),
-    total: String(r.total ?? r.totalAmount ?? r.total_amount ?? "0"),
+    subtotal: String(r.subtotal || r.netAmount || "0"),
+    vatAmount: String(r.vatAmount ?? "0"),
+    total: String((Number(r.total || 0) ? r.total : r.totalAmount) || "0"),
     notes: String(r.notes ?? ""),
     items: Array.isArray(r.items) ? r.items : [],
-    createdAt: String(r.createdAt ?? r.created_at ?? ""),
+    createdAt: r.createdAt ? r.createdAt.toISOString() : "",
   }));
 
   return <InvoicesClient lang={lang} invoices={serialized} />;
