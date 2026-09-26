@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart, CheckSquare, Menu, X, Handshake } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, Sparkles, BarChart3, Receipt, Building2, UsersRound, FilePlus, ShoppingCart, CheckSquare, Menu, X, Handshake, ScrollText } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -22,6 +22,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: dict.fixedAssets, href: `/${lang}/dashboard/fixed-assets`, icon: Building2 },
     { name: dict.counterparties, href: `/${lang}/dashboard/counterparties`, icon: UsersRound },
     { name: 'Сделки', href: `/${lang}/dashboard/deals`, icon: Handshake },
+    { name: 'Договори', href: `/${lang}/dashboard/contracts`, icon: ScrollText },
     { name: dict.invoices, href: `/${lang}/dashboard/invoices`, icon: FilePlus },
     { name: dict.purchaseInvoices, href: `/${lang}/dashboard/purchase-invoices`, icon: ShoppingCart },
     { name: "Данъци", href: `/${lang}/dashboard/taxes`, icon: FileText },
@@ -89,6 +90,7 @@ export function MobileDashboardSidebar({ dict, lang }: { dict: any; lang: string
     { name: dict.fixedAssets, href: `/${lang}/dashboard/fixed-assets`, icon: Building2 },
     { name: dict.counterparties, href: `/${lang}/dashboard/counterparties`, icon: UsersRound },
     { name: 'Сделки', href: `/${lang}/dashboard/deals`, icon: Handshake },
+    { name: 'Договори', href: `/${lang}/dashboard/contracts`, icon: ScrollText },
     { name: dict.invoices, href: `/${lang}/dashboard/invoices`, icon: FilePlus },
     { name: dict.purchaseInvoices, href: `/${lang}/dashboard/purchase-invoices`, icon: ShoppingCart },
     { name: "Данъци", href: `/${lang}/dashboard/taxes`, icon: FileText },

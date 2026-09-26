@@ -1,7 +1,7 @@
 import { db } from '@/lib/db/db';
-import { contractVersions } from '@/lib/db/schema/contracts';
+import { contracts, contractVersions } from '@/lib/db/schema/contracts';
 import { eq, and } from 'drizzle-orm';
-import { getCurrentTenant } from '@/lib/tenant';
+import { requireTenant } from '@/lib/auth/get-tenant';
 
 export interface CreateVersionInput {
   versionNumber: string;
@@ -9,7 +9,12 @@ export interface CreateVersionInput {
 }
 
 export async function createVersion(contractId: string, input: CreateVersionInput) {
-  const tenantId = await getCurrentTenant();
+  const { tenantId } = await requireTenant();
+  const [contract] = await db.select({ id: contracts.id }).from(contracts).where(and(
+    eq(contracts.id, contractId),
+    eq(contracts.tenantId, tenantId),
+  )).limit(1);
+  if (!contract) throw new Error('Договорът не е от този акаунт.');
   
   // 1. Mark all existing versions for this contract as not current
   await db.update(contractVersions)
@@ -34,7 +39,7 @@ export async function createVersion(contractId: string, input: CreateVersionInpu
 }
 
 export async function getCurrentVersion(contractId: string) {
-  const tenantId = await getCurrentTenant();
+  const { tenantId } = await requireTenant();
   
   const [currentVersion] = await db.select()
     .from(contractVersions)

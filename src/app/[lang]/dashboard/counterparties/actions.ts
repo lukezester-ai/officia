@@ -91,6 +91,7 @@ import { invoices } from '@/lib/db/schema/invoices';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { deals } from '@/lib/db/schema/deals';
+import { contracts } from '@/lib/db/schema/contracts';
 
 export async function getCounterparty360Data(id: string) {
   try {
@@ -114,6 +115,15 @@ export async function getCounterparty360Data(id: string) {
       .leftJoin(invoices, eq(deals.invoiceId, invoices.id))
       .where(and(eq(deals.tenantId, tenantId), eq(deals.counterpartyId, counterparty.id)))
       .orderBy(desc(deals.createdAt));
+    const relatedContracts = await db.select({
+      id: contracts.id,
+      title: contracts.title,
+      status: contracts.status,
+      startDate: contracts.startDate,
+      endDate: contracts.endDate,
+    }).from(contracts)
+      .where(and(eq(contracts.tenantId, tenantId), eq(contracts.counterpartyId, counterparty.id)))
+      .orderBy(desc(contracts.createdAt));
     
     // Financials
     const unpaidInvoices = relatedInvoices.filter(i => i.status === 'issued');
@@ -166,6 +176,7 @@ export async function getCounterparty360Data(id: string) {
         },
         invoices: relatedInvoices,
         deals: relatedDeals,
+        contracts: relatedContracts,
         transactions: relatedTransactions,
         documents: relatedDocuments,
         aiNotes

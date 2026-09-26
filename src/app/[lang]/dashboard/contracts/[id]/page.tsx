@@ -3,9 +3,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, FileText, UserPlus, Upload, XCircle, AlertTriangle } from '@/components/icons';
+import { ArrowLeft, CheckCircle, FileText, XCircle, AlertTriangle } from '@/components/icons';
 import { notFound } from 'next/navigation';
 import { activateContractAction, terminateContractAction } from '../actions';
+import { NewContractForm } from '../_form';
+import { ContractVersionForm } from '../_version-form';
+import { contractFileLabel } from '@/lib/contracts/files';
 import { getDictionary } from '@/lib/get-dictionary';
 
 export default async function ContractDetailsPage(props: { params: Promise<{ lang: string, id: string }> }) {
@@ -22,8 +25,12 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
           <h1 className="text-3xl font-bold tracking-tight">Нов договор</h1>
         </div>
         <Card>
-          <CardContent className="pt-6 text-center text-muted-foreground p-12">
-             В процес на разработка: Тук ще бъде формата за създаване на нов договор.
+          <CardHeader>
+            <CardTitle>Данни</CardTitle>
+            <CardDescription>Черновата се появява при клиента, ако е избран.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <NewContractForm lang={params.lang} />
           </CardContent>
         </Card>
       </div>
@@ -61,14 +68,14 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
         
         <div className="flex items-center gap-2">
           {isDraft && (
-            <form action={async (formData) => await activateContractAction(contract.id, formData)}>
+            <form action={activateContractAction.bind(null, contract.id)}>
               <Button type="submit" disabled={!canActivate} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                 <CheckCircle className="h-4 w-4" /> Активирай
               </Button>
             </form>
           )}
           {isActive && (
-            <form action={async (formData) => await terminateContractAction(contract.id, formData)}>
+            <form action={terminateContractAction.bind(null, contract.id)}>
               <Button type="submit" variant="destructive" className="gap-2">
                 <XCircle className="h-4 w-4" /> Прекрати
               </Button>
@@ -83,8 +90,8 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
           <div>
             <p className="font-medium">Договорът не може да бъде активиран все още.</p>
             <ul className="list-disc list-inside text-sm mt-1">
-              {contract.parties.length === 0 && <li>Трябва да добавите поне една страна (Party).</li>}
-              {!contract.currentVersion && <li>Трябва да качите поне един документ/версия.</li>}
+              {contract.parties.length === 0 && <li>Избери клиент при създаването на договора.</li>}
+              {!contract.currentVersion && <li>Качи файла на договора.</li>}
             </ul>
           </div>
         </div>
@@ -98,9 +105,6 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
                 <CardTitle>Страни по договора</CardTitle>
                 <CardDescription>Участващи фирми или лица</CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="gap-2">
-                <UserPlus className="h-4 w-4" /> Добави
-              </Button>
             </CardHeader>
             <CardContent>
               {contract.parties.length === 0 ? (
@@ -127,11 +131,9 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
                 <CardTitle>Документи и версии</CardTitle>
                 <CardDescription>Качени файлове към договора</CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Upload className="h-4 w-4" /> Качи версия
-              </Button>
             </CardHeader>
             <CardContent>
+              <ContractVersionForm contractId={contract.id} />
               {contract.versions.length === 0 ? (
                 <p className="text-muted-foreground text-center py-6">Няма качени файлове.</p>
               ) : (
@@ -142,7 +144,12 @@ export default async function ContractDetailsPage(props: { params: Promise<{ lan
                         <FileText className="h-8 w-8 text-blue-500" />
                         <div>
                           <p className="font-medium">Версия {version.versionNumber}</p>
-                          <p className="text-sm text-muted-foreground">Качена на {new Date(version.createdAt).toLocaleDateString('bg-BG')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {contractFileLabel(version.contentUrl) || 'Без файл'} · {new Date(version.createdAt).toLocaleDateString('bg-BG')}
+                          </p>
+                          {version.contentUrl ? (
+                            <a className="text-sm text-primary hover:underline" href={`/api/contracts/${contract.id}/versions/${version.id}`}>Свали</a>
+                          ) : null}
                         </div>
                       </div>
                       {version.isCurrent && <Badge>Текуща</Badge>}

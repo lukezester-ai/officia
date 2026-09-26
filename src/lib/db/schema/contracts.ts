@@ -7,6 +7,7 @@ export const contracts = pgTable('contracts', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   title: varchar('title', { length: 255 }).notNull(),
+  counterpartyId: uuid('counterparty_id'),
   description: text('description'),
   status: contractStatusEnum('status').default('draft').notNull(),
   startDate: timestamp('start_date'),

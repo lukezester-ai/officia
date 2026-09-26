@@ -49,13 +49,29 @@ interface DealRow {
   invoiceStatus: string | null;
 }
 
+interface ContractRow {
+  id: string;
+  title: string;
+  status: string;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+}
+
 interface Counterparty360Data {
   counterparty: Counterparty;
   financials: Financials;
   invoices: Invoice[];
   deals: DealRow[];
+  contracts: ContractRow[];
   transactions: Transaction[];
   aiNotes: string[];
+}
+
+function contractStatusLabel(status: string) {
+  if (status === 'active') return 'Активен';
+  if (status === 'expired') return 'Изтекъл';
+  if (status === 'terminated') return 'Прекратен';
+  return 'Чернова';
 }
 
 function fmt(n: number) {
@@ -78,7 +94,7 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
     );
   }
 
-  const { counterparty, financials, invoices, deals, transactions, aiNotes } = res.data as Counterparty360Data;
+  const { counterparty, financials, invoices, deals, contracts, transactions, aiNotes } = res.data as Counterparty360Data;
 
   return (
     <div className="space-y-6">
@@ -188,6 +204,9 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                   <TabsTrigger value="deals" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
                     Сделки ({deals.length})
                   </TabsTrigger>
+                  <TabsTrigger value="contracts" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
+                    Договори ({contracts.length})
+                  </TabsTrigger>
                   <TabsTrigger value="transactions" className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4">
                     Банкови плащания ({transactions.length})
                   </TabsTrigger>
@@ -238,6 +257,26 @@ export default async function Counterparty360Page(props: { params: Promise<{ lan
                             {fmt(parseFloat(deal.amount || '0'))} {deal.currency || 'EUR'}
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="contracts" className="p-0 m-0">
+                  {contracts.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground text-sm">Няма договори с този клиент.</div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {contracts.map((contract) => (
+                        <Link key={contract.id} href={`/${params.lang}/dashboard/contracts/${contract.id}`} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                          <div>
+                            <p className="text-sm font-medium">{contract.title}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {contractStatusLabel(contract.status)}
+                              {contract.endDate ? ` · до ${new Date(contract.endDate).toLocaleDateString('bg-BG')}` : ''}
+                            </p>
+                          </div>
+                        </Link>
                       ))}
                     </div>
                   )}

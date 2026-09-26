@@ -1,12 +1,12 @@
 import { db } from '@/lib/db/db';
 import { contracts } from '@/lib/db/schema/contracts';
 import { eq, and } from 'drizzle-orm';
-import { getCurrentTenant } from '@/lib/tenant';
+import { requireTenant } from '@/lib/auth/get-tenant';
 import { getContractById } from './contract-service';
 import { logAiAction } from '@/lib/ai/audit/audit-logger';
 
 export async function activateContract(id: string) {
-  const tenantId = await getCurrentTenant();
+  const { tenantId } = await requireTenant();
   
   const contract = await getContractById(id);
   if (!contract) {
@@ -45,7 +45,7 @@ export async function activateContract(id: string) {
 }
 
 export async function terminateContract(id: string) {
-  const tenantId = await getCurrentTenant();
+  const { tenantId } = await requireTenant();
   
   const [updated] = await db.update(contracts)
     .set({ 
@@ -67,7 +67,7 @@ export async function terminateContract(id: string) {
 }
 
 export async function expireContract(id: string) {
-  const tenantId = await getCurrentTenant();
+  const { tenantId } = await requireTenant();
   
   const [updated] = await db.update(contracts)
     .set({ 
