@@ -1,10 +1,65 @@
 ﻿'use client';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Box, CheckCircle, Clock, FileText, Upload, AlertTriangle } from 'lucide-react';
+import { Box, CheckCircle, FileText, Upload, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
+import { getDocuments } from '@/app/[lang]/dashboard/documents/actions';
+import { linkAssetDocument } from '@/app/[lang]/dashboard/fixed-assets/actions';
 
-export function AssetDrawer({ asset, open, onOpenChange }: { asset: any, open: boolean, onOpenChange: (open: boolean) => void }) {
+function AttachFile({ asset, onLinked }: { asset: any; onLinked: (documentId: string, title: string, fileUrl: string | null) => void }) {
+  const [files, setFiles] = useState<{ id: string; title: string }[]>([]);
+  const [fileId, setFileId] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void getDocuments().then((res) => {
+      if (res.success) setFiles((res.data || []).map((row) => ({ id: row.id, title: row.title })));
+    });
+  }, []);
+
+  async function attach() {
+    setSaving(true);
+    const res = await linkAssetDocument(asset.id, fileId);
+    setSaving(false);
+    if (!res.success) {
+      toast.error(res.error || 'Документът не беше добавен.');
+      return;
+    }
+    onLinked(res.documentId, res.title, res.fileUrl);
+    toast.success(res.already ? 'Този файл вече е към актива.' : 'Файлът е добавен към актива.');
+  }
+
+  return (
+    <div className="space-y-2">
+      {asset.documentTitle ? (
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="flex items-center gap-2 text-emerald-600"><CheckCircle size={16} /> {asset.documentTitle}</span>
+          {asset.fileUrl ? <a href={`/api/documents/${asset.documentId}`} className="text-indigo-500 hover:underline">Изтегли</a> : null}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground text-center py-2">Няма свързани документи.</p>
+      )}
+      <select
+        value={fileId}
+        onChange={(e) => setFileId(e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      >
+        <option value="">{files.length ? 'Избери файл от архива' : 'Архивът е празен'}</option>
+        {files.map((file) => (
+          <option key={file.id} value={file.id}>{file.title}</option>
+        ))}
+      </select>
+      <Button variant="outline" className="w-full justify-start gap-2" onClick={attach} disabled={saving || !fileId}>
+        <Upload size={14} />
+        {saving ? 'Запис...' : asset.documentId ? 'Смени файла' : 'Добави'}
+      </Button>
+    </div>
+  );
+}
+
+export function AssetDrawer({ asset, open, onOpenChange, onLinked }: { asset: any, open: boolean, onOpenChange: (open: boolean) => void, onLinked?: (documentId: string, title: string, fileUrl: string | null) => void }) {
   if (!asset) return null;
 
   return (
@@ -73,18 +128,11 @@ export function AssetDrawer({ asset, open, onOpenChange }: { asset: any, open: b
 
           {/* 3. Documents */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider flex justify-between items-center">
-              <span>3. Документи</span>
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-indigo-500"><Upload size={14} className="mr-1"/> Добави</Button>
+            <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-2">
+              <FileText size={14} /> 3. Документи
             </h3>
             <div className="bg-white dark:bg-slate-950 border border-border rounded-xl p-4">
-              {asset.documentId ? (
-                <div className="flex items-center gap-2 text-sm text-emerald-600">
-                  <CheckCircle size={16} /> Прикачена фактура
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-2">Няма свързани документи.</p>
-              )}
+              <AttachFile asset={asset} onLinked={(documentId, title, fileUrl) => onLinked?.(documentId, title, fileUrl)} />
             </div>
           </div>
 

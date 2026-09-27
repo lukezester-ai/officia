@@ -21,7 +21,7 @@ const STATUS: Record<string, { label: string; color: string }> = {
 export function InvoiceTable({ items, onAction, onPatched }: {
   items: any[];
   onAction: (action: string, id: string) => Promise<void>;
-  onPatched?: (id: string, patch: { aiStatus: string | null }) => void;
+  onPatched?: (id: string, patch: { aiStatus?: string | null; matchedTransactionId?: string }) => void;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
@@ -147,6 +147,12 @@ export function InvoiceTable({ items, onAction, onPatched }: {
           const id = selectedInvoice.id;
           setSelectedInvoice((prev: any) => prev ? { ...prev, aiStatus } : prev);
           onPatched?.(id, { aiStatus });
+        }}
+        onBankLinked={(transactionId) => {
+          if (!selectedInvoice) return;
+          const id = selectedInvoice.id;
+          setSelectedInvoice((prev: any) => prev ? { ...prev, matchedTransactionId: transactionId } : prev);
+          onPatched?.(id, { matchedTransactionId: transactionId });
         }}
       />
     </>

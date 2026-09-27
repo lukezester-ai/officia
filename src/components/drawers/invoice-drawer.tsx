@@ -1,18 +1,71 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Clock, Zap, ArrowRight, Building, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
-import { checkInvoiceDuplicate, createInvoiceTask } from '@/app/[lang]/dashboard/invoices/actions';
+import { checkInvoiceDuplicate, createInvoiceTask, linkInvoiceToBankMove, listInvoiceBankMoves } from '@/app/[lang]/dashboard/invoices/actions';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
+
+function BankLink({ invoiceId, linked, onLinked }: { invoiceId: string; linked?: string | null; onLinked: (transactionId: string) => void }) {
+  const [moves, setMoves] = useState<{ id: string; label: string }[]>([]);
+  const [moveId, setMoveId] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (linked) return;
+    void listInvoiceBankMoves().then((res) => {
+      if (res.success) setMoves(res.data);
+    });
+  }, [linked]);
+
+  async function link() {
+    setSaving(true);
+    const res = await linkInvoiceToBankMove(invoiceId, moveId);
+    setSaving(false);
+    if (!res.success) {
+      toast.error(res.error || 'Фактурата не беше свързана.');
+      return;
+    }
+    onLinked(res.transactionId);
+    toast.success(res.already ? 'Фактурата вече е свързана с движение.' : 'Движението е свързано с фактурата.');
+  }
+
+  if (linked) {
+    return (
+      <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={() => toast.success('Фактурата вече е свързана с движение.')}>
+        <DollarSign size={16} className="text-amber-500" />
+        Свързана с движение
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <select
+        value={moveId}
+        onChange={(e) => setMoveId(e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      >
+        <option value="">{moves.length ? 'Избери движение' : 'Няма несвързано движение'}</option>
+        {moves.map((move) => (
+          <option key={move.id} value={move.id}>{move.label}</option>
+        ))}
+      </select>
+      <Button variant="outline" className="w-full justify-start gap-2" onClick={link} disabled={saving || !moveId}>
+        <DollarSign size={16} className="text-amber-500" />
+        {saving ? 'Запис...' : 'Свържи с банка'}
+      </Button>
+    </div>
+  );
+}
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function InvoiceDrawer({ invoice, open, onOpenChange, onChecked }: { invoice: any, open: boolean, onOpenChange: (open: boolean) => void, onChecked?: (aiStatus: string | null) => void }) {
+export function InvoiceDrawer({ invoice, open, onOpenChange, onChecked, onBankLinked }: { invoice: any, open: boolean, onOpenChange: (open: boolean) => void, onChecked?: (aiStatus: string | null) => void, onBankLinked?: (transactionId: string) => void }) {
   const [checking, setChecking] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
   if (!invoice) return null;
@@ -86,10 +139,11 @@ export function InvoiceDrawer({ invoice, open, onOpenChange, onChecked }: { invo
                 <CheckCircle size={16} className="text-emerald-500" />
                 {checking ? 'Проверка...' : 'Провери дубликат'}
               </Button>
-              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={() => toast.info('Свързване с банка...')}>
-                <DollarSign size={16} className="text-amber-500" />
-                Свържи с банка
-              </Button>
+              <BankLink
+                invoiceId={invoice.id}
+                linked={invoice.matchedTransactionId}
+                onLinked={(transactionId) => onBankLinked?.(transactionId)}
+              />
               <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={createTask} disabled={savingTask}>
                 <Clock size={16} />
                 {savingTask ? 'Запис...' : 'Създай задача'}

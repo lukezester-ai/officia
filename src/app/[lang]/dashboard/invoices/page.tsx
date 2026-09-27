@@ -30,7 +30,7 @@ export default function InvoicesPage() {
 
   useEffect(() => { load(); }, []);
 
-  const patchInvoice = (id: string, patch: { aiStatus: string | null }) => {
+  const patchInvoice = (id: string, patch: { aiStatus?: string | null; matchedTransactionId?: string }) => {
     setInvoices((current) => current.map((row) => row.id === id ? { ...row, ...patch } : row));
   };
 

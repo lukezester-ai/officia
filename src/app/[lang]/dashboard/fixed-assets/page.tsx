@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Package, TrendingDown, AlertCircle, Layers } from 'lucide-react';
 import { toast } from 'sonner';
+import { AssetDrawer } from '@/components/drawers/asset-drawer';
 
 const METHODS = [
   { value: 'straight_line', label: 'Линеен' },
@@ -91,6 +92,7 @@ function AddAssetDialog({ onAdd }: { onAdd: () => void }) {
 export default function FixedAssetsPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<any | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -106,8 +108,8 @@ export default function FixedAssetsPage() {
     if (res.success) { toast.success('Активът е отписан'); load(); } else toast.error('Грешка');
   };
 
-  const active = assets.filter(a => a.status === 'active');
-  const writtenOff = assets.filter(a => a.status === 'written_off');
+  const active = assets.filter(a => a.isActive !== false && a.status !== 'written_off');
+  const writtenOff = assets.filter(a => a.isActive === false || a.status === 'written_off');
   const totalCost = active.reduce((s, a) => s + parseFloat(a.acquisitionCost || a.acquisition_cost || '0'), 0);
 
   // Нормализираме полетата преди изчисление (DB може да използва различни имена)
@@ -168,7 +170,7 @@ export default function FixedAssetsPage() {
                     const bv = getBookValue(a);
                     const isActive = a.isActive !== false && a.status !== 'written_off';
                     return (
-                      <TableRow key={a.id} className="hover:bg-muted/30">
+                      <TableRow key={a.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setSelected(a)}>
                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{a.category || '—'}</TableCell>
                         <TableCell className="text-sm">{new Date(a.acquisitionDate).toLocaleDateString('bg-BG')}</TableCell>
@@ -182,7 +184,7 @@ export default function FixedAssetsPage() {
                         </TableCell>
                         <TableCell>
                           {isActive && (
-                            <button onClick={() => handleWriteOff(a.id, a.name)} className="text-xs text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1">
+                            <button onClick={(event) => { event.stopPropagation(); handleWriteOff(a.id, a.name); }} className="text-xs text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1">
                               <AlertCircle size={13} />Отпиши
                             </button>
                           )}
@@ -199,6 +201,19 @@ export default function FixedAssetsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AssetDrawer
+        asset={selected}
+        open={!!selected}
+        onOpenChange={(open) => { if (!open) setSelected(null); }}
+        onLinked={(documentId, title, fileUrl) => {
+          if (!selected) return;
+          const id = selected.id;
+          const patch = { documentId, documentTitle: title, fileUrl };
+          setAssets((current) => current.map((row) => row.id === id ? { ...row, ...patch } : row));
+          setSelected((prev: any) => prev ? { ...prev, ...patch } : prev);
+        }}
+      />
     </div>
   );
 }

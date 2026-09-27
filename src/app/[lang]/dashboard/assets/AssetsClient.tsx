@@ -68,7 +68,14 @@ export default function AssetsClient({ assets, problems }: { assets: any[], prob
         </CardContent>
       </Card>
 
-      <AssetDrawer asset={selectedAsset} open={!!selectedAsset} onOpenChange={(o) => !o && setSelectedAsset(null)} />
+      <AssetDrawer
+        asset={selectedAsset}
+        open={!!selectedAsset}
+        onOpenChange={(o) => !o && setSelectedAsset(null)}
+        onLinked={(documentId, title, fileUrl) => {
+          setSelectedAsset((prev: any) => prev ? { ...prev, documentId, documentTitle: title, fileUrl } : prev);
+        }}
+      />
     </>
   );
 }

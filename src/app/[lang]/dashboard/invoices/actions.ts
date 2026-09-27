@@ -5,7 +5,9 @@ import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
 import { tasks } from '@/lib/db/schema/tasks';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { counterparties } from '@/lib/db/schema/counterparties';
-import { eq, and, desc, ne } from 'drizzle-orm';
+import { eq, and, desc, ne, inArray, isNull, or } from 'drizzle-orm';
+import { bankAccounts } from '@/lib/db/schema/bank_accounts';
+import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { revalidatePath } from 'next/cache';
 
 import { requireTenant } from '@/lib/auth/get-tenant';
@@ -252,6 +254,99 @@ export async function cancelInvoice(id: string) {
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+}
+
+export async function listInvoiceBankMoves() {
+  try {
+    const { tenantId } = await requireTenant();
+    const accounts = await db.select({ id: bankAccounts.id }).from(bankAccounts).where(eq(bankAccounts.tenantId, tenantId));
+    const ids = accounts.map((row) => row.id);
+    if (ids.length === 0) return { success: true as const, data: [] as { id: string; label: string }[] };
+
+    const rows = await db.select({
+      id: bankTransactions.id,
+      amount: bankTransactions.amount,
+      date: bankTransactions.date,
+      description: bankTransactions.description,
+      counterpartyName: bankTransactions.counterpartyName,
+    }).from(bankTransactions)
+      .where(and(
+        inArray(bankTransactions.accountId, ids),
+        isNull(bankTransactions.matchedInvoiceId),
+        or(eq(bankTransactions.isReconciled, false), isNull(bankTransactions.isReconciled)),
+      ))
+      .orderBy(desc(bankTransactions.date))
+      .limit(20);
+
+    return {
+      success: true as const,
+      data: rows.map((row) => {
+        const amount = Number(row.amount || 0);
+        const money = Number.isFinite(amount)
+          ? amount.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : row.amount;
+        const when = row.date ? new Date(row.date).toLocaleDateString('bg-BG') : 'без дата';
+        const who = (row.counterpartyName || row.description || 'Движение').slice(0, 40);
+        return { id: row.id, label: `${when} · ${who} · ${money} €` };
+      }),
+    };
+  } catch (error) {
+    console.error('[list-invoice-bank-moves]', error);
+    return { success: false as const, error: 'Движенията не се заредиха.', data: [] as { id: string; label: string }[] };
+  }
+}
+
+export async function linkInvoiceToBankMove(invoiceId: string, transactionId: string) {
+  try {
+    const { tenantId } = await requireTenant();
+    const id = parseUuidParam(invoiceId);
+    const txId = parseUuidParam(transactionId);
+    if (!id || !txId) return { success: false as const, error: 'Избери движение.' };
+
+    const [invoice] = await db.select({
+      id: invoices.id,
+      matchedTransactionId: invoices.matchedTransactionId,
+    }).from(invoices)
+      .where(and(eq(invoices.id, id), eq(invoices.tenantId, tenantId)))
+      .limit(1);
+    if (!invoice) return { success: false as const, error: 'Фактурата не е от този акаунт.' };
+    if (invoice.matchedTransactionId) {
+      return { success: true as const, already: true, transactionId: invoice.matchedTransactionId };
+    }
+
+    const [move] = await db.select({
+      id: bankTransactions.id,
+      matchedInvoiceId: bankTransactions.matchedInvoiceId,
+    }).from(bankTransactions)
+      .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+      .where(and(
+        eq(bankTransactions.id, txId),
+        eq(bankAccounts.tenantId, tenantId),
+        isNull(bankTransactions.matchedInvoiceId),
+      ))
+      .limit(1);
+    if (!move) return { success: false as const, error: 'Движението не е от този акаунт.' };
+
+    await db.transaction(async (tx) => {
+      await tx.update(invoices)
+        .set({ matchedTransactionId: move.id })
+        .where(and(eq(invoices.id, invoice.id), eq(invoices.tenantId, tenantId)));
+      await tx.update(bankTransactions)
+        .set({
+          matchedInvoiceId: invoice.id,
+          matchStatus: 'confirmed',
+          isReconciled: true,
+          reviewRequired: false,
+        })
+        .where(eq(bankTransactions.id, move.id));
+    });
+
+    revalidatePath('/', 'layout');
+    return { success: true as const, already: false, transactionId: move.id };
+  } catch (error) {
+    console.error('[link-invoice-bank]', error);
+    return { success: false as const, error: 'Фактурата не беше свързана.' };
   }
 }
 
