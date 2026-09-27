@@ -14,19 +14,24 @@ function clientKey(req: Request) {
   return `${ip}:${path}`;
 }
 
-export async function withRateLimit(req: Request, handler: () => Promise<Response>) {
+export function consumeRateLimit(key: string, limit: number, windowMs = WINDOW_MS) {
   const now = Date.now();
-  const key = clientKey(req);
   let bucket = buckets.get(key);
   if (!bucket || now > bucket.reset) {
-    bucket = { count: 0, reset: now + WINDOW_MS };
+    bucket = { count: 0, reset: now + windowMs };
     buckets.set(key, bucket);
   }
   bucket.count += 1;
-  if (bucket.count > LIMIT) {
+  if (bucket.count > limit) return { ok: false as const, reset: bucket.reset };
+  return { ok: true as const };
+}
+
+export async function withRateLimit(req: Request, handler: () => Promise<Response>) {
+  const hit = consumeRateLimit(clientKey(req), LIMIT);
+  if (!hit.ok) {
     return new Response('Too Many Requests', {
       status: 429,
-      headers: { 'X-RateLimit-Reset': String(bucket.reset) },
+      headers: { 'X-RateLimit-Reset': String(hit.reset) },
     });
   }
   return handler();

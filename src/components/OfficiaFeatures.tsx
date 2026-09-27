@@ -226,7 +226,7 @@ function BankSyncMockup() {
             <h5 className="text-[11px] font-semibold text-white">УниКредит Булбанк</h5>
             <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Свързано чрез PSD2
+              От CSV извлечение
             </span>
           </div>
         </div>
@@ -778,27 +778,27 @@ const featureCards: FeatureCardData[] = [
     id: "ai-docs",
     tag: "AI асистент",
     title: "Качи документ — AI извлича всичко",
-    description: "PDF или снимка на фактура → Claude AI разпознава доставчик, сума, ДДС, дата и предлага осчетоводяване.",
+    description: "Снимка на фактура → Claude разпознава доставчик, сума, ДДС и дата. Записът е след преглед. PDF не се чете.",
     mockup: <AIDocumentsMockup />,
-    tags: ["Claude AI", "OCR", "Auto-осчетоводяване"],
+    tags: ["Claude", "Снимка", "Преглед"],
     delay: 0.2,
   },
   {
     id: "bank-sync",
     tag: "Банкиране",
-    title: "Банково свързване чрез PSD2 и интелигентно съпоставяне",
-    description: "Свързване с банкови сметки (PSD2 GoCardless / MT940 CAMT импорт). Автоматично синхронизиране на транзакции и AI съпоставяне със счетоводни записвания.",
+    title: "Банкови движения от CSV извлечение",
+    description: "Качва се CSV извлечение. Няма жива връзка с банка и няма четене на MT940, CAMT или GoCardless.",
     mockup: <BankSyncMockup />,
-    tags: ["PSD2", "Auto-match", "GoCardless"],
+    tags: ["CSV", "Извлечение"],
     delay: 0.3,
   },
   {
     id: "payroll-tax",
     tag: "ТРЗ и Данъци",
-    title: "Автоматични декларации Обр.1 и Обр.6",
-    description: "Изчисляване на ТРЗ, осигуровки и данък общ доход. Масов експорт (ZIP/XML) за НАП или директно подаване през портала с КЕП.",
+    title: "Заплати и чернова за Обр.1 и Обр.6",
+    description: "Изчисляват се заплати, осигуровки и данък. Сваля се чернова. Officia не я подава към НАП.",
     mockup: <PayrollMockup />,
-    tags: ["Обр.1", "Обр.6", "XML export"],
+    tags: ["Обр.1", "Обр.6", "Чернова"],
     delay: 0.4,
   },
   {
@@ -813,10 +813,10 @@ const featureCards: FeatureCardData[] = [
   {
     id: "e-invoice",
     tag: "Е-фактури",
-    title: "Е-фактури към НАП с UBL XML",
-    description: "Изпращане и получаване на електронни фактури чрез НАП. UBL XML формат, автоматична валидация и проследяване на статус.",
+    title: "Е-фактурата не се изпраща към НАП",
+    description: "Подготвя се XML. Заявка към НАП не тръгва и не се връща регистрационен номер.",
     mockup: <EInvoiceMockup />,
-    tags: ["НАП", "UBL XML", "Автоматично"],
+    tags: ["XML", "Без подаване"],
     delay: 0.55,
   },
   {
@@ -895,7 +895,7 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
             <div>
               <h3 className="mb-3 text-2xl font-bold tracking-tight text-white md:text-4xl">Готови ли сте за бъдещето на счетоводството?</h3>
               <p className="max-w-lg text-sm leading-relaxed text-zinc-400 md:text-base">
-                ⚡ <b>Пълен старт за под 5 минути:</b> внасяте сметкоплан, свързвате банкова сметка или качвате извлечение и AI автоматично разпознава първите ви документи. Без измислени метрики или скрити такси.
+                ⚡ <b>Какво може да се пусне:</b> журнални записи, фактури, CSV извлечение и снимка за разпознаване. Няма жива банка и няма подаване към НАП.
               </p>
             </div>
             <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">

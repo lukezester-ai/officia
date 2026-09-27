@@ -8,13 +8,13 @@ import { AppLogoLink } from '@/components/brand/app-logo-link';
 
 const benefits = [
   'Счетоводство и журнални записи',
-  'Извличане с изкуствен интелект от снимки и PDF',
+  'Извличане с изкуствен интелект от снимки',
   'ДДС дневници и ZIP за НАП',
   'Фактури продажби и покупки',
   'Човешки ресурси и изчисляване на заплати',
   'Интерфейс на български език',
   'Защитен вход и изолация на фирмените данни',
-  'Експорт CSV/Excel/PDF (отчети)',
+  'Експорт CSV, Excel и PDF на счетоводните отчети',
 ];
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -54,10 +54,10 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 </div>
               </div>
               <div className="space-y-4 text-sm text-zinc-400">
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Clerk автентикация (MFA/SSO чрез Clerk настройки)</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Вход през Clerk</span></div>
                 <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Всяка фирма вижда само своите данни</span></div>
                 <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>PostgreSQL + Drizzle ORM</span></div>
-                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>Ограничаване на заявките към разпознаването и изкуствения интелект</span></div>
+                <div className="flex items-start gap-3"><CheckCircle size={14} className="text-indigo-400 mt-0.5 shrink-0" /><span>AI чатът е до 20 заявки в минута на фирма, разпознаването — до 10 на потребител. Лимитът е в паметта на сървъра.</span></div>
               </div>
             </div>
           </div>
