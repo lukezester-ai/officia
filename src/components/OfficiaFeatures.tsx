@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -22,15 +21,14 @@ import {
   Search,
   Settings,
   Users,
-  Zap,
 } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import { Cell, Pie, PieChart } from "recharts";
 
 const journalEntries = [
-  { id: "je-1", date: "15.01.2025", doc: "Ф-0012", desc: "Наем офис", debit: "1 200,00 лв", credit: "", status: "Осчетоводено" },
-  { id: "je-2", date: "16.01.2025", doc: "Ф-0988", desc: "Електроенергия", debit: "245,50 лв", credit: "", status: "Осчетоводено" },
-  { id: "je-3", date: "18.01.2025", doc: "БИ-021", desc: "Продажба софтуер", debit: "", credit: "5 400,00 лв", status: "Осчетоводено" },
+  { id: "je-1", date: "15.01.2025", doc: "Ф-0012", desc: "Наем офис", debit: "1 200,00 €", credit: "", status: "Чернова" },
+  { id: "je-2", date: "16.01.2025", doc: "Ф-0988", desc: "Електроенергия", debit: "245,50 €", credit: "", status: "Чернова" },
+  { id: "je-3", date: "18.01.2025", doc: "БИ-021", desc: "Продажба софтуер", debit: "", credit: "5 400,00 €", status: "Чернова" },
 ];
 
 const vatData = [
@@ -39,9 +37,9 @@ const vatData = [
 ];
 
 const transactions = [
-  { id: "tx-1", vendor: "ТехноМ ЕООД", amount: "-1 200,00 лв", status: "Matched", match: "Фактура #2024-047" },
-  { id: "tx-2", vendor: "НетУоркс АД", amount: "-45,00 лв", status: "Review", match: null },
-  { id: "tx-3", vendor: "Пейпал Люксембург", amount: "-12,00 лв", status: "Matched", match: "Абонамент Cloud" },
+  { id: "tx-1", vendor: "ТехноМ ЕООД", amount: "-1 200,00 €", status: "Matched", match: "Фактура #2024-047" },
+  { id: "tx-2", vendor: "НетУоркс АД", amount: "-45,00 €", status: "Review", match: null },
+  { id: "tx-3", vendor: "Пейпал Люксембург", amount: "-12,00 €", status: "Matched", match: "Абонамент Cloud" },
 ];
 
 function AccountingMockup() {
@@ -121,7 +119,7 @@ function AccountingMockup() {
             </div>
             <div className="rounded-xl border border-purple-500/20 bg-purple-600/10 p-3">
               <span className="mb-1 block font-mono text-[8px] uppercase tracking-[0.08em] text-purple-400">За внасяне</span>
-              <span className="text-[11px] font-bold text-white">790,90 лв</span>
+              <span className="text-[11px] font-bold text-white">790,90 €</span>
             </div>
           </div>
         </div>
@@ -133,8 +131,8 @@ function AccountingMockup() {
 function AIDocumentsMockup() {
   const fields = [
     { label: "Доставчик", value: "ТехноМ ЕООД", highlight: false, confirmed: true },
-    { label: "Сума (бруто)", value: "1 200,00 лв", highlight: true, confirmed: false },
-    { label: "ДДС (20%)", value: "240,00 лв", highlight: false, confirmed: true },
+    { label: "Сума (бруто)", value: "1 200,00 €", highlight: true, confirmed: false },
+    { label: "ДДС (20%)", value: "240,00 €", highlight: false, confirmed: true },
     { label: "Дата", value: "15.01.2025", highlight: false, confirmed: true },
   ];
 
@@ -148,7 +146,7 @@ function AIDocumentsMockup() {
         </div>
         <div className="ml-4 flex h-5 w-36 items-center gap-1.5 rounded bg-zinc-800/80 px-2 text-[9px] text-zinc-500">
           <Search className="h-2.5 w-2.5" />
-          invoice_scan_04.pdf
+          snimka_faktura.jpg
         </div>
       </div>
 
@@ -201,11 +199,7 @@ function AIDocumentsMockup() {
               <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/20">
                 <Bot className="h-3 w-3 text-white" />
               </div>
-              <p className="text-[10px] leading-relaxed text-white/90">Искаш ли да осчетоводя тази фактура към сметка 602 (Разходи за наеми)?</p>
-            </div>
-            <div className="mt-2.5 flex gap-2">
-              <button className="flex-1 rounded-lg bg-white py-1.5 text-[10px] font-bold text-purple-700">ДА</button>
-              <button className="flex-1 rounded-lg bg-white/20 py-1.5 text-[10px] text-white">НЕ</button>
+              <p className="text-[10px] leading-relaxed text-white/90">Полетата се преглеждат преди запис. Самото осчетоводяване не тръгва оттук.</p>
             </div>
           </div>
         </div>
@@ -232,21 +226,11 @@ function BankSyncMockup() {
         </div>
         <div className="text-right">
           <span className="mb-0.5 block text-[8px] uppercase tracking-[0.08em] text-zinc-600">Баланс</span>
-          <span className="text-[13px] font-bold tabular-nums text-white">24 560,82 лв</span>
+          <span className="text-[13px] font-bold tabular-nums text-white">24 560,82 €</span>
         </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
-        <div className="mb-5">
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-zinc-500">AI автоматично съпоставяне</span>
-            <span className="text-[11px] font-bold tabular-nums text-purple-400">87%</span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800/80">
-            <motion.div initial={{ width: 0 }} whileInView={{ width: "87%" }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full rounded-full bg-gradient-to-r from-[#7c3aed] to-indigo-500" />
-          </div>
-        </div>
-
         <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden">
           {transactions.map((tx, index) => (
             <div key={tx.id} className="flex items-center justify-between rounded-xl border border-white/[0.05] p-3" style={{ background: index % 2 === 0 ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.04)" }}>
@@ -278,10 +262,9 @@ function BankSyncMockup() {
         </div>
 
         <div className="mt-4 flex shrink-0 gap-2">
-          <button className="flex-1 rounded-lg border border-white/[0.07] bg-zinc-800/40 py-2 text-[9px] font-medium text-white transition-colors hover:bg-zinc-800/60">Всички транзакции</button>
-          <button className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-purple-600 py-2 text-[9px] font-bold text-white transition-colors hover:bg-purple-500">
-            <Zap className="h-3 w-3 fill-white" />
-            Синхронизирай
+          <button className="flex-1 rounded-lg border border-white/[0.07] bg-zinc-800/40 py-2 text-[9px] font-medium text-white">Примерни редове</button>
+          <button className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-purple-600 py-2 text-[9px] font-bold text-white">
+            Качи CSV
           </button>
         </div>
       </div>
@@ -363,7 +346,7 @@ function PayrollMockup() {
             <h5 className="text-[11px] font-semibold text-white">Обр. 1 и Обр. 6</h5>
             <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              XML за НАП
+              Чернова, не е подадена
             </span>
           </div>
         </div>
@@ -418,11 +401,11 @@ function PayrollMockup() {
         <div className="mt-3 flex gap-2">
           <button className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-amber-600/30 bg-amber-600/10 py-1.5 text-[8px] font-bold text-amber-400">
             <Download className="h-2.5 w-2.5" />
-            Обр.1 XML
+            Свали чернова
           </button>
           <button className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-orange-600/30 bg-orange-600/10 py-1.5 text-[8px] font-bold text-orange-400">
             <Download className="h-2.5 w-2.5" />
-            Обр.6 XML
+            Не се подава
           </button>
         </div>
       </div>
@@ -520,22 +503,12 @@ function HRMockup() {
 }
 
 function EInvoiceMockup() {
-  const [invoices, setInvoices] = useState([
-    { id: "EINV-001", to: "ТехноМ ЕООД", amount: "1 200,00", vat: "240,00", status: "Одобрена", date: "15.07.2025", error: null },
-    { id: "EINV-002", to: "НетУоркс АД", amount: "450,00", vat: "90,00", status: "Изпратена", date: "16.07.2025", error: null },
-    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "⚠️ AI Одит: За корекция", date: "17.07.2025", error: "AI Валидация: Открита е грешка в UBL XML/ЕИК (Код 401). Кликнете за автоматична корекция:" },
-    { id: "EINV-004", to: "ГрийнТек ЕООД", amount: "890,00", vat: "178,00", status: "Одобрена", date: "18.07.2025", error: null },
-  ]);
-
-  const handleRetry = (id: string) => {
-    setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === id
-          ? { ...inv, status: "Одобрена (AI Коригирана)", error: null }
-          : inv
-      )
-    );
-  };
+  const invoices = [
+    { id: "EINV-001", to: "ТехноМ ЕООД", amount: "1 200,00", vat: "240,00", status: "Чернова", date: "15.07.2025" },
+    { id: "EINV-002", to: "НетУоркс АД", amount: "450,00", vat: "90,00", status: "Чернова", date: "16.07.2025" },
+    { id: "EINV-003", to: "Дигитал ООД", amount: "3 600,00", vat: "720,00", status: "Чернова", date: "17.07.2025" },
+    { id: "EINV-004", to: "ГрийнТек ЕООД", amount: "890,00", vat: "178,00", status: "Чернова", date: "18.07.2025" },
+  ];
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12121b] shadow-2xl">
@@ -545,15 +518,15 @@ function EInvoiceMockup() {
             <FileCheck className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h5 className="text-[11px] font-semibold text-white">Е-фактури & Auto-Journal</h5>
-            <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              НАП & Счетоводна книга
+            <h5 className="text-[11px] font-semibold text-white">Фактури</h5>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-amber-400">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+              Не се изпращат към НАП
             </span>
           </div>
         </div>
         <div className="flex gap-1">
-          <span className="rounded bg-blue-600/20 px-2 py-0.5 text-[8px] font-semibold text-blue-400">UBL XML</span>
+          <span className="rounded bg-blue-600/20 px-2 py-0.5 text-[8px] font-semibold text-blue-400">В списъка</span>
         </div>
       </div>
 
@@ -561,7 +534,7 @@ function EInvoiceMockup() {
         <div className="mb-2.5 flex items-center justify-between">
           <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-zinc-500">Изходящи фактури</span>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-blue-600/15 px-2 py-0.5 text-[8px] font-medium text-blue-400">4 активни</span>
+            <span className="rounded-full bg-blue-600/15 px-2 py-0.5 text-[8px] font-medium text-blue-400">4 чернови</span>
           </div>
         </div>
 
@@ -580,40 +553,25 @@ function EInvoiceMockup() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <span className="block text-[9px] font-semibold text-white">{inv.amount} лв</span>
-                    <span className="text-[7px] text-zinc-500">ДДС {inv.vat} лв</span>
+                    <span className="block text-[9px] font-semibold text-white">{inv.amount} €</span>
+                    <span className="text-[7px] text-zinc-500">ДДС {inv.vat} €</span>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-[7px] font-semibold ${
-                    inv.status.includes("Одобрена") ? "bg-emerald-500/15 text-emerald-400" :
-                    inv.status === "Изпратена" ? "bg-blue-500/15 text-blue-400" :
-                    "bg-red-500/15 text-red-400"
-                  }`}>
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[7px] font-semibold text-amber-300">
                     {inv.status}
                   </span>
                 </div>
               </div>
-              {inv.error && (
-                <div className="mt-1.5 flex items-center justify-between rounded bg-amber-500/10 px-2 py-1.5 border border-amber-500/20">
-                  <span className="text-[8px] text-amber-300 font-medium leading-tight">{inv.error}</span>
-                  <button
-                    onClick={() => handleRetry(inv.id)}
-                    className="rounded bg-indigo-600 hover:bg-indigo-500 px-2.5 py-1 text-[8px] font-bold text-white transition-colors shrink-0 shadow"
-                  >
-                    ⚡ AI Авто-корекция
-                  </button>
-                </div>
-              )}
             </div>
           ))}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-center">
-            <span className="block text-[9px] font-bold text-emerald-400">6 140,00 лв</span>
-            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Изпратени</span>
+            <span className="block text-[9px] font-bold text-emerald-400">6 140,00 €</span>
+            <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">Чернови</span>
           </div>
           <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-2.5 text-center">
-            <span className="block text-[9px] font-bold text-blue-400">1 228,00 лв</span>
+            <span className="block text-[9px] font-bold text-blue-400">1 228,00 €</span>
             <span className="text-[7px] uppercase tracking-[0.08em] text-zinc-500">ДДС</span>
           </div>
         </div>
@@ -671,7 +629,7 @@ function InventoryMockup() {
                   <span className="text-[7px] text-zinc-500">{item.category} · {item.qty} {item.unit}</span>
                 </div>
               </div>
-              <span className="text-[9px] font-semibold text-white">{item.value} лв</span>
+              <span className="text-[9px] font-semibold text-white">{item.value} €</span>
             </div>
           ))}
         </div>
@@ -768,16 +726,16 @@ const featureCards: FeatureCardData[] = [
   {
     id: "accounting",
     tag: "Счетоводство",
-    title: "Пълен сметкоплан и автоматично ДДС",
-    description: "Журнални записи, ДДС дневници, баланс и отчет за приходи/загуби — всичко автоматизирано.",
+    title: "Журнал, ДДС дневници и отчети",
+    description: "Има журнални записи, ДДС дневници, баланс и отчет за приходи и загуби. Нищо от това не се подава само към НАП.",
     mockup: <AccountingMockup />,
-    tags: ["ЗДДС", "ДДС дневници", "НАП export"],
+    tags: ["Журнал", "ДДС дневници", "ZIP за НАП"],
     delay: 0.1,
   },
   {
     id: "ai-docs",
     tag: "AI асистент",
-    title: "Качи документ — AI извлича всичко",
+    title: "Снимка на фактура — полета преди запис",
     description: "Снимка на фактура → Claude разпознава доставчик, сума, ДДС и дата. Записът е след преглед. PDF не се чете.",
     mockup: <AIDocumentsMockup />,
     tags: ["Claude", "Снимка", "Преглед"],
@@ -832,9 +790,9 @@ const featureCards: FeatureCardData[] = [
     id: "reports",
     tag: "Анализи",
     title: "Финансови справки и анализи",
-    description: "Интерактивни графики за приходи, разходи и печалба. Сравнение по месеци и години с експорт към Excel.",
+    description: "Графики по месеци за приходи, разходи и печалба. Счетоводните отчети се свалят в Excel.",
     mockup: <ReportsMockup />,
-    tags: ["Приходи", "Разходи", "Graphs"],
+    tags: ["Приходи", "Разходи", "Excel"],
     delay: 0.65,
   },
 ];
