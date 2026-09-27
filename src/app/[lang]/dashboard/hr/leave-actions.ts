@@ -4,6 +4,7 @@ import { db } from '@/lib/db/db';
 import { leaveRequests } from '@/lib/db/schema/leave_requests';
 import { employees } from '@/lib/db/schema/employees';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { requireModule } from '@/lib/billing/entitlements';
 import { eq, desc, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
@@ -23,6 +24,7 @@ const WORK_STATUS_MAP: Record<string, string> = {
 
 export async function getLeaveRequests() {
   try {
+    await requireModule('hr');
     const { tenantId } = await requireTenant();
 
     const rows = await db
@@ -68,6 +70,7 @@ export async function createLeaveRequest(data: {
   reason?: string;
 }) {
   try {
+    await requireModule('hr');
     const { tenantId } = await requireTenant();
 
     await db.insert(leaveRequests).values({
@@ -89,6 +92,7 @@ export async function createLeaveRequest(data: {
 
 export async function approveLeaveRequest(id: string, employeeId: string, type: string) {
   try {
+    await requireModule('hr');
     await db.update(leaveRequests)
       .set({ status: 'approved' })
       .where(eq(leaveRequests.id, id));
@@ -108,6 +112,7 @@ export async function approveLeaveRequest(id: string, employeeId: string, type: 
 
 export async function rejectLeaveRequest(id: string) {
   try {
+    await requireModule('hr');
     await db.update(leaveRequests)
       .set({ status: 'rejected' })
       .where(eq(leaveRequests.id, id));
@@ -121,6 +126,7 @@ export async function rejectLeaveRequest(id: string) {
 
 export async function getEmployeesForSelect() {
   try {
+    await requireModule('hr');
     const { tenantId } = await requireTenant();
     const emps = await db
       .select({ id: employees.id, firstName: employees.firstName, lastName: employees.lastName, position: employees.position })
@@ -136,6 +142,7 @@ const ANNUAL_DAYS_LIMIT = 20; // КТ стандарт – 20 дни плате�
 
 export async function getLeaveBalance() {
   try {
+    await requireModule('hr');
     const { tenantId } = await requireTenant();
 
     // Всички активни служители

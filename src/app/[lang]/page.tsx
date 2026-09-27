@@ -69,7 +69,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да автоматизираш офиса си?</h2>
-          <p className="text-zinc-400 mb-8">Регистрирай се безплатно — 14 дни пълен достъп, после честни лимити по план.</p>
+          <p className="text-zinc-400 mb-8">Регистрация без карта за 14 дни. После достъпът спира, докато не се плати план.</p>
           <Link href={signUpHref} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
             Стартирай безплатно <ArrowRight size={18} />
           </Link>

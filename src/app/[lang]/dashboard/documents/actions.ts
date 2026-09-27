@@ -232,6 +232,8 @@ export async function createDocumentInvoice(documentId: string) {
     const address = [client.address, client.city].filter(Boolean).join(', ') || null;
     const today = new Date().toISOString().slice(0, 10);
     const description = doc.title.slice(0, 200);
+    const { assertCanCreateInvoice } = await import('@/lib/billing/entitlements');
+    await assertCanCreateInvoice();
 
     const invoiceId = await db.transaction(async (tx) => {
       const [invoice] = await tx.insert(invoices).values({

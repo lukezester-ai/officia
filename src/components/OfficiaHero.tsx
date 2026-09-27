@@ -17,8 +17,8 @@ type MetricItem = {
 };
 
 const metricsData: MetricItem[] = [
-  { id: "trial", numericValue: 14, suffix: " дни", label: "Пълен достъп при регистрация", highlightColor: "purple" },
-  { id: "starter", numericValue: 50, suffix: "", label: "Фактури/месец (Стартер)", highlightColor: "white" },
+  { id: "trial", numericValue: 14, suffix: " дни", label: "Без карта, после достъпът спира", highlightColor: "purple" },
+  { id: "starter", numericValue: 50, suffix: "", label: "Фактури/месец на Стартер", highlightColor: "white" },
   { id: "modules", numericValue: 5, suffix: "", label: "Модула: счетоводство, фактури, ТРЗ, HR, банкиране", highlightColor: "purple" },
   { id: "lang", numericValue: 1, suffix: "", label: "Език: BG", highlightColor: "purple" },
 ];
@@ -169,7 +169,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
 
             <motion.div initial={skip ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: skip ? 0 : 0.8 }} className="mt-6 flex items-center gap-2 text-sm font-medium text-[#6b6b8a]">
               <CheckCircle2 className="h-4 w-4 text-[#7c3aed]/60" />
-              <span>14 дни пълен достъп · без кредитна карта</span>
+              <span>14 дни без карта · после достъпът спира</span>
             </motion.div>
           </div>
         </section>

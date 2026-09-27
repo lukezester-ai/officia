@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getTenantProfile, updateTenantProfile } from './actions';
+import { getTenantProfile, getWorkspacePlan, inviteWorkspaceUser, updateTenantProfile } from './actions';
 import { toast } from 'sonner';
 import { Building2, Save } from 'lucide-react';
 
@@ -17,10 +17,15 @@ export default function WorkspaceSettingsPage() {
     vatNumber: '',
     address: '',
   });
+  const [plan, setPlan] = useState<any>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     async function load() {
       const res = await getTenantProfile();
+      const planRes = await getWorkspacePlan();
+      if (planRes.success) setPlan(planRes.data);
       if (res.success && res.data) {
         setFormData({
           name: res.data.name || '',
@@ -123,6 +128,61 @@ export default function WorkspaceSettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      {plan && (
+        <Card className="shadow-sm border-0 ring-1 ring-black/5">
+          <CardHeader className="bg-gray-50/50 border-b pb-4">
+            <CardTitle className="text-lg">План и потребители</CardTitle>
+            <CardDescription>
+              {plan.plan === 'starter'
+                ? `Стартер · ${plan.daysLeft ?? 0} дни до края на безплатния достъп`
+                : plan.plan}
+              {plan.limits.users == null
+                ? ` · ${plan.usage.users} потребители`
+                : ` · ${plan.usage.users} от ${plan.limits.users} потребители`}
+              {plan.limits.employees
+                ? ` · ${plan.usage.employees} от ${plan.limits.employees} служители`
+                : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            <div className="text-sm text-zinc-600">
+              {(plan.members || []).map((member: { email: string; name: string | null }) => (
+                <div key={member.email}>{member.name || member.email}</div>
+              ))}
+              {(plan.invites || []).map((email: string) => (
+                <div key={email} className="text-zinc-400">{email} · чака регистрация</div>
+              ))}
+            </div>
+            <form
+              className="flex gap-2"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setInviting(true);
+                const res = await inviteWorkspaceUser(inviteEmail);
+                if (res.success) {
+                  toast.success('Поканата е записана. При регистрация с този имейл човекът влиза в тази фирма.');
+                  setInviteEmail('');
+                  const planRes = await getWorkspacePlan();
+                  if (planRes.success) setPlan(planRes.data);
+                } else {
+                  toast.error(res.error);
+                }
+                setInviting(false);
+              }}
+            >
+              <Input
+                type="email"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+                placeholder="имейл на колега"
+                required
+              />
+              <Button type="submit" disabled={inviting}>Покани</Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

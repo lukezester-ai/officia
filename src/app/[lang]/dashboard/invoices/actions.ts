@@ -85,6 +85,8 @@ export async function createInvoice(input: {
   try {
     const { tenantId } = await requireTenant();
     if (!tenantId) return { success: false, error: 'Липсва Tenant' };
+    const { assertCanCreateInvoice } = await import('@/lib/billing/entitlements');
+    await assertCanCreateInvoice();
 
     const computedLines = input.lines.map((line) => {
       const quantity = Number(line.quantity) || 0;

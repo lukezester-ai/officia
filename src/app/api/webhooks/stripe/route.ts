@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/lib/db/db';
-import { invoices } from '@/lib/db/schema';
+import { invoices, tenants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { isUuid } from '@/lib/utils/ids';
+import { isPlanId } from '@/lib/billing/entitlements';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -73,6 +74,15 @@ export async function POST(req: Request) {
       } as any);
 
       console.log(`✅ Automatically issued invoice ${newInvoiceNumber} for subscription checkout ${session.id}.`);
+    }
+
+    const paidPlan = session.metadata?.plan;
+    const paidTenantId = session.metadata?.tenantId;
+    if (isPlanId(paidPlan) && paidPlan !== 'starter' && isUuid(paidTenantId)) {
+      await db.update(tenants).set({
+        plan: paidPlan,
+        subscriptionStatus: 'active',
+      }).where(eq(tenants.id, paidTenantId));
     }
   } else if (event.type === 'invoice.paid' || event.type === 'invoice.payment_succeeded') {
     const stripeInvoice = event.data.object as Stripe.Invoice;

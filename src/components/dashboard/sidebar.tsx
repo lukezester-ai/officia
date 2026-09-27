@@ -6,7 +6,7 @@ import { LayoutDashboard, FileText, Users, Briefcase, Bot, Settings, Landmark, S
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
+export function Sidebar({ dict, lang, hiddenHrefs = [] }: { dict: any; lang: string; hiddenHrefs?: string[] }) {
   const pathname = usePathname();
   const navItems = [
     { name: dict.dashboard, href: `/${lang}/dashboard`, icon: LayoutDashboard },
@@ -28,7 +28,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
     { name: "Данъци", href: `/${lang}/dashboard/taxes`, icon: FileText },
     { name: dict.aiAssistant, href: `/${lang}/dashboard/ai-assistant`, icon: Bot },
     { name: dict.settings, href: `/${lang}/dashboard/settings`, icon: Settings },
-  ];
+  ].filter((item) => !hiddenHrefs.includes(item.href));
   return (
     <aside className="hidden md:flex w-64 h-screen flex-col fixed left-0 top-0 z-50 bg-[#0A0F1C] border-r border-white/5">
       <Link href={`/${lang}`} className="px-5 py-5 flex items-center gap-2.5 hover:opacity-80 transition-opacity">
@@ -73,7 +73,7 @@ export function Sidebar({ dict, lang }: { dict: any; lang: string }) {
   );
 }
 
-export function MobileDashboardSidebar({ dict, lang }: { dict: any; lang: string }) {
+export function MobileDashboardSidebar({ dict, lang, hiddenHrefs = [] }: { dict: any; lang: string; hiddenHrefs?: string[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const navItems = [
@@ -96,7 +96,7 @@ export function MobileDashboardSidebar({ dict, lang }: { dict: any; lang: string
     { name: "Данъци", href: `/${lang}/dashboard/taxes`, icon: FileText },
     { name: dict.aiAssistant, href: `/${lang}/dashboard/ai-assistant`, icon: Bot },
     { name: dict.settings, href: `/${lang}/dashboard/settings`, icon: Settings },
-  ];
+  ].filter((item) => !hiddenHrefs.includes(item.href));
 
   return (
     <div className="md:hidden flex items-center">

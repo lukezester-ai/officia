@@ -8,12 +8,14 @@ function formatPrice(n: number): string {
   return n % 1 !== 0 ? n.toFixed(2).replace('.', ',') : n.toString();
 }
 
+const STARTER_LOCKED = ['ТРЗ', 'Кадри и отпуски', 'AI асистент', 'ZIP за ДДС'];
+
 const PLANS = [
   {
     id: 'starter',
     name: 'Стартер',
     icon: Zap,
-    description: 'За самонаети и микро-фирми',
+    description: '14 дни без карта, после достъпът спира',
     monthlyPrice: 0,
     annualPrice: 0,
     annualTotal: 0,
@@ -25,49 +27,42 @@ const PLANS = [
     cta: 'Започни безплатно',
     ctaStyle: 'block text-center border border-white/15 hover:border-white/30 rounded-xl py-3 text-sm font-medium transition-all hover:bg-white/10 mt-auto',
     features: [
-      'До 50 фактури/месец',
-      'Основно счетоводство',
-      'ДДС дневници (преглед)',
+      'До 50 фактури за месец',
       '1 потребител',
-      '1 банкова сметка',
-      'Email поддръжка',
+      'Журнал, ДДС дневници, баланс и отчет',
+      'Банково равнение от CSV извлечение',
     ],
-    locked: ['ТРЗ и HR', 'AI асистент', 'НАП export'],
+    locked: STARTER_LOCKED,
   },
   {
     id: 'business',
     name: 'Бизнес',
     icon: Building2,
-    description: 'За малки и средни предприятия',
+    description: 'Абонамент през Stripe',
     monthlyPrice: 14.90,
     annualPrice: 11.90,
     annualTotal: 142.80,
     isFree: false,
-    badge: 'Най-популярен',
     cardStyle: 'bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-500/30 rounded-2xl p-7 text-left relative overflow-hidden shadow-2xl shadow-violet-900/50 flex flex-col',
     textColor: 'text-violet-100',
     subTextColor: 'text-violet-200',
     checkColor: 'text-white',
     featured: true,
-    cta: 'Започни пробния период',
+    cta: 'Към плащане',
     ctaStyle: 'block text-center bg-white text-violet-700 hover:bg-violet-50 rounded-xl py-3 text-sm font-semibold transition-all shadow-lg mt-auto',
     features: [
-      'Неограничени фактури и покупки',
-      'Пълно счетоводство + ДДС',
-      'ТРЗ до 10 служители',
-      'Масов експорт на ДДС и ТРЗ (ZIP/XML за НАП клиент)',
-      'HR управление и отпуски',
-      'Банково равнение и импорт на CSV извлечение',
-      'Batch export за банкови преводи',
-      'Законодателен монитор НАП/НОИ',
+      'Фактури без месечен таван',
       '3 потребители',
+      'ТРЗ до 10 служители',
+      'Кадри и отпуски',
+      'ZIP файл за ДДС',
     ],
   },
   {
     id: 'pro',
     name: 'Про',
     icon: Sparkles,
-    description: 'За по-големи екипи и растящи компании',
+    description: 'Абонамент през Stripe',
     monthlyPrice: 49,
     annualPrice: 39,
     annualTotal: 468,
@@ -76,25 +71,20 @@ const PLANS = [
     textColor: 'text-zinc-400',
     subTextColor: 'text-zinc-500',
     checkColor: 'text-emerald-400',
-    cta: 'Започни пробния период',
+    cta: 'Към плащане',
     ctaStyle: 'block text-center border border-violet-500/40 hover:border-violet-400 text-violet-400 hover:bg-violet-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
     features: [
       'Всичко от Бизнес',
-      'Неограничени служители ТРЗ',
-      'AI асистент Claude + OCR',
-      'Гласово въвеждане на BG',
-      'AI помни историята и не ви пита едно и също два пъти',
-      'AI одит на ведомости и главна книга',
-      'Директно подаване през НАП/НОИ портал с ПИК и КЕП без ръчно качване',
-      'До 10 потребители + права',
-      'Приоритетна поддръжка',
+      '10 потребители',
+      'ТРЗ без таван на служители',
+      'AI чат и разпознаване от снимка',
     ],
   },
   {
     id: 'accounting_firm',
     name: 'Кантора',
     icon: Scale,
-    description: 'За счетоводни кантори с множество клиенти',
+    description: 'Абонамент през Stripe',
     monthlyPrice: 89,
     annualPrice: 71,
     annualTotal: 852,
@@ -103,17 +93,11 @@ const PLANS = [
     textColor: 'text-zinc-400',
     subTextColor: 'text-zinc-500',
     checkColor: 'text-amber-400',
-    cta: 'Започни пробния период',
+    cta: 'Към плащане',
     ctaStyle: 'block text-center border border-amber-500/40 hover:border-amber-400 text-amber-400 hover:bg-amber-500/10 rounded-xl py-3 text-sm font-semibold transition-all mt-auto',
     features: [
       'Всичко от Про',
-      'Неограничени клиентски workspace-и',
-      'Управление на множество фирми',
-      'Консолидирани отчети',
-      'Бял етикет (white label)',
-      'Приоритетни НАП updates',
-      'Неограничени потребители',
-      'Dedicated поддръжка',
+      'Без таван на потребители',
     ],
   },
 ];
@@ -158,7 +142,7 @@ export default function PricingSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Прост, честен ценови план</h2>
-          <p className="text-zinc-400 mb-8">Без скрити такси. Без изненади. Смени плана по всяко време.</p>
+          <p className="text-zinc-400 mb-8">Регистрацията е без карта за 14 дни. След това достъпът спира, докато не се плати план. Лимитите по-долу се прилагат в приложението.</p>
 
           <div className="flex justify-center items-center gap-3">
             <span className={`text-sm ${!isAnnual ? 'text-white font-semibold' : 'text-zinc-400'}`}>Месечно</span>
@@ -184,12 +168,6 @@ export default function PricingSection() {
 
             return (
               <div key={plan.id} className={plan.cardStyle}>
-                {plan.badge && (
-                  <div className="absolute top-4 right-4 bg-white/20 text-xs font-semibold px-2.5 py-1 rounded-full">
-                    {plan.badge}
-                  </div>
-                )}
-
                 <div className="mb-5">
                   <div className="flex items-center gap-2 mb-1">
                     <Icon size={16} className={plan.featured ? 'text-violet-200' : plan.checkColor} />
@@ -202,7 +180,7 @@ export default function PricingSection() {
                   {plan.isFree ? (
                     <>
                       <div className="text-3xl font-bold text-white">Безплатно</div>
-                      <div className={`text-xs mt-1 ${plan.subTextColor}`}>14 дни · без кредитна карта</div>
+                      <div className={`text-xs mt-1 ${plan.subTextColor}`}>14 дни · без карта</div>
                     </>
                   ) : (
                     <>
@@ -226,9 +204,9 @@ export default function PricingSection() {
                       {f}
                     </div>
                   ))}
-                  {plan.locked?.map((f) => (
+                  {'locked' in plan && plan.locked?.map((f) => (
                     <div key={f} className="flex items-start gap-1.5 opacity-35">
-                      <div className="w-3 h-3 rounded-full border border-zinc-600 shrink-0 mt-0.5 flex-none" />
+                      <div className="w-3 h-3 rounded-full border border-zinc-600 shrink-0 mt-0.5" />
                       {f}
                     </div>
                   ))}
@@ -254,7 +232,7 @@ export default function PricingSection() {
         </div>
 
         <p className="text-center text-zinc-600 text-xs mt-8">
-          Всички планове включват SSL, автоматични backup-и и съответствие с GDPR. При годишен план — 2 месеца безплатно.
+          Годишната цена е с около 20% по-ниска от дванадесет месечни вноски. Плащането тръгва, когато в Stripe има цена за плана.
         </p>
       </div>
     </section>

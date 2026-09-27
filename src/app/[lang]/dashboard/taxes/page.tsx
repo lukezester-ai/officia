@@ -15,6 +15,22 @@ export default function TaxesPage() {
   const [generatingProfitTax, setGeneratingProfitTax] = useState(false);
   const [exportingBatch, setExportingBatch] = useState(false);
 
+  async function downloadVatZip(year: number, month: number) {
+    const res = await fetch(`/api/accounting/vat-export?year=${year}&month=${month}`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      toast.error(data?.error || 'ZIP файлът за ДДС не е в този план.');
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `DDS_${year}_${String(month).padStart(2, '0')}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const load = async () => {
     const res = await getDeclarations();
     if (res.success && res.data) setDeclarations(res.data);
@@ -238,7 +254,6 @@ export default function TaxesPage() {
               ) : ddsDeclarations.map((d) => {
                 const isPayable = parseFloat(d.totalAmount || '0') > 0;
                 const dDate = new Date(d.periodStart);
-                const zipUrl = `/api/accounting/vat-export?year=${dDate.getFullYear()}&month=${dDate.getMonth() + 1}`;
                 return (
                   <TableRow key={d.id} className="border-white/10 hover:bg-white/5 transition-colors group">
                     <TableCell className="font-medium text-zinc-200 tabular-nums">
@@ -258,13 +273,13 @@ export default function TaxesPage() {
                        </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                       <a 
-                         href={zipUrl} 
-                         download
+                       <button
+                         type="button"
+                         onClick={() => downloadVatZip(dDate.getFullYear(), dDate.getMonth() + 1)}
                          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-violet-600 hover:text-white hover:border-violet-600 text-zinc-300 text-xs font-medium h-8 px-2.5 transition-colors opacity-0 group-hover:opacity-100"
                        >
                          <FileArchive size={14} className="mr-1.5"/> Експорт за НАП (.zip)
-                       </a>
+                       </button>
                     </TableCell>
                   </TableRow>
                 );

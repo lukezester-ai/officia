@@ -5,6 +5,7 @@ import { employees } from '@/lib/db/schema/employees';
 import { tenants } from '@/lib/db/schema/tenants';
 import { eq, and } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { requireModule } from '@/lib/billing/entitlements';
 import { calculatePayroll } from '@/lib/payroll/calculator';
 import {
   buildPayrollDeclaration,
@@ -15,6 +16,7 @@ import {
 
 export async function getPayrollData() {
   try {
+    await requireModule('payroll');
     const { tenantId } = await requireTenant();
     
     // Взимаме само активните служители
@@ -86,6 +88,7 @@ export async function getPayrollDeclaration(): Promise<
   { success: true; draft: DeclarationDraft; xml: string } | { success: false; error: string }
 > {
   try {
+    await requireModule('payroll');
     const { tenantId } = await requireTenant();
     const [company] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
     const activeEmployees = await db.select().from(employees)
@@ -105,12 +108,13 @@ export async function getPayrollDeclaration(): Promise<
     return { success: true, draft, xml: renderPayrollDeclarationXml(draft) };
   } catch (error) {
     console.error('[payroll declaration]', error);
-    return { success: false, error: 'Декларацията не можа да се подготви.' };
+    return { success: false, error: error instanceof Error ? error.message : 'Декларацията не можа да се подготви.' };
   }
 }
 
 export async function postPayrollToJournal() {
   try {
+    await requireModule('payroll');
     const { tenantId } = await requireTenant();
     const payroll = await getPayrollData();
     if (!payroll.success || !payroll.data) {

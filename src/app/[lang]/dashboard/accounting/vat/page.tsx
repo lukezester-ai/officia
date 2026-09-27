@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calculator } from "@/components/icons";
 import { PrintButton } from "@/components/print-button";
 import { requireTenant } from "@/lib/auth/get-tenant";
+import { getEntitlement } from "@/lib/billing/entitlements";
 import { fetchVatPeriodDocuments, vatLineAmounts, vatPeriodBounds } from "@/lib/tax/vat-period";
 
 function currentPeriod() {
@@ -43,6 +44,7 @@ export default async function VatPage({
   const [year, month] = period.split("-").map(Number);
   const { start, end } = vatPeriodBounds(year!, month!);
   const { tenantId } = await requireTenant();
+  const access = await getEntitlement();
   const { sales: salesRows, salesTotals, purchaseTotals } = await fetchVatPeriodDocuments(
     tenantId,
     start,
@@ -82,6 +84,7 @@ export default async function VatPage({
             </div>
           </div>
           <div className="flex gap-2">
+            {access.modules.vatZip ? (
             <a
               href={`/api/accounting/vat-export?year=${period.split('-')[0]}&month=${period.split('-')[1]}`}
               className="flex items-center gap-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-colors px-4 py-2 rounded-xl text-sm font-medium print:hidden shadow-sm"
@@ -89,6 +92,9 @@ export default async function VatPage({
             >
               <FileText size={14} /> НАП Експорт (ZIP)
             </a>
+            ) : (
+              <span className="px-4 py-2 text-sm text-zinc-500">ZIP за ДДС е в план Бизнес</span>
+            )}
             <PrintButton label="PDF / Печат" />
           </div>
         </div>

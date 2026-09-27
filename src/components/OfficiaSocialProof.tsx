@@ -84,7 +84,7 @@ export default function OfficiaSocialProof({ lang }: { lang: string }) {
           </Link>
           <p className="flex items-center justify-center gap-2 text-sm text-slate-500">
             <CheckCircle className="h-4 w-4 text-emerald-500" />
-            <span>14 дни пълен достъп · после лимит 50 фактури/месец (Стартер)</span>
+            <span>14 дни без карта. Стартерът е до 50 фактури на месец и 1 потребител.</span>
           </p>
         </div>
       </div>

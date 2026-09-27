@@ -5,6 +5,7 @@ import { findRelevantTaxLaws, buildRagSystemPrompt } from '@/lib/ai/rag/tax-rag'
 import { requireApiSession, publicClientError } from '@/lib/auth/api-guard';
 import { rejectOversizedRequest } from '@/lib/api/security';
 import { consumeRateLimit } from '@/lib/api/rate-limit';
+import { moduleDeniedResponse } from '@/lib/billing/entitlements';
 
 const MAX_REQUESTS_PER_WINDOW = 20;
 const MAX_MESSAGES = 30;
@@ -19,6 +20,8 @@ export async function POST(req: NextRequest) {
 
     const { ctx, response } = await requireApiSession();
     if (response || !ctx) return response!;
+    const denied = await moduleDeniedResponse('ai');
+    if (denied) return denied;
 
     const hit = consumeRateLimit(`ai-chat:${ctx.tenantId}`, MAX_REQUESTS_PER_WINDOW);
     if (!hit.ok) {

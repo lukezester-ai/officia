@@ -4,6 +4,7 @@ import { taxDeclarations } from '@/lib/db/schema/tax_declarations';
 import { TaxEngine } from '@/lib/accounting/tax-engine';
 import { desc, eq } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { requireModule } from '@/lib/billing/entitlements';
 
 export async function getDeclarations() {
   try {
@@ -56,6 +57,7 @@ export async function exportBatchDeclarationsAction(
   month: number
 ): Promise<{ success: boolean; zipBase64?: string; error?: string }> {
   try {
+    await requireModule('vatZip');
     const { tenantId } = await requireTenant();
     const [company] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
     const eik = company?.vatNumber || company?.bulstat;

@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/db';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { moduleDeniedResponse } from '@/lib/billing/entitlements';
 import { generateNapExportArchive } from '@/lib/accounting/nap-export';
 import { and, eq } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
   try {
+    const denied = await moduleDeniedResponse('vatZip');
+    if (denied) return denied;
     const { tenantId, tenant } = await requireTenant();
 
     const searchParams = req.nextUrl.searchParams;

@@ -91,6 +91,8 @@ export async function moveDeal(id: string, stage: string) {
     let invoiceId = deal.invoiceId;
 
     if (stage === 'won' && !invoiceId) {
+      const { assertCanCreateInvoice } = await import('@/lib/billing/entitlements');
+      await assertCanCreateInvoice();
       const amounts = splitDealAmount(deal.amount);
       if (!amounts) return { success: false, error: 'Сумата на сделката не става за фактура.' };
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { processDocumentImage } from '@/lib/ai/agents/ocr';
 import { consumeRateLimit } from '@/lib/api/rate-limit';
 import { rejectOversizedRequest, requireApiUser } from '@/lib/api/security';
+import { moduleDeniedResponse } from '@/lib/billing/entitlements';
 
 const OCR_LIMIT_PER_MINUTE = 10;
 
@@ -9,6 +10,8 @@ export async function POST(req: Request) {
   try {
     const { userId, response } = await requireApiUser();
     if (response || !userId) return response;
+    const denied = await moduleDeniedResponse('ai');
+    if (denied) return denied;
     const tooLarge = rejectOversizedRequest(req, 10 * 1024 * 1024);
     if (tooLarge) return tooLarge;
     const body = await req.json();

@@ -22,6 +22,8 @@ export const buildCreateInvoiceTool = (tenantId: string, userId: string) => tool
   }),
   execute: async ({ clientName, items, dueDate, notes }) => {
     try {
+      const { assertCanCreateInvoice } = await import('@/lib/billing/entitlements');
+      await assertCanCreateInvoice();
       // 1. Търсим контрагента по име (case-insensitive)
       const [found] = await db.select().from(counterparties).where(and(
           eq(counterparties.tenantId, tenantId),

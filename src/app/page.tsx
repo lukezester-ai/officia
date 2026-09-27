@@ -57,7 +57,7 @@ export default function LandingPage() {
             <Link href="#demo" className={cn(buttonVariants({ size: "lg", variant: "outline" }), "text-lg px-10")}>Виж демо</Link>
           </div>
 
-          <p className="text-sm text-zinc-500 mt-6">Без кредитна карта • 14 дни пълен достъп</p>
+          <p className="text-sm text-zinc-500 mt-6">14 дни без карта · после достъпът спира</p>
         </div>
       </section>
 

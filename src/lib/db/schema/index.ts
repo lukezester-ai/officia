@@ -1,4 +1,5 @@
 export * from './tenants';
+export * from './tenant_invites';
 export * from './users';
 export * from './invoices';
 export * from './documents';

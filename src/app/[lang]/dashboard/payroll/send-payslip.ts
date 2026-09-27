@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { requireModule } from '@/lib/billing/entitlements';
 import { EMPLOYER_RATE_TOTAL, PAYROLL_RATES } from '@/lib/payroll/rates';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -120,7 +121,8 @@ export async function sendPayslipEmail(
   }
 ) {
   try {
-    const { tenantId } = await requireTenant();
+    await requireModule('payroll');
+    await requireTenant();
     const now = new Date();
     const month = now.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' });
 

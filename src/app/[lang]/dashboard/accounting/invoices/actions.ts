@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { and, eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { assertCanCreateInvoice } from '@/lib/billing/entitlements';
 import { chooseInvoiceNumber } from '@/lib/accounting/invoice-number';
 import { ensureAutoJournalForInvoice } from '@/lib/accounting/auto-journal';
 import { syncStockFromSalesInvoice } from '@/lib/inventory/auto-stock';
@@ -75,6 +76,7 @@ export async function createInvoice(
   try {
     const tenant = await requireTenant();
     tenantId = tenant.tenantId;
+    await assertCanCreateInvoice();
     const user = tenant.user;
     const existing = await db
       .select({ invoiceNumber: invoices.invoiceNumber })

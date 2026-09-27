@@ -4,10 +4,12 @@ import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
 import { and, desc, eq } from 'drizzle-orm';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { assertCanAddEmployee, requireModule } from '@/lib/billing/entitlements';
 import { revalidatePath } from 'next/cache';
 
 export async function getHrData() {
   try {
+    await requireModule('hr');
     const { tenantId } = await requireTenant();
     const allEmployees = await db.select().from(employees).where(eq(employees.tenantId, tenantId)).orderBy(desc(employees.startDate));
     
@@ -37,6 +39,7 @@ export async function getHrData() {
 
 export async function createEmployee(data: any) {
   try {
+    await assertCanAddEmployee();
     const { tenantId, user } = await requireTenant();
     const ownerUserId = user?.id;
     if (!ownerUserId) return { success: false, error: 'Липсва потребител за HR запис.' };
@@ -65,6 +68,7 @@ export async function createEmployee(data: any) {
 
 export async function updateEmployeeStatus(id: string, newStatus: string) {
   try {
+    await requireModule('hr');
     const { tenantId } = await requireTenant();
     await db.update(employees)
       .set({ workStatus: newStatus })
