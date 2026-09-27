@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, FileSignature, CheckCircle, Clock, Upload, X, Loader2, Sparkles, Eye } from 'lucide-react';
 import { DocumentDrawer } from '@/components/drawers/document-drawer';
+import { DocumentChat } from '@/components/ai/document-chat';
 import { uploadAndAnalyzeDocument } from './actions';
 import { toast } from 'sonner';
 
@@ -172,7 +173,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
                   <div><span className="text-zinc-500 text-xs">Номер:</span><br /><span className="text-zinc-200">{ocrResult.invoiceNumber}</span></div>
                 )}
                 {ocrResult.totalAmount && (
-                  <div><span className="text-zinc-500 text-xs">Сума:</span><br /><span className="text-emerald-400 font-semibold">{ocrResult.totalAmount} {ocrResult.currency || 'лв.'}</span></div>
+                  <div><span className="text-zinc-500 text-xs">Сума:</span><br /><span className="text-emerald-400 font-semibold">{ocrResult.totalAmount} {ocrResult.currency || 'EUR'}</span></div>
                 )}
                 {ocrResult.date && (
                   <div><span className="text-zinc-500 text-xs">Дата:</span><br /><span className="text-zinc-200">{ocrResult.date}</span></div>
@@ -184,6 +185,17 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
                   <p className="mt-1 p-2 bg-white/5 rounded-lg whitespace-pre-wrap line-clamp-4">{ocrResult.extractedText}</p>
                 </details>
               )}
+              <DocumentChat
+                documentName={file.name}
+                extractedText={ocrResult.extractedText || ''}
+                fields={{
+                  counterpartyName: ocrResult.counterpartyName,
+                  invoiceNumber: ocrResult.invoiceNumber,
+                  totalAmount: ocrResult.totalAmount,
+                  currency: ocrResult.currency,
+                  date: ocrResult.date,
+                }}
+              />
             </div>
           )}
 
