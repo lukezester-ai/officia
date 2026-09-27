@@ -12,6 +12,7 @@ import { eq, and } from "drizzle-orm";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import { cache } from "react";
 import { getInvoiceEffectiveAmount } from "@/lib/utils/invoice-amount";
+import { sofiaToday, splitIssuedByDue } from "@/lib/reports/invoice-snapshot";
 
 const PAID = new Set(["paid", "платена"]);
 const CANCELLED = new Set(["cancelled", "canceled", "void", "storno"]);
@@ -76,10 +77,14 @@ export const getDashboardData = cache(async () => {
 
   const unpaidInvoices = tenantInvoices.filter((i) => !PAID.has(i.status || "") && !CANCELLED.has(i.status || ""));
   const invoicesForReview = tenantInvoices.filter((i) => i.aiStatus === "needs_review");
-  const dueInvoices = tenantInvoices.filter((i) => {
-    if (PAID.has(i.status || "") || CANCELLED.has(i.status || "") || !i.dueDate) return false;
-    return new Date(i.dueDate).getTime() <= Date.now();
-  });
+  const dueSplit = splitIssuedByDue(
+    tenantInvoices.map((invoice) => ({
+      status: invoice.status,
+      dueDate: invoice.dueDate,
+      amount: getInvoiceEffectiveAmount(invoice),
+    })),
+    sofiaToday(),
+  );
   const vatIssues = tenantInvoices.filter((i) => i.einvoiceStatus === "error").length;
 
   const billed = tenantInvoices.filter((i) => i.status === "issued" || PAID.has(i.status || ""));
@@ -106,10 +111,7 @@ export const getDashboardData = cache(async () => {
       documents: docsForReview.length,
       vatIssues,
     },
-    upcomingDeadlines: {
-      dueInvoices: dueInvoices.length,
-      expiringDocs: 0,
-    },
+    upcomingDeadlines: dueSplit,
     aiRecommendations: openInbox.slice(0, 5)
   };
 });

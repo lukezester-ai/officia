@@ -6,20 +6,18 @@ import { Search, FileText, Users, Building2, Receipt, BarChart2, Landmark, Setti
 type Page = { label: string; href: string; Icon: any; group: string };
 
 const PAGES: Page[] = [
-  { label: "Главно табло",    href: "/dashboard",                    Icon: BarChart2,    group: "Навигация" },
-  { label: "Фактури",         href: "/dashboard/invoices",           Icon: Receipt,      group: "Навигация" },
-  { label: "Покупки",         href: "/dashboard/purchase-invoices",  Icon: ShoppingCart, group: "Навигация" },
-  { label: "Документи",       href: "/dashboard/documents",          Icon: FileText,     group: "Навигация" },
-  { label: "Контрагенти",     href: "/dashboard/counterparties",     Icon: Building2,    group: "Навигация" },
-  { label: "Банкиране",       href: "/dashboard/banking",            Icon: Landmark,     group: "Навигация" },
-  { label: "Счетоводство",    href: "/dashboard/accounting",         Icon: BarChart2,    group: "Навигация" },
-  { label: "ЧА",              href: "/dashboard/hr",                 Icon: Users,        group: "Навигация" },
-  { label: "Отчети",          href: "/dashboard/reports",            Icon: BarChart2,    group: "Навигация" },
-  { label: "ДДС журнал",      href: "/dashboard/vat-journals",       Icon: FileText,     group: "Навигация" },
-  { label: "Настройки",       href: "/dashboard/settings",           Icon: Settings,     group: "Навигация" },
-  { label: "Нова фактура",    href: "/dashboard/invoices/new",       Icon: Receipt,      group: "Бързи действия" },
-  { label: "Нов документ",    href: "/dashboard/documents/new",      Icon: FileText,     group: "Бързи действия" },
-  { label: "Нов контрагент",  href: "/dashboard/counterparties/new", Icon: Building2,    group: "Бързи действия" },
+  { label: "Табло", href: "/dashboard", Icon: BarChart2, group: "Навигация" },
+  { label: "Фактури", href: "/dashboard/invoices", Icon: Receipt, group: "Навигация" },
+  { label: "Покупки", href: "/dashboard/purchase-invoices", Icon: ShoppingCart, group: "Навигация" },
+  { label: "Документи", href: "/dashboard/documents", Icon: FileText, group: "Навигация" },
+  { label: "Контрагенти", href: "/dashboard/counterparties", Icon: Building2, group: "Навигация" },
+  { label: "Банка", href: "/dashboard/banking", Icon: Landmark, group: "Навигация" },
+  { label: "Счетоводство", href: "/dashboard/accounting", Icon: BarChart2, group: "Навигация" },
+  { label: "Кадри", href: "/dashboard/hr", Icon: Users, group: "Навигация" },
+  { label: "Отчети от фактури", href: "/dashboard/reports", Icon: BarChart2, group: "Навигация" },
+  { label: "Отчети от журнала", href: "/dashboard/accounting/reports", Icon: BarChart2, group: "Навигация" },
+  { label: "ДДС дневници", href: "/dashboard/vat-journals", Icon: FileText, group: "Навигация" },
+  { label: "Настройки", href: "/dashboard/settings", Icon: Settings, group: "Навигация" },
 ];
 
 export function GlobalSearch() {
@@ -91,7 +89,7 @@ export function GlobalSearch() {
           ))}
         </div>
         <div className="px-4 py-2 border-t border-white/8 flex gap-4 text-[11px] text-zinc-600">
-          <span>↑↓ navigation</span><span>↵ otvori</span><span>Esc zmtvori</span>
+          <span>↑↓ движение</span><span>↵ отваря</span><span>Esc затваря</span>
           <span className="ml-auto">Ctrl+K</span>
         </div>
       </div>

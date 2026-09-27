@@ -1,235 +1,191 @@
 import React from 'react';
+import Link from 'next/link';
 import { getReportsData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit, TrendingUp, TrendingDown, AlertTriangle, ArrowRight, CheckCircle2, Bookmark, Download, FileText, CheckCircle, Clock } from '@/components/icons';
+import { FileText, CheckCircle } from '@/components/icons';
 import { ReportsPrintButton } from './ReportsPrintButton';
+import { ReportsCsvButton } from './ReportsCsvButton';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function ReportsPage() {
+function monthLine(thisLabel: string, thisAmount: number, lastLabel: string, lastAmount: number, percent: number | null) {
+  const base = `${thisLabel} ${fmt(thisAmount)} € · ${lastLabel} ${fmt(lastAmount)} €`;
+  if (percent === null) return `${base} · няма база за процент`;
+  const signed = percent > 0 ? `+${percent}` : String(percent);
+  return `${base} · ${signed}% към миналия месец`;
+}
+
+export default async function ReportsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
   const res = await getReportsData();
-  const data = res.data ?? {
-    revenue: 0, expenses: 0, profit: 0, totalUnpaidSales: 0, totalUnpaidPurchases: 0, overdueCount: 0,
-    cfoSummary: "Липсват данни.", cfoInsights: [] as { type: string; text: string }[],
-    docsCount: 0, analyzedDocsCount: 0, transactionsCount: 0, reconciledCount: 0, ocrRate: 0, matchRate: 0,
-    allDocs: [] as { id: string; title: string; type: string; status: string; createdAt: string }[],
-  };
+  const data = res.data;
+  const csvRows = [
+    { label: 'Продажби', value: fmt(data.revenue) },
+    { label: 'Покупки', value: fmt(data.expenses) },
+    { label: 'Разлика', value: fmt(data.difference) },
+    { label: `Продажби ${data.thisMonthLabel}`, value: fmt(data.salesThisMonth) },
+    { label: `Продажби ${data.lastMonthLabel}`, value: fmt(data.salesLastMonth) },
+    { label: `Покупки ${data.thisMonthLabel}`, value: fmt(data.purchasesThisMonth) },
+    { label: `Покупки ${data.lastMonthLabel}`, value: fmt(data.purchasesLastMonth) },
+    { label: 'Просрочени фактури', value: String(data.overdueCount) },
+    { label: 'Просрочена сума', value: fmt(data.overdueAmount) },
+    { label: 'Покупки с падеж до 7 дни', value: String(data.dueThisWeekCount) },
+    { label: 'Сума с падеж до 7 дни', value: fmt(data.dueThisWeekAmount) },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Отчети & CFO Copilot</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Управленски анализи и AI бизнес съвети.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Отчети от фактурите</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Издадени продажби и одобрени покупки. Черновите не влизат. Това не е баланс от журнала.</p>
         </div>
-        <ReportsPrintButton />
+        <div className="flex gap-2">
+          <ReportsCsvButton rows={csvRows} />
+          <ReportsPrintButton />
+        </div>
       </div>
 
-      {/* CFO Copilot Panel */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-indigo-500 text-white rounded-xl shadow-sm">
-            <BrainCircuit size={24} />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg text-indigo-950 dark:text-indigo-200 mb-2">CFO Copilot Месечно обобщение</h3>
-            <p className="text-indigo-900/80 dark:text-indigo-300/80 mb-4">{data.cfoSummary}</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {data.cfoInsights.map((insight: any, i: number) => (
-                <div key={i} className="bg-white/60 dark:bg-slate-900/60 p-3 rounded-lg flex items-start gap-3 border border-white/40 dark:border-slate-800">
-                  {insight.type === 'risk' && <AlertTriangle size={16} className="text-amber-500 mt-0.5" />}
-                  {insight.type === 'opportunity' && <CheckCircle2 size={16} className="text-emerald-500 mt-0.5" />}
-                  {insight.type === 'alert' && <TrendingDown size={16} className="text-rose-500 mt-0.5" />}
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{insight.text}</span>
-                </div>
-              ))}
+      {!res.success ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          Базата не върна фактурите. Нулите по-долу не са отчет.
+        </div>
+      ) : null}
+
+      <div className="space-y-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 text-sm text-indigo-950 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-100">
+        {data.lines.map((line) => <p key={line}>{line}</p>)}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <p className="mb-2 text-sm font-medium text-muted-foreground">Продажби</p>
+            <h3 className="text-3xl font-bold tabular-nums">{fmt(data.revenue)} €</h3>
+            <p className="mt-2 text-xs text-muted-foreground">{monthLine(data.thisMonthLabel, data.salesThisMonth, data.lastMonthLabel, data.salesLastMonth, data.salesChangePercent)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <p className="mb-2 text-sm font-medium text-muted-foreground">Покупки</p>
+            <h3 className="text-3xl font-bold tabular-nums">{fmt(data.expenses)} €</h3>
+            <p className="mt-2 text-xs text-muted-foreground">{monthLine(data.thisMonthLabel, data.purchasesThisMonth, data.lastMonthLabel, data.purchasesLastMonth, data.purchasesChangePercent)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 bg-slate-900 text-white shadow-sm dark:bg-slate-50 dark:text-slate-900">
+          <CardContent className="p-6">
+            <p className="mb-2 text-sm font-medium opacity-80">Разлика от фактури</p>
+            <h3 className="text-3xl font-bold tabular-nums">{fmt(data.difference)} €</h3>
+            <p className="mt-2 text-xs opacity-70">Продажби минус покупки. Не е печалба от баланса.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Просрочени продажби</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Издадени, с падеж преди днес</p>
+              <h4 className="mt-1 text-xl font-bold tabular-nums">{fmt(data.overdueAmount)} €</h4>
+              <p className="mt-1 text-sm text-rose-600">{data.overdueCount} бр.</p>
             </div>
-          </div>
-        </div>
+            <Link href={`/${lang}/dashboard/invoices`} className="text-sm font-medium text-indigo-600 hover:underline">Към фактурите</Link>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Покупки до 7 дни</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Одобрени, с падеж от днес до 7 дни</p>
+              <h4 className="mt-1 text-xl font-bold tabular-nums">{fmt(data.dueThisWeekAmount)} €</h4>
+              <p className="mt-1 text-sm text-muted-foreground">{data.dueThisWeekCount} бр.</p>
+            </div>
+            <Link href={`/${lang}/dashboard/purchase-invoices`} className="text-sm font-medium text-indigo-600 hover:underline">Към покупките</Link>
+          </CardContent>
+        </Card>
       </div>
 
-      <Tabs defaultValue="financials" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-12 items-center bg-slate-100 dark:bg-slate-900 rounded-xl p-1 mb-6">
-          <TabsTrigger value="financials" className="rounded-lg h-9 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Финансови</TabsTrigger>
-          <TabsTrigger value="invoices" className="rounded-lg h-9 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Фактури & Плащания</TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg h-9 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Документи</TabsTrigger>
-          <TabsTrigger value="efficiency" className="rounded-lg h-9 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">AI Ефективност</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-xl bg-indigo-500/10 p-3.5 text-indigo-500"><FileText size={24} /></div>
+            <div>
+              <p className="text-sm text-muted-foreground">Качени документи</p>
+              <h3 className="mt-1 text-2xl font-bold">{data.docsCount} бр.</h3>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-xl bg-emerald-500/10 p-3.5 text-emerald-500"><CheckCircle size={24} /></div>
+            <div>
+              <p className="text-sm text-muted-foreground">С разпознат текст</p>
+              <h3 className="mt-1 text-2xl font-bold">{data.recognizedPercent === null ? '—' : `${data.recognizedPercent}%`}</h3>
+              <p className="text-xs text-muted-foreground">{data.analyzedDocsCount} от {data.docsCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">Съпоставени банкови движения</p>
+            <h3 className="mt-1 text-2xl font-bold">{data.reconciledPercent === null ? '—' : `${data.reconciledPercent}%`}</h3>
+            <p className="text-xs text-muted-foreground">{data.reconciledCount} от {data.transactionsCount}. Процентът е дял, не точност на модел.</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="financials" className="space-y-4 m-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="shadow-sm border-0">
-              <CardContent className="p-6">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Приходи</p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.revenue)} €</h3>
-                <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1"><TrendingUp size={12}/> +12% спрямо м.м.</p>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm border-0">
-              <CardContent className="p-6">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Разходи</p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{fmt(data.expenses)} €</h3>
-                <p className="text-xs text-rose-600 mt-2 flex items-center gap-1"><TrendingUp size={12}/> +5% спрямо м.м.</p>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm border-0 bg-slate-900 text-white dark:bg-slate-50 dark:text-slate-900">
-              <CardContent className="p-6">
-                <p className="text-sm font-medium opacity-80 mb-2">Нетна печалба (Баланс)</p>
-                <h3 className="text-3xl font-bold">{fmt(data.profit)} €</h3>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Последни документи</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.allDocs.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Няма качени документи</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-3 font-medium">Наименование</th>
+                    <th className="pb-3 font-medium">Вид</th>
+                    <th className="pb-3 font-medium">Статус</th>
+                    <th className="pb-3 text-right font-medium">Дата</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {data.allDocs.map((doc) => (
+                    <tr key={doc.id}>
+                      <td className="flex items-center gap-2 py-3 font-medium">
+                        <FileText size={15} className="text-indigo-400" />
+                        {doc.title}
+                      </td>
+                      <td className="py-3 text-muted-foreground">{doc.type}</td>
+                      <td className="py-3">
+                        <Badge variant="secondary" className="border-indigo-500/20 bg-indigo-500/10 font-normal text-indigo-500">
+                          {doc.status === 'processed' || doc.status === 'analyzed' ? 'Разпознат' : doc.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 text-right tabular-nums text-muted-foreground">{doc.createdAt}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value="invoices" className="space-y-4 m-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="shadow-sm border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Вземания от клиенти</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Общо неплатени (Чакащи)</p>
-                      <h4 className="text-xl font-bold mt-1">{fmt(data.totalUnpaidSales)} €</h4>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Просрочени фактури</p>
-                      <h4 className="text-xl font-bold text-rose-600 mt-1">{data.overdueCount} бр.</h4>
-                    </div>
-                    <Button size="sm" variant="outline" className="gap-2">Изпрати напомняне <ArrowRight size={14}/></Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="shadow-sm border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Задължения към доставчици</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Общо задължения</p>
-                      <h4 className="text-xl font-bold mt-1">{fmt(data.totalUnpaidPurchases)} €</h4>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm text-muted-foreground">За плащане тази седмица</p>
-                      <h4 className="text-xl font-bold mt-1">0.00 €</h4>
-                    </div>
-                    <Button size="sm" variant="outline" className="gap-2">Подготви преводи <ArrowRight size={14}/></Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="documents" className="space-y-4 m-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="shadow-sm border-0">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="p-3.5 bg-indigo-500/10 text-indigo-500 rounded-xl">
-                  <FileText size={24} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Общо качени документи</p>
-                  <h3 className="text-2xl font-bold mt-1">{data.docsCount || 0} бр.</h3>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm border-0">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="p-3.5 bg-emerald-500/10 text-emerald-500 rounded-xl">
-                  <CheckCircle size={24} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Автоматично обработени от OCR</p>
-                  <h3 className="text-2xl font-bold mt-1">{data.analyzedDocsCount || 0} бр.</h3>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="shadow-sm border-0">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Последни документи в системата</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(!data.allDocs || data.allDocs.length === 0) ? (
-                <div className="py-8 text-center text-muted-foreground text-sm">Няма намерени документи</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="pb-3 font-medium">Наименование</th>
-                        <th className="pb-3 font-medium">Вид</th>
-                        <th className="pb-3 font-medium">Статус</th>
-                        <th className="pb-3 font-medium text-right">Дата</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {data.allDocs.map((doc: any) => (
-                        <tr key={doc.id} className="hover:bg-muted/30">
-                          <td className="py-3 font-medium flex items-center gap-2">
-                            <FileText size={15} className="text-indigo-400" />
-                            {doc.title}
-                          </td>
-                          <td className="py-3 text-muted-foreground">{doc.type}</td>
-                          <td className="py-3">
-                            <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-normal">
-                              {doc.status === 'processed' || doc.status === 'analyzed' ? 'Обработен' : doc.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 text-right tabular-nums text-muted-foreground">{doc.createdAt}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="efficiency" className="space-y-4 m-0">
-          <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <BrainCircuit size={48} className="mx-auto text-indigo-500 mb-4 opacity-75"/>
-              <h3 className="text-xl font-bold mb-2">AI Ефективност този месец</h3>
-              <p className="text-muted-foreground mb-6">Officia AI автоматизира счетоводните процеси на база реални транзакции.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-800">
-                  <h4 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{data.ocrRate || 92}%</h4>
-                  <p className="text-xs text-muted-foreground mt-1.5 font-medium">Автоматично разпознати документи</p>
-                </div>
-                <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-800">
-                  <h4 className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{data.matchRate || 88}%</h4>
-                  <p className="text-xs text-muted-foreground mt-1.5 font-medium">Точност на банково съпоставяне</p>
-                </div>
-                <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-800">
-                  <h4 className="text-3xl font-bold text-purple-600 dark:text-purple-400">{data.transactionsCount || 0}</h4>
-                  <p className="text-xs text-muted-foreground mt-1.5 font-medium">Обработени банкови транзакции</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <p className="text-sm text-muted-foreground">
+        Балансът и отчетът за приходи и разходи се смятат от журнала.{' '}
+        <Link href={`/${lang}/dashboard/accounting/reports`} className="font-medium text-indigo-600 hover:underline">Към отчетите от журнала</Link>
+      </p>
     </div>
   );
 }

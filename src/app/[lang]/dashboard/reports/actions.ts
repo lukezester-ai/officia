@@ -1,86 +1,122 @@
 'use server';
 
+import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db/db';
 import { invoices } from '@/lib/db/schema/invoices';
-import { eq } from 'drizzle-orm';
+import { purchaseInvoices } from '@/lib/db/schema/purchase-invoices';
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
+import { buildInvoiceSnapshot, sharePercent, sofiaToday, type InvoiceSnapshot } from '@/lib/reports/invoice-snapshot';
 
-export async function getReportsData() {
+export type ReportsView = InvoiceSnapshot & {
+  docsCount: number;
+  analyzedDocsCount: number;
+  recognizedPercent: number | null;
+  transactionsCount: number;
+  reconciledCount: number;
+  reconciledPercent: number | null;
+  allDocs: { id: string; title: string; type: string; status: string; createdAt: string }[];
+};
+
+function emptySnapshot(): InvoiceSnapshot {
+  return buildInvoiceSnapshot({ sales: [], purchases: [], today: sofiaToday() });
+}
+
+function emptyView(): ReportsView {
+  return {
+    ...emptySnapshot(),
+    docsCount: 0,
+    analyzedDocsCount: 0,
+    recognizedPercent: null,
+    transactionsCount: 0,
+    reconciledCount: 0,
+    reconciledPercent: null,
+    allDocs: [],
+  };
+}
+
+export async function getReportsData(): Promise<{ success: boolean; error?: string; data: ReportsView }> {
   try {
     const { tenantId } = await requireTenant();
-    const allInvoices = await db.select().from(invoices).where(eq(invoices.tenantId, tenantId));
+    const [salesRows, purchaseRows] = await Promise.all([
+      db.select({
+        status: invoices.status,
+        issueDate: invoices.issueDate,
+        dueDate: invoices.dueDate,
+        totalAmount: invoices.totalAmount,
+        total: invoices.total,
+        amount: invoices.amount,
+        netAmount: invoices.netAmount,
+        vatAmount: invoices.vatAmount,
+      }).from(invoices).where(eq(invoices.tenantId, tenantId)),
+      db.select({
+        status: purchaseInvoices.status,
+        issueDate: purchaseInvoices.issueDate,
+        dueDate: purchaseInvoices.dueDate,
+        totalAmount: purchaseInvoices.totalAmount,
+      }).from(purchaseInvoices).where(eq(purchaseInvoices.tenantId, tenantId)),
+    ]);
 
-    const revenue = allInvoices.filter(i => i.type === 'sale').reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
-    const expenses = allInvoices.filter(i => i.type === 'purchase').reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
-    
-    const unpaidSales = allInvoices.filter(i => i.type === 'sale' && i.status === 'issued');
-    const unpaidPurchases = allInvoices.filter(i => i.type === 'purchase' && i.status === 'issued');
-
-    const totalUnpaidSales = unpaidSales.reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
-    const totalUnpaidPurchases = unpaidPurchases.reduce((sum, i) => sum + parseFloat(i.totalAmount || '0'), 0);
-
-    const overdueCount = unpaidSales.filter(i => i.dueDate && new Date(i.dueDate) < new Date()).length;
-
-    // AI CFO Copilot mock response based on metrics
-    let cfoSummary = "Финансовото състояние е стабилно. ";
-    if (expenses > revenue) {
-      cfoSummary = "Внимание: Разходите надвишават приходите този месец. Препоръчва се преглед на основните пера.";
-    } else if (overdueCount > 0) {
-      cfoSummary = `Имате ${overdueCount} просрочени изходящи фактури. Приоритетно насочете усилия към събирането им, за да запазите ликвидността.`;
-    }
-
-    const cfoInsights = [
-      { type: 'alert', text: `Имате ${unpaidPurchases.length} неплатени фактури към доставчици.` }
-    ];
+    const snapshot = buildInvoiceSnapshot({
+      today: sofiaToday(),
+      sales: salesRows.map((row) => ({
+        amount: getInvoiceEffectiveAmount(row),
+        issueDate: row.issueDate,
+        dueDate: row.dueDate,
+        status: row.status,
+      })),
+      purchases: purchaseRows.map((row) => ({
+        amount: Number(row.totalAmount) || 0,
+        issueDate: row.issueDate,
+        dueDate: row.dueDate,
+        status: row.status,
+      })),
+    });
 
     const { documents } = await import('@/lib/db/schema/documents');
     const { bankAccounts } = await import('@/lib/db/schema/bank_accounts');
     const { bankTransactions } = await import('@/lib/db/schema/bank_transactions');
 
-    const allDocs = await db.select().from(documents).where(eq(documents.tenantId, tenantId));
-    const docsCount = allDocs.length;
-    const analyzedDocsCount = allDocs.filter(d => d.aiStatus === 'processed' || d.status === 'analyzed').length;
+    const allDocs = await db.select({
+      id: documents.id,
+      title: documents.title,
+      type: documents.type,
+      status: documents.status,
+      aiStatus: documents.aiStatus,
+      createdAt: documents.createdAt,
+    }).from(documents).where(eq(documents.tenantId, tenantId));
 
-    const allAccounts = await db.select().from(bankAccounts).where(eq(bankAccounts.tenantId, tenantId));
-    const accountIds = new Set(allAccounts.map(a => a.id));
-    const allTx = (await db.select().from(bankTransactions)).filter(t => accountIds.has(t.accountId));
-    const transactionsCount = allTx.length;
-    const reconciledCount = allTx.filter(t => t.isReconciled || t.matchStatus === 'confirmed').length;
+    const txRows = await db.select({
+      isReconciled: bankTransactions.isReconciled,
+      matchStatus: bankTransactions.matchStatus,
+    }).from(bankTransactions)
+      .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+      .where(eq(bankAccounts.tenantId, tenantId));
 
-    const ocrRate = docsCount > 0 ? Math.round((analyzedDocsCount / docsCount) * 100) : 0;
-    const matchRate = transactionsCount > 0 ? Math.round((reconciledCount / transactionsCount) * 100) : 0;
+    const analyzedDocsCount = allDocs.filter((doc) => doc.aiStatus === 'processed' || doc.status === 'analyzed').length;
+    const reconciledCount = txRows.filter((row) => row.isReconciled || row.matchStatus === 'confirmed').length;
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
-        revenue,
-        expenses,
-        profit: revenue - expenses,
-        totalUnpaidSales,
-        totalUnpaidPurchases,
-        overdueCount,
-        cfoSummary,
-        cfoInsights,
-        docsCount,
+        ...snapshot,
+        docsCount: allDocs.length,
         analyzedDocsCount,
-        transactionsCount,
+        recognizedPercent: sharePercent(analyzedDocsCount, allDocs.length),
+        transactionsCount: txRows.length,
         reconciledCount,
-        ocrRate,
-        matchRate,
-        allDocs: allDocs.slice(0, 10).map(d => ({
-          id: d.id,
-          title: d.title || 'Документ',
-          type: d.type || 'invoice',
-          status: d.status || 'processed',
-          createdAt: d.createdAt ? new Date(d.createdAt).toLocaleDateString('bg-BG') : '-'
-        }))
-      }
+        reconciledPercent: sharePercent(reconciledCount, txRows.length),
+        allDocs: allDocs.slice(0, 10).map((doc) => ({
+          id: doc.id,
+          title: doc.title || 'Документ',
+          type: doc.type || 'invoice',
+          status: doc.status || 'pending_analysis',
+          createdAt: doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('bg-BG') : '—',
+        })),
+      },
     };
-  } catch (error: any) {
-    return { success: false, error: error.message, data: {
-      revenue: 0, expenses: 0, profit: 0, totalUnpaidSales: 0, totalUnpaidPurchases: 0, overdueCount: 0,
-      cfoSummary: '', cfoInsights: [] as { type: string; text: string }[],
-      docsCount: 0, analyzedDocsCount: 0, transactionsCount: 0, reconciledCount: 0, ocrRate: 0, matchRate: 0, allDocs: [],
-    } };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Неуспешно зареждане';
+    return { success: false, error: message, data: emptyView() };
   }
 }

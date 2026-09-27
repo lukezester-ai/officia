@@ -14,7 +14,7 @@ export function ReportsPrintButton() {
       onClick={handlePrint}
       className="gap-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-200"
     >
-      <Download size={16} /> Експорт (PDF)
+      <Download size={16} /> Печат
     </Button>
   );
 }

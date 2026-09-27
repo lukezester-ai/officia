@@ -1,10 +1,18 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, ShoppingCart, Wallet, AlertCircle, Inbox, Clock, CheckSquare } from '@/components/icons';
-import { getDashboardData } from './actions';
 import Link from 'next/link';
+import { AlertCircle, ArrowRight, Clock, FileText, Inbox, Landmark, ShoppingCart, TrendingUp, Wallet } from '@/components/icons';
+import { getDashboardData } from './actions';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function todayLabel() {
+  return new Intl.DateTimeFormat('bg-BG', {
+    timeZone: 'Europe/Sofia',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
 }
 
 export default async function DashboardPage({ params }: { params?: Promise<{ lang: string }> }) {
@@ -25,7 +33,44 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
   const expenses = data?.overviewStats?.expenses ?? 0;
   const outstandingCount = data?.overviewStats?.outstandingCount ?? 0;
   const outstandingAmount = data?.overviewStats?.outstandingAmount ?? 0;
-  const netProfit = revenue - expenses;
+  const difference = revenue - expenses;
+  const overdueCount = data?.upcomingDeadlines?.overdueCount ?? 0;
+  const overdueAmount = data?.upcomingDeadlines?.overdueAmount ?? 0;
+  const dueSoonCount = data?.upcomingDeadlines?.dueSoonCount ?? 0;
+  const dueSoonAmount = data?.upcomingDeadlines?.dueSoonAmount ?? 0;
+  const bankReview = data?.needsReview?.transactions ?? 0;
+  const docsReview = data?.needsReview?.documents ?? 0;
+  const vatIssues = data?.needsReview?.vatIssues ?? 0;
+  const inboxOpen = data?.overviewStats?.inboxOpenItems ?? 0;
+
+  const lead = overdueCount > 0
+    ? `${overdueCount} просрочени фактури за ${fmt(overdueAmount)} €. Това е първата работа за днес.`
+    : dueSoonCount > 0
+      ? `${dueSoonCount} издадени фактури с падеж до 7 дни, общо ${fmt(dueSoonAmount)} €.`
+      : 'Няма просрочени фактури и няма падеж в следващите 7 дни.';
+
+  const work = [
+    { href: `/${lang}/dashboard/invoices`, label: 'Просрочени продажби', detail: overdueCount > 0 ? `${fmt(overdueAmount)} €` : 'Няма', count: overdueCount, icon: AlertCircle },
+    { href: `/${lang}/dashboard/invoices`, label: 'Падеж до 7 дни', detail: dueSoonCount > 0 ? `${fmt(dueSoonAmount)} €` : 'Няма', count: dueSoonCount, icon: Clock },
+    { href: `/${lang}/dashboard/banking`, label: 'Банкови редове за преглед', detail: 'От качено CSV', count: bankReview, icon: Landmark },
+    { href: `/${lang}/dashboard/documents`, label: 'Документи за преглед', detail: 'След разпознаване', count: docsReview, icon: FileText },
+    { href: `/${lang}/dashboard/vat`, label: 'ДДС грешки по фактури', detail: 'Статус на е-фактура', count: vatIssues, icon: AlertCircle },
+    { href: `/${lang}/dashboard/ai-inbox`, label: 'Отворени входящи записи', detail: 'Не са AI съвет', count: inboxOpen, icon: Inbox },
+  ];
+
+  const jumps = [
+    { href: `/${lang}/dashboard/invoices`, label: 'Фактури', text: 'Издаване и плащане' },
+    { href: `/${lang}/dashboard/accounting`, label: 'Журнал', text: 'Записи, не автоматично осчетоводяване' },
+    { href: `/${lang}/dashboard/banking`, label: 'Банка', text: 'Движения от CSV' },
+    { href: `/${lang}/dashboard/reports`, label: 'Отчети', text: 'Суми от фактурите' },
+  ];
+
+  const metrics = [
+    { label: 'Продажби', value: fmt(revenue), note: 'Издадени и платени', icon: TrendingUp },
+    { label: 'Покупки', value: fmt(expenses), note: 'Одобрени и платени', icon: ShoppingCart },
+    { label: 'Разлика', value: fmt(difference), note: 'От фактури, не от баланса', icon: Wallet },
+    { label: 'За събиране', value: fmt(outstandingAmount), note: `${outstandingCount} издадени`, icon: AlertCircle },
+  ];
 
   return (
     <div className="space-y-6">
@@ -34,178 +79,63 @@ export default async function DashboardPage({ params }: { params?: Promise<{ lan
           Фирмените данни още се зареждат от базата. Презареди страницата; нулите по-долу не означават, че фирмата е празна.
         </div>
       ) : null}
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Приходи */}
-        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-violet-500/5 transition-all hover:border-violet-500/30">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-violet-500/20 text-violet-400 rounded-xl p-2.5">
-              <TrendingUp size={18} />
-            </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Приходи</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(revenue)}</div>
-          <div className="text-sm text-zinc-500">€ от продажби</div>
-        </div>
 
-        {/* Разходи */}
-        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-amber-500/5 transition-all hover:border-amber-500/30">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-amber-500/20 text-amber-400 rounded-xl p-2.5">
-              <ShoppingCart size={18} />
-            </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Разходи</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(expenses)}</div>
-          <div className="text-sm text-zinc-500">€ от покупки</div>
-        </div>
+      <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c14] px-6 py-7 sm:px-8">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Officia</p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">Днес, {todayLabel()}</h1>
+        <p className="mt-3 max-w-2xl text-base text-zinc-300">{lead}</p>
+      </section>
 
-        {/* Резултат */}
-        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-emerald-500/5 transition-all hover:border-emerald-500/30">
-          <div className="flex items-center justify-between mb-4">
-            <div className={`rounded-xl p-2.5 ${netProfit >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-              <Wallet size={18} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((item) => (
+          <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <item.icon size={18} className="text-[#a78bfa]" />
+              <span className="text-xs text-zinc-500">{item.label}</span>
             </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">Резултат</span>
+            <div className="text-3xl font-bold tabular-nums tracking-tight text-white">{item.value}</div>
+            <p className="mt-1 text-sm text-zinc-500">€ · {item.note}</p>
           </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(netProfit)}</div>
-          <div className="text-sm text-zinc-500">€ нетна печалба</div>
-        </div>
-
-        {/* Чакащи плащания */}
-        <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-rose-500/5 transition-all hover:border-rose-500/30">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-rose-500/20 text-rose-400 rounded-xl p-2.5">
-              <AlertCircle size={18} />
-            </div>
-            <span className="text-xs font-medium bg-white/5 px-2.5 py-1 rounded-full text-zinc-400">{outstandingCount} бр.</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight mb-1 text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{fmt(outstandingAmount)}</div>
-          <div className="text-sm text-zinc-500">€ за събиране</div>
-        </div>
+        ))}
       </div>
 
-      {/* The 4 Operational Blocks */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        
-        {/* Block 1: Needs Review */}
-        <Card className="shadow-sm border-0 bg-white dark:bg-slate-900 border-l-4 border-l-rose-500">
-          <CardHeader className="pb-3 border-b border-muted">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center">
-                <AlertCircle size={14} className="text-rose-600" />
-              </div>
-              Нуждаят се от преглед
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Фактури за преглед</span>
-              <span className="font-semibold">{data?.needsReview?.invoices || 0}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Банкови транзакции</span>
-              <span className="font-semibold">{data?.needsReview?.transactions || 0}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Документи без данни</span>
-              <span className="font-semibold">{data?.needsReview?.documents || 0}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">ДДС несъответствия</span>
-              <span className="font-semibold text-rose-500">{data?.needsReview?.vatIssues || 0}</span>
-            </div>
-            <Link href={`/${lang}/dashboard/ai-inbox`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
-              Преглед на всички
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:col-span-3">
+          <h2 className="text-base font-semibold text-white">Работата за днес</h2>
+          <div className="mt-4 divide-y divide-white/8">
+            {work.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="group flex cursor-pointer items-center gap-3 py-3 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-violet-500/60"
+              >
+                <item.icon size={16} className="shrink-0 text-zinc-500 group-hover:text-[#a78bfa]" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-zinc-200">{item.label}</span>
+                  <span className="block text-xs text-zinc-500">{item.detail}</span>
+                </span>
+                <span className="tabular-nums text-sm font-semibold text-white">{item.count}</span>
+                <ArrowRight size={14} className="text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-[#a78bfa]" />
+              </Link>
+            ))}
+          </div>
+        </section>
 
-        {/* Block 2: AI Inbox */}
-        <Card className="shadow-sm border-0 bg-white dark:bg-slate-900 border-l-4 border-l-indigo-500">
-          <CardHeader className="pb-3 border-b border-muted flex flex-row justify-between items-center">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/50 flex items-center justify-center">
-                <Inbox size={14} className="text-indigo-600" />
-              </div>
-              AI Inbox
-            </CardTitle>
-            {(data?.overviewStats?.inboxOpenItems ?? 0) > 0 && (
-              <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                {data?.overviewStats?.inboxOpenItems} нови
-              </span>
-            )}
-          </CardHeader>
-          <CardContent className="pt-4">
-            {(!data?.aiRecommendations || data.aiRecommendations.length === 0) ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Няма нови AI препоръки.</p>
-            ) : (
-              <div className="space-y-3">
-                {data.aiRecommendations.map((item: any) => (
-                  <div key={item.id} className="text-sm border-l-2 border-indigo-200 pl-3">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>
-                  </div>
-                ))}
-                <Link href={`/${lang}/dashboard/ai-inbox`} className="mt-4 block w-full text-center bg-muted/50 hover:bg-muted py-2 rounded-lg text-sm font-medium transition-colors">
-                  Отваряне на Inbox
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Block 3: Approvals */}
-        <Card className="shadow-sm border-0 bg-white dark:bg-slate-900 border-l-4 border-l-emerald-500">
-          <CardHeader className="pb-3 border-b border-muted flex flex-row justify-between items-center">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center">
-                <CheckSquare size={14} className="text-emerald-600" />
-              </div>
-              Чакащи одобрения
-            </CardTitle>
-            {((data?.overviewStats?.approvalsPending ?? 0) > 0) && (
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                {data?.overviewStats?.approvalsPending} чакащи
-              </span>
-            )}
-          </CardHeader>
-          <CardContent className="pt-4">
-            {data?.overviewStats?.approvalsPending === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Нямате задачи за одобрение.</p>
-            ) : (
-              <div className="flex justify-between items-center text-sm py-2">
-                <span className="text-muted-foreground">Имате {data?.overviewStats?.approvalsPending ?? 0} заявки за преглед.</span>
-                <Link href={`/${lang}/mobile/approvals`} className="text-emerald-600 hover:underline font-medium">
-                  Преглед
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Block 4: Deadlines */}
-        <Card className="shadow-sm border-0 bg-white dark:bg-slate-900 border-l-4 border-l-amber-500">
-          <CardHeader className="pb-3 border-b border-muted">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center">
-                <Clock size={14} className="text-amber-600" />
-              </div>
-              Срокове и рискове
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Фактури с падеж до 7 дни</span>
-              <span className="font-semibold text-amber-600">{data?.upcomingDeadlines?.dueInvoices || 0}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Документи с изтичащ срок</span>
-              <span className="font-semibold">{data?.upcomingDeadlines?.expiringDocs || 0}</span>
-            </div>
-          </CardContent>
-        </Card>
-
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:col-span-2">
+          <h2 className="text-base font-semibold text-white">Къде се върши</h2>
+          <div className="mt-4 grid grid-cols-1 gap-3">
+            {jumps.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="cursor-pointer rounded-xl border border-white/8 px-4 py-3 outline-none transition-colors hover:border-[#7c3aed]/50 hover:bg-[#7c3aed]/10 focus-visible:ring-2 focus-visible:ring-violet-500/60"
+              >
+                <span className="block text-sm font-semibold text-white">{item.label}</span>
+                <span className="mt-0.5 block text-xs text-zinc-500">{item.text}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
