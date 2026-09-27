@@ -27,11 +27,17 @@ export default function CurrenciesClient({ initialTrends }: { initialTrends: any
 
   const handleSync = async () => {
     setIsSyncing(true);
-    toast.promise(syncRates(), {
-      loading: 'Синхронизиране с ЕЦБ...',
-      success: 'Курсовете са обновени успешно!',
-      error: 'Грешка при синхронизация'
-    });
+    toast.promise(
+      syncRates().then((result) => {
+        if (!result.success) throw new Error(result.error);
+        return result;
+      }),
+      {
+        loading: 'Сваляне на курсове от ЕЦБ...',
+        success: 'Курсовете от ЕЦБ са записани.',
+        error: (error) => error?.message || 'Курсовете не се свалиха.',
+      },
+    );
     setTimeout(() => setIsSyncing(false), 1000);
   };
 

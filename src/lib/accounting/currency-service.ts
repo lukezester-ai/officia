@@ -19,6 +19,7 @@ export class CurrencyService {
    * and saves them to the database.
    */
   static async syncLatestRates() {
+    let received = 0;
     for (const cur of this.TARGET_CURRENCIES) {
       if (cur === this.BASE_CURRENCY) continue;
       
@@ -29,6 +30,8 @@ export class CurrencyService {
         const data = await response.json();
         const rate = data.rates[this.BASE_CURRENCY];
         const dateStr = data.date; // "YYYY-MM-DD"
+        if (!Number.isFinite(Number(rate)) || !dateStr) continue;
+        received += 1;
 
         // Check if rate already exists for this date
         const existing = await db.query.exchangeRates.findFirst({
@@ -51,6 +54,7 @@ export class CurrencyService {
         console.error(`Failed to sync rate for ${cur}:`, error);
       }
     }
+    return received;
   }
 
   /**
