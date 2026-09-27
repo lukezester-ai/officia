@@ -19,7 +19,7 @@ type MetricItem = {
 const metricsData: MetricItem[] = [
   { id: "trial", numericValue: 14, suffix: " дни", label: "Без карта, после достъпът спира", highlightColor: "purple" },
   { id: "starter", numericValue: 50, suffix: "", label: "Фактури/месец на Стартер", highlightColor: "white" },
-  { id: "modules", numericValue: 5, suffix: "", label: "Модула: счетоводство, фактури, ТРЗ, HR, банкиране", highlightColor: "purple" },
+  { id: "modules", numericValue: 5, suffix: "", label: "Модула: счетоводство, фактури, ТРЗ, HR, CSV", highlightColor: "purple" },
   { id: "lang", numericValue: 1, suffix: "", label: "Език: BG", highlightColor: "purple" },
 ];
 
@@ -143,7 +143,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
           <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
             <motion.div initial={skip ? false : { opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.1 }} className="mb-10 inline-flex items-center gap-2 rounded-full border border-purple-500/25 bg-purple-500/10 px-4 py-1.5 text-xs font-semibold text-[#c4b5fd]" style={{ animation: skip ? "none" : "badgePulse 2s ease-in-out infinite" }}>
               <Zap className="h-3.5 w-3.5 text-[#a78bfa]" />
-              <span>Счетоводителят като финансов директор</span>
+              <span>Журнал, фактури и ДДС дневници</span>
             </motion.div>
 
             <div className="mb-8 font-bold" style={{ fontSize: "clamp(2.1rem, 6.5vw + 0.8rem, 5.5rem)", lineHeight: 1.05, letterSpacing: "-0.02em" }}>
@@ -154,7 +154,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
             </div>
 
             <motion.p initial={skip ? false : { opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.5 }} className="mb-12 max-w-3xl text-lg leading-relaxed text-[#9191b0] md:text-xl font-medium">
-              В <span className="text-white font-bold">Officia</span> счетоводителят е <span className="text-purple-300 font-semibold">финансов директор</span>, на когото AI асистентът върши 90% от рутинната работа автоматично и му показва готови, проверени и балансирани отчети!
+              В <span className="text-white font-bold">Officia</span> журнал, фактури и ДДС дневници са в евро. Снимка на фактура извлича полета преди запис. <span className="text-purple-300 font-semibold">AI</span> отговаря само от този текст и не осчетоводява сам.
             </motion.p>
 
             <motion.div initial={skip ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: easeOutQuart, delay: skip ? 0 : 0.65 }} className="flex flex-col items-center gap-4 sm:flex-row">
@@ -163,7 +163,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
                 <ArrowRight className="h-5 w-5 transition-transform duration-150 group-hover:translate-x-1" />
               </Link>
               <Link href={`/${lang}/dashboard`} prefetch={false} className="flex items-center gap-3 rounded-2xl border border-white/60 px-8 py-5 text-lg font-bold text-[#d0d0f0] transition-all hover:border-white/75 hover:bg-white/6 active:scale-[0.97]">
-                <span>Виж демо</span>
+                <span>Към таблото</span>
               </Link>
             </motion.div>
 

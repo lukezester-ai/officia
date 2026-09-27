@@ -9,7 +9,7 @@ import { AppLogoLink } from '@/components/brand/app-logo-link';
 const benefits = [
   'Счетоводство и журнални записи',
   'Извличане с изкуствен интелект от снимки',
-  'ДДС дневници и ZIP за НАП',
+  'ДДС дневници и ZIP за ДДС, без подаване към НАП',
   'Фактури продажби и покупки',
   'Човешки ресурси и изчисляване на заплати',
   'Интерфейс на български език',
@@ -68,7 +68,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да автоматизираш офиса си?</h2>
+          <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да водиш счетоводството на едно място?</h2>
           <p className="text-zinc-400 mb-8">Регистрация без карта за 14 дни. После достъпът спира, докато не се плати план.</p>
           <Link href={signUpHref} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
             Стартирай безплатно <ArrowRight size={18} />

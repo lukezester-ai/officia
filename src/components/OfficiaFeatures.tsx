@@ -729,7 +729,7 @@ const featureCards: FeatureCardData[] = [
     title: "Журнал, ДДС дневници и отчети",
     description: "Има журнални записи, ДДС дневници, баланс и отчет за приходи и загуби. Нищо от това не се подава само към НАП.",
     mockup: <AccountingMockup />,
-    tags: ["Журнал", "ДДС дневници", "ZIP за НАП"],
+    tags: ["Журнал", "ДДС дневници", "ZIP за ДДС"],
     delay: 0.1,
   },
   {
@@ -830,9 +830,9 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
             transition={{ delay: 0.1 }}
             className="mx-auto max-w-2xl text-[17px] leading-relaxed text-zinc-400"
           >
-            Officia замества 5 различни програми — <span className="font-medium text-white">счетоводство</span>,{" "}
+            Officia събира <span className="font-medium text-white">счетоводство</span>,{" "}
             <span className="font-medium text-white">фактуриране</span>, <span className="font-medium text-white">HR</span>,{" "}
-            <span className="font-medium text-white">банкиране</span> и <span className="font-medium text-white">документи</span>.
+            <span className="font-medium text-white">CSV извлечение</span> и <span className="font-medium text-white">документи</span>.
           </motion.p>
         </div>
 
@@ -858,7 +858,7 @@ export default function OfficiaFeatures({ lang }: { lang: string }) {
             </div>
             <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
               <CTAButton href={signUpHref} variant="primary" label="Започни безплатно" />
-              <CTAButton href="/bg/dashboard" variant="secondary" label="Демонстрация" />
+              <CTAButton href="/bg/dashboard" variant="secondary" label="Към таблото" />
             </div>
           </div>
         </motion.div>
