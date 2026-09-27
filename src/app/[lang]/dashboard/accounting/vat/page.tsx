@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calculator } from "@/components/icons";
 import { PrintButton } from "@/components/print-button";
-import VatB2GClient from "./VatB2GClient";
 import { requireTenant } from "@/lib/auth/get-tenant";
 import { fetchVatPeriodDocuments, vatLineAmounts, vatPeriodBounds } from "@/lib/tax/vat-period";
 
@@ -83,7 +82,6 @@ export default async function VatPage({
             </div>
           </div>
           <div className="flex gap-2">
-            <VatB2GClient period={period} />
             <a
               href={`/api/accounting/vat-export?year=${period.split('-')[0]}&month=${period.split('-')[1]}`}
               className="flex items-center gap-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-colors px-4 py-2 rounded-xl text-sm font-medium print:hidden shadow-sm"

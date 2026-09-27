@@ -61,7 +61,7 @@ export function VatActions() {
         onClick={() => setIsNraModalOpen(true)}
         className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-indigo-500/50"
       >
-        <Landmark size={16} /> Подай към НАП
+        <Landmark size={16} /> Файл за НАП
       </Button>
 
       {/* Download period picker */}
@@ -120,7 +120,6 @@ export function VatActions() {
       <NraSubmitModal
         isOpen={isNraModalOpen}
         onClose={() => setIsNraModalOpen(false)}
-        onSuccess={() => {}}
       />
     </div>
   );
