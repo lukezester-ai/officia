@@ -334,6 +334,12 @@ export default function DocumentsClient({ initialDocuments }: { initialDocuments
           setDocs((prev) => prev.map((doc) => doc.id === id ? { ...doc, counterpartyName: name } : doc));
           setSelectedDoc((prev: any) => prev ? { ...prev, counterpartyName: name } : prev);
         }}
+        onInvoiced={(invoiceNumber) => {
+          if (!selectedDoc) return;
+          const id = selectedDoc.id;
+          setDocs((prev) => prev.map((doc) => doc.id === id ? { ...doc, invoiceNumber } : doc));
+          setSelectedDoc((prev: any) => prev ? { ...prev, invoiceNumber } : prev);
+        }}
       />
     </>
   );

@@ -5,6 +5,7 @@ export const documents = pgTable('documents', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
   counterpartyId: uuid('counterparty_id'),
+  invoiceId: uuid('invoice_id'),
   title: text('title').notNull(),
   type: text('type').notNull(), // 'contract', 'order', 'invoice', etc.
   fileUrl: text('file_url'),

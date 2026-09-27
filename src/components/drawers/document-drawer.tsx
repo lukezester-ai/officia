@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Clock, FileKey, Zap, LayoutList, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCounterparties } from '@/app/[lang]/dashboard/counterparties/actions';
-import { linkDocumentToClient } from '@/app/[lang]/dashboard/documents/actions';
+import { createDocumentInvoice, createDocumentTask, linkDocumentToClient } from '@/app/[lang]/dashboard/documents/actions';
 
 function LinkClient({ documentId, linkedName, onLinked }: { documentId: string; linkedName?: string | null; onLinked: (name: string) => void }) {
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
@@ -54,8 +54,35 @@ function LinkClient({ documentId, linkedName, onLinked }: { documentId: string; 
   );
 }
 
-export function DocumentDrawer({ document, open, onOpenChange, onLinked }: { document: any, open: boolean, onOpenChange: (open: boolean) => void, onLinked?: (name: string) => void }) {
+export function DocumentDrawer({ document, open, onOpenChange, onLinked, onInvoiced }: { document: any, open: boolean, onOpenChange: (open: boolean) => void, onLinked?: (name: string) => void, onInvoiced?: (invoiceNumber: string) => void }) {
+  const [savingTask, setSavingTask] = useState(false);
+  const [savingInvoice, setSavingInvoice] = useState(false);
   if (!document) return null;
+
+  async function createInvoice() {
+    setSavingInvoice(true);
+    const res = await createDocumentInvoice(document.id);
+    setSavingInvoice(false);
+    if (!res.success) {
+      toast.error(res.error || 'Фактурата не беше записана.');
+      return;
+    }
+    if (res.invoiceNumber) onInvoiced?.(res.invoiceNumber);
+    toast.success(res.already
+      ? `Фактура ${res.invoiceNumber} вече е в списъка.`
+      : `Фактура ${res.invoiceNumber} е в Чернови.`);
+  }
+
+  async function createTask() {
+    setSavingTask(true);
+    const res = await createDocumentTask(document.id);
+    setSavingTask(false);
+    if (!res.success) {
+      toast.error(res.error || 'Задачата не беше записана.');
+      return;
+    }
+    toast.success(res.already ? 'Задачата вече е в списъка.' : 'Задачата е в „AI Задачи“.');
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -92,14 +119,14 @@ export function DocumentDrawer({ document, open, onOpenChange, onLinked }: { doc
           <div className="space-y-3">
             <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">Действия</h3>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="justify-start gap-2" onClick={() => toast.info('Създаване на фактура...')}>
+              <Button variant="outline" className="justify-start gap-2" onClick={createInvoice} disabled={savingInvoice}>
                 <FileText size={16} className="text-indigo-500" />
-                Създай фактура
+                {savingInvoice ? 'Запис...' : document.invoiceNumber ? `Фактура ${document.invoiceNumber}` : 'Създай фактура'}
               </Button>
               <LinkClient documentId={document.id} linkedName={document.counterpartyName} onLinked={(name) => onLinked?.(name)} />
-              <Button variant="outline" className="justify-start gap-2">
+              <Button variant="outline" className="justify-start gap-2" onClick={createTask} disabled={savingTask}>
                 <Clock size={16} />
-                Създай задача
+                {savingTask ? 'Запис...' : 'Създай задача'}
               </Button>
               {document.fileUrl ? (
                 <a href={`/api/documents/${document.id}`} className="inline-flex items-center justify-start gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent">
