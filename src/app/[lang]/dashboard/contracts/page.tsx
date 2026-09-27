@@ -10,7 +10,14 @@ import { getDictionary } from '@/lib/get-dictionary';
 export default async function ContractsPage(props: { params: Promise<{ lang: string }> }) {
   const params = await props.params;
   const dict = await getDictionary(params.lang as any);
-  const contractsList = await getContracts();
+  let contractsList: Awaited<ReturnType<typeof getContracts>> = [];
+  let loadError = false;
+  try {
+    contractsList = await getContracts();
+  } catch (error) {
+    console.error('[contracts]', error);
+    loadError = true;
+  }
   
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in zoom-in duration-300">
@@ -23,6 +30,12 @@ export default async function ContractsPage(props: { params: Promise<{ lang: str
           <Plus className="h-4 w-4" /> Нов договор
         </Link>
       </div>
+
+      {loadError ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Договорите не се заредиха, защото базата не отговори. Презареди страницата.
+        </div>
+      ) : null}
       
       <Card className="border shadow-sm">
         <CardContent className="p-0">
