@@ -2,13 +2,13 @@ import React from 'react';
 import { getAccountingData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, AlertCircle, Clock, Plus, Zap, FileText } from '@/components/icons';
 
 import { AccountingActionButtons } from './_action-buttons';
 import { EntryActionButtons } from './_entry-actions';
+import { ReviewJournalButton } from './_review';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -17,10 +17,25 @@ function fmt(n: number) {
 export default async function AccountingPage(props: { params: Promise<{ lang: string }> }) {
   const params = await props.params;
   const res = await getAccountingData();
-  const data = res.data ?? { headers: [], lines: [], pendingInvoices: [] };
+  const data = res.data ?? { headers: [], lines: [], accounts: [], pendingInvoices: [] };
+  const accounts = data.accounts ?? [];
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
 
   const drafts = data.headers.filter(h => h.status === 'draft');
-  const problems = data.headers.filter(h => h.aiStatus === 'problem');
+  const problems = data.headers.filter((header) => {
+    if (header.aiStatus === 'verified') return false;
+    if (header.aiStatus === 'problem') return true;
+    const entryLines = data.lines.filter((line) => line.journalId === header.id);
+    if (entryLines.length === 0) return false;
+    let debit = 0;
+    let credit = 0;
+    for (const line of entryLines) {
+      const amount = parseFloat(line.amount || '0') || 0;
+      if (line.entryType === 'debit') debit += amount;
+      if (line.entryType === 'credit') credit += amount;
+    }
+    return Math.abs(debit - credit) > 0.02;
+  });
 
   return (
     <div className="space-y-6">
@@ -219,7 +234,21 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" className="h-8 text-rose-600 hover:bg-rose-50 border-rose-200">Прегледай</Button>
+                        <ReviewJournalButton
+                          id={h.id}
+                          journalNumber={h.journalNumber}
+                          description={h.description}
+                          posted={h.status === 'posted'}
+                          lines={data.lines.filter((line) => line.journalId === h.id).map((line) => {
+                            const account = accountById.get(line.accountId);
+                            return {
+                              id: line.id,
+                              accountLabel: account ? `${account.accountNumber} ${account.name}` : 'Без сметка',
+                              entryType: line.entryType,
+                              amount: String(line.amount),
+                            };
+                          })}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

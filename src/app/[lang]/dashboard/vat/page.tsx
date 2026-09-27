@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Download, AlertTriangle, TrendingDown, TrendingUp, DollarSign, FileText } from '@/components/icons';
 
 import { VatActions } from '@/components/dashboard/VatActions';
+import { CorrectEikButton } from './_correct';
 
 interface VatData {
   purchases: Array<{
@@ -27,6 +27,8 @@ interface VatData {
     vatAmount?: string;
   }>;
   problems: Array<{
+    invoiceId: string;
+    kind: 'sales' | 'purchase';
     invoiceNumber: string;
     issue: string;
     counterpartyName: string;
@@ -176,8 +178,8 @@ export default async function VatPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.problems.map((prob: any, idx: number) => (
-                    <TableRow key={idx}>
+                  {data.problems.map((prob) => (
+                    <TableRow key={`${prob.kind}-${prob.invoiceId}`}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-2">
                           <FileText size={16} className="text-muted-foreground"/>
@@ -189,7 +191,7 @@ export default async function VatPage() {
                         <p className="text-xs text-muted-foreground">Контрагент: {prob.counterpartyName}</p>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" className="h-8">Коригирай</Button>
+                        <CorrectEikButton invoiceId={prob.invoiceId} kind={prob.kind} />
                       </TableCell>
                     </TableRow>
                   ))}

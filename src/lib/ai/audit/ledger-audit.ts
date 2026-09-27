@@ -63,7 +63,22 @@ export async function runLedgerAudit(): Promise<AuditReportResult> {
         }
       }
 
-      if (hLines.length > 0 && Math.abs(debitTotal - creditTotal) > 0.02) {
+      const unbalanced = hLines.length > 0 && Math.abs(debitTotal - creditTotal) > 0.02;
+      if (h.status !== 'posted') {
+        if (unbalanced) {
+          await db.update(journalHeaders).set({
+            aiStatus: 'problem',
+            aiReasoning: `Дебит ${debitTotal.toFixed(2)} €, кредит ${creditTotal.toFixed(2)} €.`,
+          }).where(and(eq(journalHeaders.id, h.id), eq(journalHeaders.tenantId, tenantId)));
+        } else if (h.aiStatus === 'problem') {
+          await db.update(journalHeaders).set({
+            aiStatus: null,
+            aiReasoning: null,
+          }).where(and(eq(journalHeaders.id, h.id), eq(journalHeaders.tenantId, tenantId)));
+        }
+      }
+
+      if (unbalanced) {
         anomalies.push({
           id: `unbalanced-${h.id}`,
           documentRef: h.journalNumber || `№ ${h.id.slice(0, 8)}`,

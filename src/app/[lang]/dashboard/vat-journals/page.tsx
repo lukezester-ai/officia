@@ -1,5 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { getVatJournals, createVatJournal, deleteVatJournal } from './actions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -146,6 +148,7 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
 }
 
 export default function VatJournalsPage() {
+  const { lang } = useParams<{ lang: string }>();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -157,6 +160,9 @@ export default function VatJournalsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">ДДС Дневници</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Дневник на продажбите и покупките по ЗДДС</p>
+          <Link href={`/${lang}/dashboard/vat`} className="text-sm text-indigo-600 hover:underline">
+            Провери липсващ ЕИК по фактури
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           <select className="h-9 rounded-lg border border-input bg-background px-3 text-sm outline-none" value={month} onChange={e => setMonth(Number(e.target.value))}>

@@ -4,7 +4,7 @@ import { accountPlan } from './account_plan';
 import { companyDivisions } from './company_structure';
 import { projects } from './projects';
 
-export const entryTypeEnum = pgEnum('entry_type', ['debit', 'credit']);
+export const entryTypeEnum = pgEnum('journal_entry_side', ['debit', 'credit']);
 export const journalStatusEnum = pgEnum('journal_status', ['draft', 'posted', 'canceled']);
 
 export const journalHeaders = pgTable('journal_headers', {
