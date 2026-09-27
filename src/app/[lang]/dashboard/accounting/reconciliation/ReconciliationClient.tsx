@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { Upload, Check, X, BrainCircuit, Receipt, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { uploadBankStatement, confirmMatch } from './actions';
+import { uploadBankStatement, confirmMatch, rejectSuggestion } from './actions';
 import { BankStatementParser } from '@/lib/accounting/bank-parser';
 import { toast } from 'sonner';
 
 export default function ReconciliationClient({ initialSuggestions }: { initialSuggestions: any[] }) {
   const [suggestions, setSuggestions] = useState(initialSuggestions);
   const [isUploading, setIsUploading] = useState(false);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,9 +44,16 @@ export default function ReconciliationClient({ initialSuggestions }: { initialSu
     });
   };
 
-  const handleReject = (txId: string) => {
+  const handleReject = async (txId: string) => {
+    setRejectingId(txId);
+    const res = await rejectSuggestion(txId);
+    setRejectingId(null);
+    if (!res.success) {
+      toast.error(res.error || "Предложението не беше отхвърлено");
+      return;
+    }
     setSuggestions(prev => prev.filter(s => s.transaction.id !== txId));
-    toast.info("Предложението е отхвърлено");
+    toast.success(res.already ? "Предложението вече е отхвърлено" : "Предложението е отхвърлено");
   };
 
   return (
@@ -75,7 +83,7 @@ export default function ReconciliationClient({ initialSuggestions }: { initialSu
         {suggestions.length === 0 && (
           <div className="text-center py-12 bg-white/3 border border-white/5 rounded-2xl">
             <CheckCircle2 size={48} className="mx-auto text-zinc-600 mb-4" />
-            <p className="text-zinc-400">Всички транзакции са равнени!</p>
+            <p className="text-zinc-400">Няма предложени съвпадения.</p>
           </div>
         )}
 
@@ -129,7 +137,8 @@ export default function ReconciliationClient({ initialSuggestions }: { initialSu
                 </button>
                 <button 
                   onClick={() => handleReject(sugg.transaction.id)}
-                  className="w-12 h-12 rounded-full bg-red-500/10 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-all"
+                  disabled={rejectingId === sugg.transaction.id}
+                  className="w-12 h-12 rounded-full bg-red-500/10 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-all disabled:opacity-50"
                   title="Отхвърли"
                 >
                   <X size={20} />

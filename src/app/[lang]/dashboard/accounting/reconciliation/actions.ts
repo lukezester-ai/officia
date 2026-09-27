@@ -9,6 +9,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { autoCloseMatchedDocument } from "@/lib/matching/auto-close";
 import { requireTenant } from "@/lib/auth/get-tenant";
+import { parseUuidParam } from "@/lib/utils/ids";
 
 export async function uploadBankStatement(parsedTransactions: any[]) {
   const { tenantId } = await requireTenant();
@@ -82,4 +83,44 @@ export async function confirmMatch(transactionId: string, matchType: 'invoice' |
   
   revalidatePath("/[lang]/dashboard/accounting/reconciliation", "page");
   return { success: true };
+}
+
+export async function rejectSuggestion(transactionId: string) {
+  try {
+    const { tenantId } = await requireTenant();
+    const id = parseUuidParam(transactionId);
+    if (!id) return { success: false as const, error: "Невалидно движение." };
+
+    const [owned] = await db
+      .select({
+        id: bankTransactions.id,
+        matchStatus: bankTransactions.matchStatus,
+        isReconciled: bankTransactions.isReconciled,
+      })
+      .from(bankTransactions)
+      .innerJoin(bankAccounts, eq(bankTransactions.accountId, bankAccounts.id))
+      .where(and(
+        eq(bankTransactions.id, id),
+        eq(bankAccounts.tenantId, tenantId),
+      ))
+      .limit(1);
+
+    if (!owned) return { success: false as const, error: "Движението не е намерено." };
+    if (owned.isReconciled) return { success: false as const, error: "Движението вече е равнено." };
+    if (owned.matchStatus === "rejected") return { success: true as const, already: true };
+
+    await db.update(bankTransactions).set({
+      matchStatus: "rejected",
+      matchedInvoiceId: null,
+      matchedExpenseId: null,
+      reviewRequired: false,
+      isReconciled: false,
+    }).where(eq(bankTransactions.id, owned.id));
+
+    revalidatePath("/", "layout");
+    return { success: true as const, already: false };
+  } catch (error) {
+    console.error("[reject-suggestion]", error);
+    return { success: false as const, error: "Предложението не беше отхвърлено." };
+  }
 }

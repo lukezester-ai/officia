@@ -3,7 +3,7 @@ import { bankTransactions } from '@/lib/db/schema/bank_transactions';
 import { bankAccounts } from '@/lib/db/schema/bank_accounts';
 import { invoices } from '@/lib/db/schema/invoices';
 import { expenses } from '@/lib/db/schema/expenses';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, or } from 'drizzle-orm';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 const OPEN_INVOICE_STATUSES = ['issued', 'sent', 'overdue'];
@@ -42,6 +42,7 @@ export class ReconciliationEngine {
       .where(and(
         eq(bankAccounts.tenantId, tenantId),
         eq(bankTransactions.isReconciled, false),
+        or(isNull(bankTransactions.matchStatus), ne(bankTransactions.matchStatus, 'rejected')),
       ));
 
     const openInvoices = await db
