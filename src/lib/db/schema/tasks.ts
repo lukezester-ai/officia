@@ -6,6 +6,7 @@ export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
   documentId: uuid('document_id').references(() => documents.id),
+  invoiceId: uuid('invoice_id'),
   title: text('title').notNull(),
   description: text('description'),
   dueDate: date('due_date'),

@@ -1,17 +1,49 @@
 'use client';
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Clock, Zap, ArrowRight, Building, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { checkInvoiceDuplicate, createInvoiceTask } from '@/app/[lang]/dashboard/invoices/actions';
 import { getInvoiceEffectiveAmount } from '@/lib/utils/invoice-amount';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function InvoiceDrawer({ invoice, open, onOpenChange }: { invoice: any, open: boolean, onOpenChange: (open: boolean) => void }) {
+export function InvoiceDrawer({ invoice, open, onOpenChange, onChecked }: { invoice: any, open: boolean, onOpenChange: (open: boolean) => void, onChecked?: (aiStatus: string | null) => void }) {
+  const [checking, setChecking] = useState(false);
+  const [savingTask, setSavingTask] = useState(false);
   if (!invoice) return null;
+
+  async function checkDuplicate() {
+    setChecking(true);
+    const res = await checkInvoiceDuplicate(invoice.id);
+    setChecking(false);
+    if (!res.success) {
+      toast.error(res.error || 'Проверката не мина.');
+      return;
+    }
+    onChecked?.(res.aiStatus);
+    if (res.matches.length === 0) {
+      toast.success('Няма друга фактура със същия номер или със същия клиент, дата и сума.');
+      return;
+    }
+    const numbers = res.matches.map((row) => row.invoiceNumber).filter(Boolean).join(', ');
+    toast.error(`Съвпада с фактура ${numbers}.`);
+  }
+
+  async function createTask() {
+    setSavingTask(true);
+    const res = await createInvoiceTask(invoice.id);
+    setSavingTask(false);
+    if (!res.success) {
+      toast.error(res.error || 'Задачата не беше записана.');
+      return;
+    }
+    toast.success(res.already ? 'Задачата вече е в списъка.' : 'Задачата е в „Задачи“.');
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -50,17 +82,17 @@ export function InvoiceDrawer({ invoice, open, onOpenChange }: { invoice: any, o
                 <FileText size={16} />
                 Свали PDF
               </Button>
-              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={() => toast.info('Търсене за дубликати...')}>
+              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={checkDuplicate} disabled={checking}>
                 <CheckCircle size={16} className="text-emerald-500" />
-                Провери дубликат
+                {checking ? 'Проверка...' : 'Провери дубликат'}
               </Button>
               <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={() => toast.info('Свързване с банка...')}>
                 <DollarSign size={16} className="text-amber-500" />
                 Свържи с банка
               </Button>
-              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300">
+              <Button variant="outline" className="justify-start gap-2 hover:bg-white/10 border-white/10 bg-white/5 text-zinc-300" onClick={createTask} disabled={savingTask}>
                 <Clock size={16} />
-                Създай задача
+                {savingTask ? 'Запис...' : 'Създай задача'}
               </Button>
             </div>
           </div>

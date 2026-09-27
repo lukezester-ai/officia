@@ -30,6 +30,10 @@ export default function InvoicesPage() {
 
   useEffect(() => { load(); }, []);
 
+  const patchInvoice = (id: string, patch: { aiStatus: string | null }) => {
+    setInvoices((current) => current.map((row) => row.id === id ? { ...row, ...patch } : row));
+  };
+
   const handleAction = async (action: string, id: string) => {
     let res: any;
     if (action === 'issue') res = await issueInvoice(id);
@@ -158,22 +162,22 @@ export default function InvoicesPage() {
                 <TabsTrigger value="overdue">Просрочени ({invoices.filter(i => i.status === 'issued' && i.dueDate && new Date(i.dueDate) < new Date()).length})</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
-                <InvoiceTable items={invoices} onAction={handleAction} />
+                <InvoiceTable items={invoices} onAction={handleAction} onPatched={patchInvoice} />
               </TabsContent>
               <TabsContent value="draft">
-                <InvoiceTable items={draft} onAction={handleAction} />
+                <InvoiceTable items={draft} onAction={handleAction} onPatched={patchInvoice} />
               </TabsContent>
               <TabsContent value="issued">
-                <InvoiceTable items={issued} onAction={handleAction} />
+                <InvoiceTable items={issued} onAction={handleAction} onPatched={patchInvoice} />
               </TabsContent>
               <TabsContent value="paid">
-                <InvoiceTable items={paid} onAction={handleAction} />
+                <InvoiceTable items={paid} onAction={handleAction} onPatched={patchInvoice} />
               </TabsContent>
               <TabsContent value="needs_review">
-                <InvoiceTable items={invoices.filter(i => i.aiStatus === 'needs_review' || i.aiStatus === 'duplicate_suspected')} onAction={handleAction} />
+                <InvoiceTable items={invoices.filter(i => i.aiStatus === 'needs_review' || i.aiStatus === 'duplicate_suspected')} onAction={handleAction} onPatched={patchInvoice} />
               </TabsContent>
               <TabsContent value="overdue">
-                <InvoiceTable items={invoices.filter(i => i.status === 'issued' && i.dueDate && new Date(i.dueDate) < new Date())} onAction={handleAction} />
+                <InvoiceTable items={invoices.filter(i => i.status === 'issued' && i.dueDate && new Date(i.dueDate) < new Date())} onAction={handleAction} onPatched={patchInvoice} />
               </TabsContent>
             </Tabs>
           )}

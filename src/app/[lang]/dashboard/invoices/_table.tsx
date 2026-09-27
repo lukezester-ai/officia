@@ -18,9 +18,10 @@ const STATUS: Record<string, { label: string; color: string }> = {
   cancelled: { label: 'Анулирана', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
 };
 
-export function InvoiceTable({ items, onAction }: {
+export function InvoiceTable({ items, onAction, onPatched }: {
   items: any[];
   onAction: (action: string, id: string) => Promise<void>;
+  onPatched?: (id: string, patch: { aiStatus: string | null }) => void;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
@@ -140,7 +141,13 @@ export function InvoiceTable({ items, onAction }: {
       <InvoiceDrawer 
         invoice={selectedInvoice} 
         open={drawerOpen} 
-        onOpenChange={setDrawerOpen} 
+        onOpenChange={setDrawerOpen}
+        onChecked={(aiStatus) => {
+          if (!selectedInvoice) return;
+          const id = selectedInvoice.id;
+          setSelectedInvoice((prev: any) => prev ? { ...prev, aiStatus } : prev);
+          onPatched?.(id, { aiStatus });
+        }}
       />
     </>
   );

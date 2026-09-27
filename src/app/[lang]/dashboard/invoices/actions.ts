@@ -2,12 +2,14 @@
 
 import { db } from '@/lib/db/db';
 import { invoices, invoiceLines } from '@/lib/db/schema/invoices';
+import { tasks } from '@/lib/db/schema/tasks';
 import { vatJournals } from '@/lib/db/schema/vat_journals';
 import { counterparties } from '@/lib/db/schema/counterparties';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, ne } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { requireTenant } from '@/lib/auth/get-tenant';
+import { parseUuidParam } from '@/lib/utils/ids';
 import { ensureAutoJournalForInvoice } from '@/lib/accounting/auto-journal';
 import { syncStockFromSalesInvoice } from '@/lib/inventory/auto-stock';
 
@@ -250,5 +252,115 @@ export async function cancelInvoice(id: string) {
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+}
+
+export async function createInvoiceTask(invoiceId: string) {
+  try {
+    const { tenantId } = await requireTenant();
+    const id = parseUuidParam(invoiceId);
+    if (!id) return { success: false as const, error: 'Фактурата не е от този акаунт.' };
+
+    const [invoice] = await db.select({
+      id: invoices.id,
+      invoiceNumber: invoices.invoiceNumber,
+      counterpartyName: invoices.counterpartyName,
+      dueDate: invoices.dueDate,
+    }).from(invoices)
+      .where(and(eq(invoices.id, id), eq(invoices.tenantId, tenantId)))
+      .limit(1);
+    if (!invoice) return { success: false as const, error: 'Фактурата не е от този акаунт.' };
+
+    const [existing] = await db.select({ id: tasks.id }).from(tasks).where(and(
+      eq(tasks.tenantId, tenantId),
+      eq(tasks.invoiceId, invoice.id),
+      eq(tasks.status, 'suggested'),
+    )).limit(1);
+    if (existing) return { success: true as const, id: existing.id, already: true };
+
+    const number = (invoice.invoiceNumber || '').trim() || 'без номер';
+    const due = /^\d{4}-\d{2}-\d{2}$/.test(invoice.dueDate || '') ? invoice.dueDate : null;
+    const [created] = await db.insert(tasks).values({
+      tenantId,
+      invoiceId: invoice.id,
+      title: `Прегледай фактура ${number}`.slice(0, 200),
+      description: invoice.counterpartyName ? `Фактура към ${invoice.counterpartyName}.` : 'Фактура от списъка.',
+      dueDate: due,
+      status: 'suggested',
+      priority: 'medium',
+    }).returning({ id: tasks.id });
+
+    revalidatePath('/', 'layout');
+    return { success: true as const, id: created.id, already: false };
+  } catch (error) {
+    console.error('[create-invoice-task]', error);
+    return { success: false as const, error: 'Задачата не беше записана.' };
+  }
+}
+
+function sameMoney(left: string | null | undefined, right: string | null | undefined) {
+  const a = Number(left || 0);
+  const b = Number(right || 0);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  return Math.round(a * 100) === Math.round(b * 100);
+}
+
+export async function checkInvoiceDuplicate(invoiceId: string) {
+  try {
+    const { tenantId } = await requireTenant();
+    const id = parseUuidParam(invoiceId);
+    if (!id) return { success: false as const, error: 'Фактурата не е от този акаунт.' };
+
+    const [invoice] = await db.select().from(invoices)
+      .where(and(eq(invoices.id, id), eq(invoices.tenantId, tenantId)))
+      .limit(1);
+    if (!invoice) return { success: false as const, error: 'Фактурата не е от този акаунт.' };
+
+    const others = await db.select({
+      id: invoices.id,
+      invoiceNumber: invoices.invoiceNumber,
+      counterpartyName: invoices.counterpartyName,
+      totalAmount: invoices.totalAmount,
+      total: invoices.total,
+      issueDate: invoices.issueDate,
+      status: invoices.status,
+    }).from(invoices).where(and(
+      eq(invoices.tenantId, tenantId),
+      ne(invoices.id, invoice.id),
+    ));
+
+    const number = (invoice.invoiceNumber || '').trim();
+    const name = (invoice.counterpartyName || '').trim().toLowerCase();
+    const total = invoice.totalAmount || invoice.total || '0';
+    const hasAmount = Math.round(Number(total) * 100) !== 0;
+    const date = invoice.issueDate || '';
+
+    const matches = others.filter((row) => {
+      if (row.status === 'cancelled') return false;
+      if (number && (row.invoiceNumber || '').trim() === number) return true;
+      if (!hasAmount || !name || !date) return false;
+      const otherName = (row.counterpartyName || '').trim().toLowerCase();
+      const otherTotal = row.totalAmount || row.total || '0';
+      return otherName === name && (row.issueDate || '') === date && sameMoney(total, otherTotal);
+    }).slice(0, 5);
+
+    const aiStatus = matches.length > 0
+      ? 'duplicate_suspected'
+      : (invoice.aiStatus === 'duplicate_suspected' ? null : invoice.aiStatus);
+
+    if (aiStatus !== invoice.aiStatus) {
+      await db.update(invoices)
+        .set({ aiStatus })
+        .where(and(eq(invoices.id, invoice.id), eq(invoices.tenantId, tenantId)));
+    }
+
+    return {
+      success: true as const,
+      aiStatus,
+      matches: matches.map((row) => ({ id: row.id, invoiceNumber: row.invoiceNumber })),
+    };
+  } catch (error) {
+    console.error('[check-invoice-duplicate]', error);
+    return { success: false as const, error: 'Проверката не мина.' };
   }
 }
