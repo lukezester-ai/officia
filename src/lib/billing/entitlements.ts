@@ -5,6 +5,7 @@ import { db } from '@/lib/db/db';
 import { employees } from '@/lib/db/schema/employees';
 import { tenantInvites } from '@/lib/db/schema/tenant_invites';
 import { users } from '@/lib/db/schema/users';
+import { hasAdminSession } from '@/lib/auth/admin-session';
 import { requireTenant } from '@/lib/auth/get-tenant';
 import {
   daysLeft,
@@ -72,6 +73,33 @@ export const getEntitlement = cache(async () => {
     db.select({ id: employees.id }).from(employees).where(and(eq(employees.tenantId, tenantId), eq(employees.isActive, true))).then((rows) => rows.length),
   ]);
 
+  const usage = {
+    users: userCount + inviteCount,
+    invoicesThisMonth: invoiceCount,
+    employees: employeeCount,
+  };
+  let admin = false;
+  try {
+    admin = await hasAdminSession();
+  } catch {
+    admin = false;
+  }
+
+  if (admin) {
+    return {
+      tenantId,
+      plan,
+      subscriptionStatus,
+      trialEndsAt,
+      active: true,
+      daysLeft: plan === 'starter' ? daysLeft(trialEndsAt, now) : null,
+      limits: { users: null, invoicesPerMonth: null, employees: null },
+      modules: { payroll: true, hr: true, ai: true, vatZip: true },
+      usage,
+      admin: true as const,
+    };
+  }
+
   return {
     tenantId,
     plan,
@@ -81,11 +109,8 @@ export const getEntitlement = cache(async () => {
     daysLeft: plan === 'starter' ? daysLeft(trialEndsAt, now) : null,
     limits: rules.limits,
     modules: rules.modules,
-    usage: {
-      users: userCount + inviteCount,
-      invoicesThisMonth: invoiceCount,
-      employees: employeeCount,
-    },
+    usage,
+    admin: false as const,
   };
 });
 

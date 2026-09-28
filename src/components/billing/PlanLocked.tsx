@@ -1,14 +1,25 @@
 import Link from 'next/link';
 
-export function PlanLocked({ module }: { module: string }) {
+export function PlanLocked({
+  module,
+  planName,
+  monthlyPrice,
+  annualPrice,
+}: {
+  module: string;
+  planName: string;
+  monthlyPrice: string;
+  annualPrice: string;
+}) {
   return (
     <div className="max-w-lg rounded-2xl border border-white/10 bg-white/5 p-8">
       <h1 className="text-2xl font-bold text-white">{module}</h1>
       <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-        Този модул не е включен в плана Стартер. ТРЗ, кадрите и ZIP файлът за ДДС се отключват с Бизнес. AI асистентът се отключва с Про.
+        Страницата не се отваря, защото не е включена в текущия план. След заплащане на сумата по избрания договор тя може да се разглежда и редактира.
+        Договорът <span className="text-zinc-200">{planName}</span> е {monthlyPrice} на месец, или {annualPrice} на месец при плащане за година.
       </p>
       <Link href="/bg#pricing" className="mt-6 inline-flex rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
-        Виж плановете
+        Избери договор и плати
       </Link>
     </div>
   );

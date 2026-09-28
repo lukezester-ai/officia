@@ -44,6 +44,7 @@ export default async function DashboardLayout({
             <SearchTrigger />
           </div>
           <div className="flex items-center gap-3">
+            {access?.admin ? <span className="text-xs font-medium text-violet-300">Администратор</span> : null}
             <UserButton />
           </div>
         </header>
