@@ -28,8 +28,8 @@ const capabilities = [
   },
 ];
 
-export default function OfficiaSocialProof({ lang }: { lang: string }) {
-  const signUpHref = `/sign-up?redirect_url=${encodeURIComponent(`/${lang}/dashboard`)}`;
+export default function OfficiaSocialProof() {
+  const signUpHref = '/sign-up';
   const prefersReduced = useReducedMotion();
 
   return (

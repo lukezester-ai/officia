@@ -19,16 +19,15 @@ const benefits = [
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
-  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
+  const signUpHref = '/sign-up';
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <OfficiaHero lang={lang} />
 
-      <OfficiaFeatures lang={lang} />
+      <OfficiaFeatures />
 
-      <OfficiaSocialProof lang={lang} />
+      <OfficiaSocialProof />
 
       <section className="py-24 px-6 bg-white/2 border-y border-white/5">
         <div className="max-w-5xl mx-auto">

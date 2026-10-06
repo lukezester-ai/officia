@@ -122,8 +122,7 @@ export default function PricingSection() {
         }),
       });
       if (res.status === 401) {
-        const redirect = encodeURIComponent('/bg#pricing');
-        window.location.href = `/sign-in?redirect_url=${redirect}`;
+        window.location.href = '/sign-in';
         return;
       }
       const data = await res.json().catch(() => ({}));

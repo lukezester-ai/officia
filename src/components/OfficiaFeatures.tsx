@@ -797,9 +797,8 @@ const featureCards: FeatureCardData[] = [
   },
 ];
 
-export default function OfficiaFeatures({ lang }: { lang: string }) {
-  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
-  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
+export default function OfficiaFeatures() {
+  const signUpHref = '/sign-up';
 
   return (
     <section id="features" className="overflow-hidden bg-[#09090f] px-4 py-24 selection:bg-purple-500 selection:text-white md:px-8">

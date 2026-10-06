@@ -96,9 +96,8 @@ function MetricsStrip({ skipAnimations }: { skipAnimations: boolean }) {
 }
 
 export default function OfficiaHero({ lang }: { lang: string }) {
-  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
-  const signInHref = `/sign-in?redirect_url=${authRedirect}`;
-  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
+  const signInHref = '/sign-in';
+  const signUpHref = '/sign-up';
   const shouldReduceMotion = useReducedMotion();
   const skip = shouldReduceMotion ?? false;
 
@@ -134,7 +133,7 @@ export default function OfficiaHero({ lang }: { lang: string }) {
             <Link href={signInHref} className="text-sm font-medium text-gray-400 transition-colors hover:text-[#a78bfa]">Вход</Link>
             <Link href={signUpHref} className="rounded-lg bg-gradient-to-b from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-700/30 transition-transform hover:scale-[1.02] active:scale-[0.98]">Започни безплатно</Link>
           </div>
-          <MobileMenu lang={lang} />
+          <MobileMenu />
         </div>
       </nav>
 

@@ -3,11 +3,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 
-export default function MobileMenu({ lang }: { lang: string }) {
+export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const authRedirect = encodeURIComponent(`/${lang}/dashboard`);
-  const signInHref = `/sign-in?redirect_url=${authRedirect}`;
-  const signUpHref = `/sign-up?redirect_url=${authRedirect}`;
+  const signInHref = '/sign-in';
+  const signUpHref = '/sign-up';
 
   return (
     <div className="md:hidden">
