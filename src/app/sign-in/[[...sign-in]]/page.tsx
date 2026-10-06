@@ -1,5 +1,6 @@
 import { SignIn } from '@clerk/nextjs';
 import { AuthScreen } from '@/components/auth/auth-screen';
+import { AuthWidget } from '@/components/auth/auth-widget';
 
 const afterAuth = '/bg/dashboard';
 
@@ -15,7 +16,9 @@ export default function Page() {
   return (
     <AuthScreen>
       <h1 className="text-xl font-semibold text-white">Вход в Officia</h1>
-      <SignIn fallbackRedirectUrl={afterAuth} forceRedirectUrl={afterAuth} signUpUrl="/sign-up" />
+      <AuthWidget>
+        <SignIn fallbackRedirectUrl={afterAuth} forceRedirectUrl={afterAuth} signUpUrl="/sign-up" />
+      </AuthWidget>
     </AuthScreen>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { DocumentLink } from '@/components/auth/document-link';
 import { CheckCircle, Zap, Building2, Sparkles, Scale } from 'lucide-react';
 
 function formatPrice(n: number): string {
@@ -212,9 +212,9 @@ export default function PricingSection() {
                 </div>
 
                 {plan.isFree ? (
-                  <Link href="/sign-up" className={plan.ctaStyle}>
+                  <DocumentLink href="/sign-up" className={plan.ctaStyle}>
                     {plan.cta}
-                  </Link>
+                  </DocumentLink>
                 ) : (
                   <button
                     type="button"

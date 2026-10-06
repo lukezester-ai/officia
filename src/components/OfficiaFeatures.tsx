@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { DocumentLink } from "@/components/auth/document-link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -869,21 +870,28 @@ export default function OfficiaFeatures() {
 function CTAButton({ href, variant, label }: { href: string; variant: "primary" | "secondary"; label: string }) {
   const [hovered, setHovered] = React.useState(false);
 
-  return (
-    <Link
-      href={href}
-      prefetch={false}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors"
-      style={{
-        background: variant === "primary" ? (hovered ? "#8b5cf6" : "#7c3aed") : hovered ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
-        border: variant === "secondary" ? "1px solid rgba(255,255,255,0.1)" : "none",
-        boxShadow: variant === "primary" ? "0 8px 28px rgba(124,58,237,0.3)" : "none",
-      }}
-    >
+  const className = "flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors";
+  const style = {
+    background: variant === "primary" ? (hovered ? "#8b5cf6" : "#7c3aed") : hovered ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+    border: variant === "secondary" ? "1px solid rgba(255,255,255,0.1)" : "none",
+    boxShadow: variant === "primary" ? "0 8px 28px rgba(124,58,237,0.3)" : "none",
+  };
+  const content = (
+    <>
       {label}
       <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out" style={{ transform: hovered ? "translateX(3px)" : "translateX(0)" }} />
+    </>
+  );
+  if (href === "/sign-in" || href === "/sign-up") {
+    return (
+      <DocumentLink href={href} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} className={className} style={style}>
+        {content}
+      </DocumentLink>
+    );
+  }
+  return (
+    <Link href={href} prefetch={false} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} className={className} style={style}>
+      {content}
     </Link>
   );
 }

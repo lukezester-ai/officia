@@ -26,7 +26,11 @@ const isPublicApi = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
-  if (isAuthRoute(req)) {
+  if (pathname === '/' || pathname === '/login') {
+    return;
+  }
+
+  if (isAuthRoute(req) || pathname.startsWith('/admin')) {
     return;
   }
 
@@ -59,15 +63,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    '/bg/dashboard',
-    '/bg/dashboard/:path*',
-    '/dashboard',
-    '/dashboard/:path*',
-    '/bg/practice/:path*',
-    '/bg/mobile/:path*',
-    '/sign-in(.*)',
-    '/sign-up(.*)',
-    '/register',
-    '/api/:path*',
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
   ],
 };

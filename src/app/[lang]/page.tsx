@@ -5,6 +5,7 @@ import OfficiaSocialProof from '@/components/OfficiaSocialProof';
 import PricingSection from './PricingSection';
 import OfficiaFeatures from '@/components/OfficiaFeatures';
 import { AppLogoLink } from '@/components/brand/app-logo-link';
+import { DocumentLink } from '@/components/auth/document-link';
 
 const benefits = [
   'Счетоводство и журнални записи',
@@ -69,9 +70,9 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Готов да водиш счетоводството на едно място?</h2>
           <p className="text-zinc-400 mb-8">Регистрация без карта за 14 дни. После достъпът спира, докато не се плати план.</p>
-          <Link href={signUpHref} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
+          <DocumentLink href={signUpHref} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-indigo-500/25">
             Стартирай безплатно <ArrowRight size={18} />
-          </Link>
+          </DocumentLink>
         </div>
       </section>
 

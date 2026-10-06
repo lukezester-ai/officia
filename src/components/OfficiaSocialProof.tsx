@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
+import { DocumentLink } from '@/components/auth/document-link';
 import { ArrowRight, CheckCircle, FileText, Landmark, Shield, Sparkles } from 'lucide-react';
 
 const capabilities = [
@@ -75,13 +75,13 @@ export default function OfficiaSocialProof() {
         </div>
 
         <div className="text-center">
-          <Link
+          <DocumentLink
             href={signUpHref}
             className="group mb-4 inline-flex items-center gap-3 rounded-full bg-[#7c3aed] px-10 py-4 font-bold text-white shadow-[0_12px_40px_rgba(124,58,237,0.25)] transition-all hover:bg-[#6d28d9] hover:scale-[1.02]"
           >
             <span>Започни безплатно</span>
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-          </Link>
+          </DocumentLink>
           <p className="flex items-center justify-center gap-2 text-sm text-slate-500">
             <CheckCircle className="h-4 w-4 text-emerald-500" />
             <span>14 дни без карта. Стартерът е до 50 фактури на месец и 1 потребител.</span>

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import { DocumentLink } from '@/components/auth/document-link';
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,10 +24,10 @@ export default function MobileMenu() {
           <a href="#pricing" onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Цени</a>
           <a href="#social-proof" onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Възможности</a>
           <div className="h-px bg-white/10 my-1" />
-          <Link href={signInHref} onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Вход</Link>
-          <Link href={signUpHref} onClick={() => setIsOpen(false)} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition-all px-4 py-3 rounded-xl font-semibold text-center text-base mt-2 shadow-lg shadow-violet-600/30">
+          <DocumentLink href={signInHref} onClick={() => setIsOpen(false)} className="text-zinc-300 hover:text-white transition-colors py-2 text-base font-medium">Вход</DocumentLink>
+          <DocumentLink href={signUpHref} onClick={() => setIsOpen(false)} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white transition-all px-4 py-3 rounded-xl font-semibold text-center text-base mt-2 shadow-lg shadow-violet-600/30">
             Започни безплатно
-          </Link>
+          </DocumentLink>
         </div>
       )}
     </div>
