@@ -19,13 +19,8 @@ export default async function Page() {
 
   return (
     <AuthScreen>
-      <SignIn
-        routing="path"
-        path="/sign-in"
-        fallbackRedirectUrl={afterAuth}
-        forceRedirectUrl={afterAuth}
-        signUpUrl="/sign-up"
-      />
+      <h1 className="text-xl font-semibold text-white">Вход в Officia</h1>
+      <SignIn fallbackRedirectUrl={afterAuth} forceRedirectUrl={afterAuth} signUpUrl="/sign-up" />
     </AuthScreen>
   );
 }

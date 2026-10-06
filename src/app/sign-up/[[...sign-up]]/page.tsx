@@ -19,13 +19,11 @@ export default async function Page() {
 
   return (
     <AuthScreen>
-      <SignUp
-        routing="path"
-        path="/sign-up"
-        fallbackRedirectUrl={afterAuth}
-        forceRedirectUrl={afterAuth}
-        signInUrl="/sign-in"
-      />
+      <div className="mb-2 text-center">
+        <h1 className="text-xl font-semibold text-white">Създай безплатен акаунт</h1>
+        <p className="mt-1 text-sm text-zinc-300">14 дни без карта. След това достъпът спира, докато не се избере план.</p>
+      </div>
+      <SignUp fallbackRedirectUrl={afterAuth} forceRedirectUrl={afterAuth} signInUrl="/sign-in" />
     </AuthScreen>
   );
 }

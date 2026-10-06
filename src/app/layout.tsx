@@ -40,7 +40,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = "bg";
   const messages = bgMessages;
-  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
   const tree = (
     <html lang={locale} className="dark" suppressHydrationWarning>
       <body className={`${firaSans.variable} ${firaCode.variable} font-sans antialiased bg-background text-foreground transition-colors duration-200 relative min-h-screen`}>
@@ -55,5 +55,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return tree;
   }
 
-  return <ClerkProvider appearance={{ theme: dark }} publishableKey={clerkPublishableKey}>{tree}</ClerkProvider>;
+  return (
+    <ClerkProvider
+      appearance={{ theme: dark }}
+      publishableKey={clerkPublishableKey}
+      signInFallbackRedirectUrl="/bg/dashboard"
+      signUpFallbackRedirectUrl="/bg/dashboard"
+    >
+      {tree}
+    </ClerkProvider>
+  );
 }

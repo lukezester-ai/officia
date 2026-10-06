@@ -27,7 +27,7 @@ export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
   if (isAuthRoute(req)) {
-    return NextResponse.next();
+    return;
   }
 
   if (pathname.startsWith('/api')) {

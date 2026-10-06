@@ -3,6 +3,11 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin();
 
+for (const key of ['NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'CLERK_SECRET_KEY'] as const) {
+  const value = process.env[key];
+  if (value) process.env[key] = value.trim();
+}
+
 const nextConfig: NextConfig = {
   // Render currently runs `npx next build` (Turbopack). Cap static workers so
   // "Collecting page data" does not open dozens of Postgres pools and hang.
