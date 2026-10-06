@@ -17,7 +17,7 @@ export async function provisionClerkUser(clerkId: string) {
   const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ').trim() || normalizedEmail;
   const [invite] = await db.select().from(tenantInvites).where(eq(tenantInvites.email, normalizedEmail)).limit(1);
 
-  let tenantId = invite?.tenantId ?? null;
+  let tenantId: string | null = invite?.tenantId ?? null;
   if (invite && tenantId) {
     const seats = await db.select({ id: users.id }).from(users).where(eq(users.tenantId, tenantId));
     const pending = await db.select({ id: tenantInvites.id }).from(tenantInvites).where(eq(tenantInvites.tenantId, tenantId));
