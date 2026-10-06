@@ -1,13 +1,31 @@
-import { SignIn } from "@clerk/nextjs";
+import { SignIn } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+import { AuthScreen } from '@/components/auth/auth-screen';
 
-export default function Page() {
+const afterAuth = '/bg/dashboard';
+
+export default async function Page() {
+  const { userId } = await auth();
+  if (userId) redirect(afterAuth);
+
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return null;
+    return (
+      <AuthScreen>
+        <p className="text-sm text-zinc-200">Входът не е настроен на този сървър.</p>
+      </AuthScreen>
+    );
   }
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#0F1F3D]">
-      <SignIn />
-    </div>
+    <AuthScreen>
+      <SignIn
+        routing="path"
+        path="/sign-in"
+        fallbackRedirectUrl={afterAuth}
+        forceRedirectUrl={afterAuth}
+        signUpUrl="/sign-up"
+      />
+    </AuthScreen>
   );
 }

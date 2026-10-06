@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import { cache } from 'react';
 import { bindRequestRlsContext, rlsAls, setRlsGucs } from '@/lib/db/rls-session';
 import { assertApplicationDbRole } from '@/lib/db/assert-app-role';
+import { provisionClerkUser } from '@/lib/auth/provision-user';
 
 /**
  * Clerk → reserved DB session → membership → tenant RLS GUCs.
@@ -43,7 +44,16 @@ export const requireTenant = cache(async () => {
     }
 
     if (!userRow) {
-      throw new Error(`Потребителят не е намерен (clerk_id=${userId})`);
+      await provisionClerkUser(userId);
+      const created: any = await db.execute(
+        sql`SELECT id, tenant_id, is_active FROM users WHERE clerk_id = ${userId} LIMIT 1`
+      );
+      const createdRow = Array.isArray(created) ? created[0] : created?.rows?.[0];
+      if (!createdRow) {
+        throw new Error(`Потребителят не е намерен (clerk_id=${userId})`);
+      }
+      tenantId = createdRow.tenant_id ?? createdRow.tenantId ?? null;
+      userRow = createdRow;
     }
 
     const isActive = userRow.is_active ?? userRow.isActive;
