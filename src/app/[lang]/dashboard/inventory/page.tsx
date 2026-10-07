@@ -87,9 +87,15 @@ export default function InventoryPage() {
   const [newItemOpen, setNewItemOpen] = useState(false);
 
   const load = async () => {
-    const res = await getInventoryData();
-    if (res.success && res.data) setData(res.data);
-    setLoading(false);
+    try {
+      const res = await getInventoryData();
+      if (res.success && res.data) setData(res.data);
+      else toast.error(('error' in res && res.error) || 'Складът не се зареди');
+    } catch {
+      toast.error('Складът не се зареди');
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 

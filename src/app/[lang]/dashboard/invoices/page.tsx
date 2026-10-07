@@ -18,14 +18,20 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const res = await getInvoices();
-    if (res.success) {
-      setInvoices(res.data);
-    } else {
+    try {
+      const res = await getInvoices();
+      if (res.success) {
+        setInvoices(res.data);
+        return res.data;
+      }
       toast.error(res.error || 'Фактурите не се заредиха');
+      return [];
+    } catch {
+      toast.error('Фактурите не се заредиха');
+      return [];
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    return res.success ? res.data : [];
   };
 
   useEffect(() => { load(); }, []);

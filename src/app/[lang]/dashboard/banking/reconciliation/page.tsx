@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { getTransactionsForReview, acceptMatch, rejectMatch, getAICandidates, manualMatch } from '../actions';
 import { ArrowLeft, CheckCircle, XCircle, Search, Link as LinkIcon, DollarSign, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface Transaction {
@@ -37,6 +38,8 @@ function fmt(n: number) {
 }
 
 export default function ReconciliationPage() {
+  const params = useParams<{ lang: string }>();
+  const lang = params?.lang || 'bg';
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -70,9 +73,15 @@ export default function ReconciliationPage() {
 
   const load = async () => {
     setLoading(true);
-    const res = await getTransactionsForReview();
-    if (res.success) setTransactions(res.data as Transaction[]);
-    setLoading(false);
+    try {
+      const res = await getTransactionsForReview();
+      if (res.success) setTransactions(res.data as Transaction[]);
+      else toast.error(('error' in res && res.error) || 'Движенията за преглед не се заредиха');
+    } catch {
+      toast.error('Движенията за преглед не се заредиха');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -105,7 +114,7 @@ export default function ReconciliationPage() {
     <div className="space-y-8 pb-10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/banking">
+          <Link href={`/${lang}/dashboard/banking`}>
             <Button variant="outline" size="icon" className="h-9 w-9 bg-white/5 border-white/10 text-zinc-300 hover:text-white hover:bg-white/10">
               <ArrowLeft size={16} />
             </Button>

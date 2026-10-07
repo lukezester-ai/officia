@@ -19,9 +19,15 @@ export default function CounterpartiesPage() {
 
   const load = async () => {
     setLoading(true);
-    const res = await getCounterparties();
-    if (res.success) setAll((res as any).data || []);
-    setLoading(false);
+    try {
+      const res = await getCounterparties();
+      if (res.success) setAll((res as any).data || []);
+      else toast.error(res.error || 'Контрагентите не се заредиха');
+    } catch {
+      toast.error('Контрагентите не се заредиха');
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 

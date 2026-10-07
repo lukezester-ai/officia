@@ -6,41 +6,41 @@ import { ReportEngine } from '@/lib/accounting/report-engine';
 export async function getReportsData(year: number) {
   try {
     const { tenantId } = await requireTenant();
-    
-    // Generate P&L for each month of the year to build the chart
-    const monthlyData = [];
-    for (let month = 1; month <= 12; month++) {
-      const startDate = new Date(Date.UTC(year, month - 1, 1));
-      const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-      
-      const pnl = await ReportEngine.generatePnL(tenantId, startDate, endDate);
-      
-      // Math.abs is used to show positive values for expenses on the chart
-      const rev = Math.abs(Number(pnl.revenue.total) || 0);
-      const exp = Math.abs(Number(pnl.expenses.total) || 0);
-      
-      monthlyData.push({
-        name: startDate.toLocaleString('bg-BG', { month: 'short' }),
-        Приходи: rev,
-        Разходи: exp,
-        Печалба: rev - exp,
-      });
+    const rows = await ReportEngine.monthlyTypeTotals(tenantId, year);
+
+    const monthlyData = Array.from({ length: 12 }, (_, index) => ({
+      name: new Date(Date.UTC(year, index, 1)).toLocaleString('bg-BG', { month: 'short' }),
+      Приходи: 0,
+      Разходи: 0,
+      Печалба: 0,
+    }));
+    let revenueTotal = 0;
+    let expenseTotal = 0;
+    for (const row of rows) {
+      const month = Number(row.month);
+      if (month < 1 || month > 12) continue;
+      const total = Number(row.total) || 0;
+      const slot = monthlyData[month - 1];
+      if (row.type === 'revenue') {
+        slot.Приходи = Math.abs(total);
+        revenueTotal += total;
+      } else if (row.type === 'expense') {
+        slot.Разходи = Math.abs(total);
+        expenseTotal += total;
+      }
     }
+    for (const slot of monthlyData) slot.Печалба = slot.Приходи - slot.Разходи;
 
-    // Generate year-to-date PnL
-    const ytdStart = new Date(Date.UTC(year, 0, 1));
-    const ytdEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
-    const ytdPnL = await ReportEngine.generatePnL(tenantId, ytdStart, ytdEnd);
-
-    // Generate current Balance Sheet
-    const balanceSheet = await ReportEngine.generateBalanceSheet(tenantId, new Date());
+    const ytdPnL = {
+      revenue: { total: revenueTotal },
+      expenses: { total: expenseTotal },
+    };
 
     return {
       success: true,
       data: {
         monthlyData,
         ytdPnL,
-        balanceSheet,
       }
     };
   } catch (error: any) {

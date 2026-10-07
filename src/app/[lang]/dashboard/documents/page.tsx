@@ -14,6 +14,12 @@ export default async function DocumentsPage() {
         </div>
       </div>
 
+      {!res.success ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Архивът не се зареди. Презареди страницата.
+        </div>
+      ) : null}
+
       <DocumentsClient initialDocuments={documents} />
     </div>
   );

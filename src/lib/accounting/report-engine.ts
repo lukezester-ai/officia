@@ -82,6 +82,27 @@ export class ReportEngine {
       .groupBy(journalLines.accountId, accountPlan.accountNumber, accountPlan.name, accountPlan.type);
   }
 
+  static async monthlyTypeTotals(tenantId: string, year: number) {
+    const start = new Date(Date.UTC(year, 0, 1));
+    const end = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+    return db
+      .select({
+        month: sql<number>`EXTRACT(MONTH FROM ${journalHeaders.entryDate})::int`,
+        type: accountPlan.type,
+        total: sql<number>`SUM(CASE WHEN ${journalLines.entryType}::text = 'debit' THEN ${journalLines.amount} ELSE -${journalLines.amount} END)`,
+      })
+      .from(journalLines)
+      .innerJoin(journalHeaders, eq(journalLines.journalId, journalHeaders.id))
+      .innerJoin(accountPlan, eq(journalLines.accountId, accountPlan.id))
+      .where(and(
+        eq(journalHeaders.tenantId, tenantId),
+        sql`${accountPlan.type} in ('revenue', 'expense')`,
+        gte(journalHeaders.entryDate, start),
+        lte(journalHeaders.entryDate, end),
+      ))
+      .groupBy(sql`EXTRACT(MONTH FROM ${journalHeaders.entryDate})::int`, accountPlan.type);
+  }
+
   private static async sumByAccountType(tenantId: string, type: string, start: Date, end: Date) {
     const result = await db
       .select({ 

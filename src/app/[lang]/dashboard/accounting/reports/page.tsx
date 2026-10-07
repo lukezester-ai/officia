@@ -8,6 +8,7 @@ import { Download, FileSpreadsheet, TrendingUp, TrendingDown, Scale, Wallet, Arr
 import { getReportsData } from './actions';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -17,6 +18,7 @@ const BG_MONTHS = ['Яну', 'Фев', 'Мар', 'Апр', 'Май', 'Юни', '
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [data, setData]       = useState<any>(null);
   const [year, setYear]       = useState(new Date().getFullYear());
   const params = useParams();
@@ -25,9 +27,22 @@ export default function ReportsPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const res = await getReportsData(year);
-      if (res.success) setData(res.data);
-      setLoading(false);
+      setLoadError('');
+      try {
+        const res = await getReportsData(year);
+        if (res.success) setData(res.data);
+        else {
+          setData(null);
+          setLoadError(res.error || 'Отчетът не се зареди');
+          toast.error(res.error || 'Отчетът не се зареди');
+        }
+      } catch {
+        setData(null);
+        setLoadError('Отчетът не се зареди');
+        toast.error('Отчетът не се зареди');
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [year]);
@@ -81,6 +96,12 @@ export default function ReportsPage() {
           </Button>
         </div>
       </div>
+
+      {loadError ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          {loadError}
+        </div>
+      ) : null}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -96,9 +96,15 @@ export default function FixedAssetsPage() {
 
   const load = async () => {
     setLoading(true);
-    const res = await getFixedAssets();
-    if (res.success) setAssets((res as any).data || []);
-    setLoading(false);
+    try {
+      const res = await getFixedAssets();
+      if (res.success) setAssets((res as any).data || []);
+      else toast.error(('error' in res && res.error) || 'Активите не се заредиха');
+    } catch {
+      toast.error('Активите не се заредиха');
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 

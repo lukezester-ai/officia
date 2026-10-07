@@ -20,9 +20,15 @@ export default function PurchaseInvoicesPage() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const res = await getPurchaseInvoices();
-    if (res.success) setInvoices(res.data);
-    setLoading(false);
+    try {
+      const res = await getPurchaseInvoices();
+      if (res.success) setInvoices(res.data);
+      else toast.error(('error' in res && res.error) || 'Покупките не се заредиха');
+    } catch {
+      toast.error('Покупките не се заредиха');
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 

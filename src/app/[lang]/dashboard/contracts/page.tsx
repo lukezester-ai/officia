@@ -35,8 +35,7 @@ export default async function ContractsPage(props: { params: Promise<{ lang: str
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
           Договорите не се заредиха, защото базата не отговори. Презареди страницата.
         </div>
-      ) : null}
-      
+      ) : (
       <Card className="border shadow-sm">
         <CardContent className="p-0">
           {contractsList.length === 0 ? (
@@ -88,6 +87,7 @@ export default async function ContractsPage(props: { params: Promise<{ lang: str
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

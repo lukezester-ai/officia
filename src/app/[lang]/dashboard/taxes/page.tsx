@@ -32,9 +32,15 @@ export default function TaxesPage() {
   }
 
   const load = async () => {
-    const res = await getDeclarations();
-    if (res.success && res.data) setDeclarations(res.data);
-    setLoading(false);
+    try {
+      const res = await getDeclarations();
+      if (res.success && res.data) setDeclarations(res.data);
+      else toast.error(('error' in res && res.error) || 'Данъците не се заредиха');
+    } catch {
+      toast.error('Данъците не се заредиха');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);

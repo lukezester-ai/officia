@@ -88,9 +88,15 @@ function JournalTab({ type, year, month }: { type: 'sales'|'purchases'; year: nu
 
   const load = async () => {
     setLoading(true);
-    const res = await getVatJournals(type === 'sales' ? 'sales' : 'purchases', year, month);
-    if (res.success) setEntries((res as any).data || []);
-    setLoading(false);
+    try {
+      const res = await getVatJournals(type === 'sales' ? 'sales' : 'purchases', year, month);
+      if (res.success) setEntries((res as any).data || []);
+      else toast.error(('error' in res && res.error) || 'ДДС дневникът не се зареди');
+    } catch {
+      toast.error('ДДС дневникът не се зареди');
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, [type, year, month]);
 

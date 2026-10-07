@@ -5,7 +5,7 @@ import { requireTenant } from "@/lib/auth/get-tenant";
 import { db } from "@/lib/db/db";
 import { journalLines, journalHeaders } from "@/lib/db/schema/journal_entries";
 import { accountPlan } from "@/lib/db/schema/account_plan";
-import { eq, and, gte, lte, sql, like, or } from "drizzle-orm";
+import { eq, and, gte, lt, lte, sql, like, or } from "drizzle-orm";
 
 function fmt(n: number) {
   return Math.abs(n).toLocaleString("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -48,7 +48,7 @@ async function getCashFlowData(tenantId: string, start: Date, end: Date) {
     .where(
       and(
         eq(journalHeaders.tenantId, tenantId),
-        lte(journalHeaders.entryDate, start),
+        lt(journalHeaders.entryDate, start),
         or(
           like(accountPlan.accountNumber, "501%"),
           like(accountPlan.accountNumber, "503%"),
@@ -92,7 +92,12 @@ export default async function CashFlowPage({ params }: { params: Promise<{ lang:
   const start = new Date(Date.UTC(year, 0, 1));
   const end   = new Date();
 
-  const data = await getCashFlowData(tenantId, start, end);
+  let data: Awaited<ReturnType<typeof getCashFlowData>>;
+  try {
+    data = await getCashFlowData(tenantId, start, end);
+  } catch (e: any) {
+    return <div className="min-h-screen bg-zinc-950 p-8 text-rose-400">⚠️ {e?.message || 'Паричният поток не се зареди.'}</div>;
+  }
 
   const ACCOUNT_NAMES: Record<string, string> = {
     "501": "Каса", "503": "Разплащателна сметка",

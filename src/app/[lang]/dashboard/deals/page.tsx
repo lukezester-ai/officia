@@ -37,10 +37,15 @@ export default function DealsPage() {
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    const [dealRes, clientRes] = await Promise.all([listDeals(), getCounterparties()]);
-    if (dealRes.success) setDeals(dealRes.data);
-    if (clientRes.success) {
-      setClients((clientRes.data || []).filter((row: Client) => row.isActive !== false && (row.type === 'client' || row.type === 'both')));
+    try {
+      const [dealRes, clientRes] = await Promise.all([listDeals(), getCounterparties()]);
+      if (dealRes.success) setDeals(dealRes.data);
+      else toast.error(dealRes.error || 'Сделките не се заредиха');
+      if (clientRes.success) {
+        setClients((clientRes.data || []).filter((row: Client) => row.isActive !== false && (row.type === 'client' || row.type === 'both')));
+      }
+    } catch {
+      toast.error('Сделките не се заредиха');
     }
   }
 

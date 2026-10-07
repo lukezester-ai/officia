@@ -21,10 +21,17 @@ export default function BankingPage() {
 
   async function loadData() {
     setLoading(true);
-    const [accRes, trxRes] = await Promise.all([getBankAccounts(), getBankTransactions()]);
-    if (accRes.success && accRes.data) setAccounts(accRes.data);
-    if (trxRes.success && trxRes.data) setTransactions(trxRes.data);
-    setLoading(false);
+    try {
+      const [accRes, trxRes] = await Promise.all([getBankAccounts(), getBankTransactions()]);
+      if (accRes.success && accRes.data) setAccounts(accRes.data);
+      else toast.error(('error' in accRes && accRes.error) || 'Сметките не се заредиха');
+      if (trxRes.success && trxRes.data) setTransactions(trxRes.data);
+      else toast.error(('error' in trxRes && trxRes.error) || 'Движенията не се заредиха');
+    } catch {
+      toast.error('Банката не се зареди');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadData(); }, []);
