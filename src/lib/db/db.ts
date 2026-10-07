@@ -29,6 +29,11 @@ function createClient(): SqlClient {
     idle_timeout: 10,
     connect_timeout: 5,
     max_lifetime: 60 * 5,
+    connection: {
+      statement_timeout: 20_000,
+      lock_timeout: 4_000,
+      idle_session_timeout: 20_000,
+    },
   });
 }
 

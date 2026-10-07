@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { getAccountingData } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,10 +14,78 @@ function fmt(n: number) {
   return n.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function accountingFailureMessage(error: string | undefined) {
+  const text = error || '';
+  if (
+    text.includes('не принадлежи')
+    || text.includes('не е намерен')
+    || text.includes('Фирмата не се създаде')
+    || text.includes('няма имейл')
+    || text.includes('Tenant access denied')
+  ) {
+    return 'Няма фирма за този акаунт. Презареди страницата. Ако влизаш за първи път, фирмата се създава при входа.';
+  }
+  return 'Счетоводните данни не се заредиха. Презареди страницата и опитай отново.';
+}
+
+function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export default async function AccountingPage(props: { params: Promise<{ lang: string }> }) {
   const params = await props.params;
-  const res = await getAccountingData();
-  const data = res.data ?? { headers: [], lines: [], accounts: [], pendingInvoices: [] };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Счетоводство</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Регистър на счетоводни движения и AI Асистент.</p>
+        </div>
+        <AccountingActionButtons lang={params.lang} />
+      </div>
+      <Suspense fallback={<p className="text-sm text-zinc-400">Зареждане на записите…</p>}>
+        <AccountingTables lang={params.lang} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function AccountingTables({ lang }: { lang: string }) {
+  let res: Awaited<ReturnType<typeof getAccountingData>>;
+  try {
+    res = await withDeadline(getAccountingData(), 12_000);
+  } catch (error) {
+    console.error('[accounting]', error);
+    res = { success: false, error: error instanceof Error ? error.message : 'timeout' };
+  }
+
+  if (!res.success || !res.data) {
+    return (
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
+        <p>{accountingFailureMessage('error' in res && typeof res.error === 'string' ? res.error : undefined)}</p>
+        <a
+          href={`/${lang}/dashboard/accounting`}
+          className="mt-3 inline-flex cursor-pointer rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-900"
+        >
+          Презареди
+        </a>
+      </div>
+    );
+  }
+
+  const data = res.data;
   const accounts = data.accounts ?? [];
   const accountById = new Map(accounts.map((account) => [account.id, account]));
 
@@ -38,15 +106,6 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Счетоводство</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Регистър на счетоводни движения и AI Асистент.</p>
-        </div>
-        <AccountingActionButtons lang={params.lang} />
-      </div>
-
       <Tabs defaultValue="pending" className="w-full">
         <TabsList className="grid w-full grid-cols-4 h-12 items-center bg-slate-100 dark:bg-slate-900 rounded-xl p-1 mb-6">
           <TabsTrigger value="all" className="rounded-lg h-9 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Всички записи</TabsTrigger>
@@ -266,6 +325,5 @@ export default async function AccountingPage(props: { params: Promise<{ lang: st
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
   );
 }

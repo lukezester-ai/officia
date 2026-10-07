@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { AlertCircle, ArrowRight, Clock, FileText, Inbox, Landmark, ShoppingCart, TrendingUp, Wallet } from '@/components/icons';
 import { getDashboardData } from './actions';
@@ -15,8 +16,28 @@ function todayLabel() {
   }).format(new Date());
 }
 
+function DashboardPending() {
+  return (
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c14] px-6 py-7 sm:px-8">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a78bfa]">Officia</p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">Днес, {todayLabel()}</h1>
+        <p className="mt-3 max-w-2xl text-base text-zinc-300">Зареждане на фирмените данни…</p>
+      </section>
+    </div>
+  );
+}
+
 export default async function DashboardPage({ params }: { params?: Promise<{ lang: string }> }) {
   const { lang = 'bg' } = (await params) || {};
+  return (
+    <Suspense fallback={<DashboardPending />}>
+      <DashboardReady lang={lang} />
+    </Suspense>
+  );
+}
+
+async function DashboardReady({ lang }: { lang: string }) {
   let loadError: string | null = null;
   const data = await Promise.race([
     getDashboardData(),

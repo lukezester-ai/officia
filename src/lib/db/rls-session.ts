@@ -17,20 +17,37 @@ const globalForRls = globalThis as unknown as {
   officiaRoleBypassesRls?: boolean;
 };
 
+function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 async function currentRoleBypassesRls(client: SqlClient): Promise<boolean> {
   if (typeof globalForRls.officiaRoleBypassesRls === 'boolean') {
     return globalForRls.officiaRoleBypassesRls;
   }
-  const [role] = await client`
+  const roleRows = await withDeadline((async () => await client`
     SELECT r.rolsuper, r.rolbypassrls
     FROM pg_roles r
     WHERE r.rolname = current_user
-  `;
+  `)(), 8_000);
+  const [role] = roleRows;
   if (role?.rolsuper || role?.rolbypassrls) {
     globalForRls.officiaRoleBypassesRls = true;
     return true;
   }
-  const owned = await client`
+  const owned = await withDeadline((async () => await client`
     SELECT 1 AS ok
     FROM pg_class c
     JOIN pg_roles r ON r.oid = c.relowner
@@ -39,7 +56,7 @@ async function currentRoleBypassesRls(client: SqlClient): Promise<boolean> {
       AND c.relkind = 'r'
       AND r.rolname = current_user
     LIMIT 1
-  `;
+  `)(), 8_000);
   globalForRls.officiaRoleBypassesRls = owned.length > 0;
   return globalForRls.officiaRoleBypassesRls;
 }
@@ -78,12 +95,22 @@ export async function ensureRequestConnection(client: SqlClient): Promise<RlsSto
     throw new Error('Postgres client cannot reserve a session');
   }
 
-  const reserved = await Promise.race([
-    client.reserve(),
-    new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('RLS session timed out')), 8_000);
-    }),
-  ]);
+  const pending = client.reserve();
+  let reserved: Reserved;
+  try {
+    reserved = await withDeadline(pending, 8_000);
+  } catch (error) {
+    void pending.then((late) => {
+      try {
+        late.release();
+      } catch {
+        // The late reservation may already be closed.
+      }
+    }).catch(() => {});
+    throw error instanceof Error && error.message === 'timeout'
+      ? new Error('RLS session timed out')
+      : error;
+  }
   const scopedDb = drizzle(reserved, { schema });
   const store: RlsStore = { db: scopedDb, reserved };
   rlsAls.enterWith(store);

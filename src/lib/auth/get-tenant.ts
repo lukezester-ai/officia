@@ -6,10 +6,26 @@ import { bindRequestRlsContext, rlsAls, setRlsGucs } from '@/lib/db/rls-session'
 import { assertApplicationDbRole } from '@/lib/db/assert-app-role';
 import { provisionClerkUser } from '@/lib/auth/provision-user';
 
+function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 /**
  * Clerk → reserved DB session → membership → tenant RLS GUCs.
  */
-export const requireTenant = cache(async () => {
+async function resolveTenant() {
   const { userId } = await auth();
 
   if (!userId) {
@@ -92,4 +108,13 @@ export const requireTenant = cache(async () => {
 
     return { tenantId, tenant, userId, user: userRow, role };
   });
-});
+}
+
+export const requireTenant = cache(() =>
+  withDeadline(resolveTenant(), 12_000).catch((error: unknown) => {
+    if (error instanceof Error && (error.message === 'timeout' || error.message === 'RLS session timed out')) {
+      throw new Error('Връзката с базата не отговори навреме.');
+    }
+    throw error;
+  }),
+);
