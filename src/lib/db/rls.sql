@@ -180,6 +180,19 @@ CREATE POLICY tenants_tenant_scope ON tenants
   USING (id = current_tenant_id() AND current_membership_active())
   WITH CHECK (id = current_tenant_id() AND current_membership_active());
 
+-- First Google sign-up has a Clerk id and no tenant GUC yet. The membership
+-- policy above cannot insert that first company (it requires a user row).
+DROP POLICY IF EXISTS tenants_bootstrap_insert ON tenants;
+CREATE POLICY tenants_bootstrap_insert ON tenants
+  FOR INSERT
+  WITH CHECK (
+    current_clerk_id() IS NOT NULL
+    AND current_tenant_id() IS NULL
+    AND NOT EXISTS (
+      SELECT 1 FROM users WHERE users.clerk_id = current_clerk_id()
+    )
+  );
+
 -- users: Clerk bootstrap by clerk_id, otherwise own active membership row.
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS users_tenant_scope ON users;

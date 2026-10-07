@@ -44,7 +44,11 @@ export const requireTenant = cache(async () => {
     }
 
     if (!userRow) {
-      await provisionClerkUser(userId);
+      try {
+        await provisionClerkUser(userId);
+      } catch (error) {
+        console.error('[provision]', error);
+      }
       const created: any = await db.execute(
         sql`SELECT id, tenant_id, is_active FROM users WHERE clerk_id = ${userId} LIMIT 1`
       );

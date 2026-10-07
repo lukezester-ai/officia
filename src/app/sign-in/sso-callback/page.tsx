@@ -4,7 +4,7 @@ import { FinishAuthRedirect } from '@/components/auth/finish-auth-redirect';
 export default function SignInCallbackPage() {
   return (
     <AuthScreen>
-      <FinishAuthRedirect message="Влизането с Google завършва. Таблото се отваря след малко." />
+      <FinishAuthRedirect message="Влизането с Google завърши. Отваряме таблото." />
     </AuthScreen>
   );
 }

@@ -4,9 +4,47 @@ import { isPlanId, rulesFor, trialEndsFrom } from '@/lib/billing/plan-rules';
 import { db } from '@/lib/db/db';
 import { tenantInvites, tenants, users } from '@/lib/db/schema';
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+async function syncTenantMetadata(clerkId: string, tenantId: string) {
+  try {
+    const client = await clerkClient();
+    await withTimeout(
+      client.users.updateUser(clerkId, { publicMetadata: { tenantId } }),
+      8_000,
+    );
+  } catch (error) {
+    console.error('[provision] metadata', error);
+  }
+}
+
 export async function provisionClerkUser(clerkId: string) {
+  const [existing] = await db
+    .select({ tenantId: users.tenantId })
+    .from(users)
+    .where(eq(users.clerkId, clerkId))
+    .limit(1);
+  if (existing?.tenantId) {
+    await syncTenantMetadata(clerkId, existing.tenantId);
+    return;
+  }
+
   const client = await clerkClient();
-  const clerkUser = await client.users.getUser(clerkId);
+  const clerkUser = await withTimeout(client.users.getUser(clerkId), 8_000);
   const email = clerkUser.emailAddresses.find((item) => item.id === clerkUser.primaryEmailAddressId)?.emailAddress
     ?? clerkUser.emailAddresses[0]?.emailAddress;
   if (!email) {
@@ -51,9 +89,16 @@ export async function provisionClerkUser(clerkId: string) {
     email,
     name,
     tenantId,
-  });
+  }).onConflictDoNothing({ target: users.clerkId });
 
-  await client.users.updateUser(clerkId, {
-    publicMetadata: { tenantId },
-  });
+  const [row] = await db
+    .select({ tenantId: users.tenantId })
+    .from(users)
+    .where(eq(users.clerkId, clerkId))
+    .limit(1);
+  if (!row?.tenantId) {
+    throw new Error('Фирмата не се създаде след входа с Google.');
+  }
+
+  await syncTenantMetadata(clerkId, row.tenantId);
 }
