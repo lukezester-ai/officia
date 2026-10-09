@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth, useClerk } from '@clerk/nextjs';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 const dashboardPath = '/bg/dashboard';
@@ -98,9 +99,9 @@ export function FinishAuthRedirect({ message }: { message: string }) {
         {problem ? 'Входът с Google не завърши. Върни се и опитай отново.' : message}
       </p>
       {problem ? (
-        <a href="/sign-in" className="text-sm font-semibold text-white underline underline-offset-4">
+        <Link href="/sign-in" className="text-sm font-semibold text-white underline underline-offset-4">
           Към входа
-        </a>
+        </Link>
       ) : isSignedIn ? (
         <button
           type="button"
